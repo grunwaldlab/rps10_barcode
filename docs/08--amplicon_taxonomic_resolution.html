@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Taxonomic resolution</title>
+
+<script src="site_libs/jquery-1.12.4/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<script src="site_libs/htmlwidgets-1.5.2/htmlwidgets.js"></script>
+<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="site_libs/datatables-binding-0.16/datatables.js"></script>
+<link href="site_libs/dt-core-1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="site_libs/dt-core-1.10.20/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="site_libs/dt-core-1.10.20/js/jquery.dataTables.min.js"></script>
+<link href="site_libs/crosstalk-1.1.0.1/css/crosstalk.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.1.0.1/js/crosstalk.min.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-inverse  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Comparing ITS1 and RPS10 for Oomycete Metabacoding</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Analysis
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="01--prepare_reference_database.html">Reference database preparation</a>
+    </li>
+    <li>
+      <a href="02--preparation_and_quality_filtering.html">Read processing and quality filtering</a>
+    </li>
+    <li>
+      <a href="03--abundance_matrix_preparation.html">Abundance matrix and taxonomic assignment</a>
+    </li>
+    <li>
+      <a href="04--blast_classification.html">Alternative taxonomic assignment using BLAST</a>
+    </li>
+    <li>
+      <a href="05--otu_clustering_threshold.html">OTU clustering threshold estimation</a>
+    </li>
+    <li>
+      <a href="06--mock_community.html">Mock community evaluation</a>
+    </li>
+    <li>
+      <a href="07--nontarget_amplification.html">Non-target amplification</a>
+    </li>
+    <li>
+      <a href="08--amplicon_taxonomic_resolution.html">Taxonomic resolution</a>
+    </li>
+    <li>
+      <a href="09--simulated_pcr_results.html">Plotting of simulated PCR results</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/grunwaldlab/rps10_barcode">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Taxonomic resolution</h1>
+
+</div>
+
+
+<div id="prepare" class="section level2">
+<h2>Prepare</h2>
+<div id="packages-used" class="section level3">
+<h3>Packages used</h3>
+<pre class="r"><code>library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(sessioninfo)
+library(metacoder)
+library(vegan)
+library(viridis)
+library(DT)
+library(stringr)
+library(qsubmitter)
+library(taxize)
+library(forcats)
+library(Biostrings)
+library(ips)
+library(insect)
+library(ggpubr)
+library(knitr)</code></pre>
+</div>
+<div id="parameters" class="section level3">
+<h3>Parameters</h3>
+<pre class="r"><code>seed &lt;- 1
+only_shared_species &lt;- TRUE # If TRUE, only use species that are present in both databases
+subsample_to_same_num &lt;- TRUE # If TRUE, subsample the amplicons used to the same number for each database
+set.seed(seed)</code></pre>
+</div>
+<div id="parallel-processing" class="section level3">
+<h3>Parallel processing</h3>
+<p>Commands that have “future” in them are run on multiple cores using the <code>furrr</code> and <code>future</code> packages.</p>
+<pre class="r"><code>plan(multiprocess)</code></pre>
+<pre><code>## Warning: [ONE-TIME WARNING] Forked processing (&#39;multicore&#39;) is disabled
+## in future (&gt;= 1.13.0) when running R from RStudio, because it is
+## considered unstable. Because of this, plan(&quot;multicore&quot;) will fall
+## back to plan(&quot;sequential&quot;), and plan(&quot;multiprocess&quot;) will fall back to
+## plan(&quot;multisession&quot;) - not plan(&quot;multicore&quot;) as in the past. For more details,
+## how to control forked processing or not, and how to silence this warning in
+## future R sessions, see ?future::supportsMulticore</code></pre>
+</div>
+<div id="introduction" class="section level3">
+<h3>Introduction</h3>
+<p>This analysis will attempt to estimate how good each locus is at distinguishing species, what I am calling “taxonomic resolution”. I will use the primer sequences and reference databases for each method to extract the portion of the sequence that would be amplified. I then align each sequence to all other sequences and record how many base pairs different each sequence is from the most similar sequence from a different species. The method with the highest numbers should be the one with the highest taxonomic resolution. This is similar to a barcode gap analysis, except that only the most similar comparisons are considered.</p>
+</div>
+<div id="extract-all-oomycete-from-reference-databases" class="section level3">
+<h3>Extract all oomycete from reference databases</h3>
+<pre class="r"><code>rps_ref &lt;- read_fasta(file.path(&#39;intermediate_data&#39;, &#39;reference_databases&#39;, &#39;rps10_reference_db.fa&#39;))
+its_ref &lt;- read_fasta(file.path(&#39;intermediate_data&#39;, &#39;reference_databases&#39;, &#39;its1_reference_db.fa&#39;))
+rps_ref &lt;- rps_ref[grepl(names(rps_ref), pattern = &#39;Oomycetes&#39;)]
+its_ref &lt;- its_ref[grepl(names(its_ref), pattern = &#39;Oomycetes&#39;)]</code></pre>
+<p>Remove spaces from sequences (not sure why there would be spaces).</p>
+<pre class="r"><code>rps_ref &lt;- trimws(gsub(rps_ref, pattern = &#39; &#39;, replacement = &#39;&#39;))
+its_ref &lt;- trimws(gsub(its_ref, pattern = &#39; &#39;, replacement = &#39;&#39;))</code></pre>
+<p>Replace names with just species names</p>
+<pre class="r"><code>names(rps_ref) &lt;- str_match(names(rps_ref), &#39;;([a-zA-Z0-9_\\-\&#39;&quot;. ]+);oodb_.+;$&#39;)[,2]
+names(its_ref) &lt;- str_match(names(its_ref), &#39;;([a-zA-Z0-9_\\-\&#39;&quot;. ]+);(unite|rob2011|phytodb|mock)_.+;$&#39;)[,2]</code></pre>
+<p>Replace underscores with spaces</p>
+<pre class="r"><code>names(rps_ref) &lt;- gsub(names(rps_ref), pattern = &#39;_&#39;, replacement = &#39; &#39;)
+names(its_ref) &lt;- gsub(names(its_ref), pattern = &#39;_&#39;, replacement = &#39; &#39;)</code></pre>
+<p>Remove species with ambiguous names or numbers</p>
+<pre class="r"><code>is_ambiguous &lt;- function(n) {
+  grepl(n, pattern = &#39; sp$&#39;) |
+    grepl(n, pattern = &#39; spp$&#39;) | 
+    grepl(n, pattern = &#39; spp.&#39;) |
+    grepl(n, pattern = &#39; sp.&#39;) |
+    grepl(n, pattern = &#39; aff. &#39;)  | 
+    grepl(n, pattern = &#39; cf.&#39;) |
+    grepl(n, pattern = &#39;[0-9]+&#39;) 
+}
+rps_ref &lt;- rps_ref[! is_ambiguous(names(rps_ref))]
+its_ref &lt;- its_ref[! is_ambiguous(names(its_ref))]</code></pre>
+<p>Remove information below species</p>
+<pre class="r"><code>names(rps_ref) &lt;- sub(names(rps_ref), pattern = &#39; var\\.?.+$&#39;, replacement = &#39;&#39;)
+names(rps_ref) &lt;- sub(names(rps_ref), pattern = &#39; subsp\\.?.+$&#39;, replacement = &#39;&#39;)
+names(its_ref) &lt;- sub(names(its_ref), pattern = &#39; var\\.?.+$&#39;, replacement = &#39;&#39;)
+names(its_ref) &lt;- sub(names(its_ref), pattern = &#39; subsp\\.?.+$&#39;, replacement = &#39;&#39;)</code></pre>
+<p>Now the names should be cleaned up enough that they can be compared to eachother:</p>
+<pre class="r"><code>unique(names(rps_ref))</code></pre>
+<pre><code>##   [1] &quot;Achlya hypogyna&quot;                  &quot;Albugo laibachii&quot;                
+##   [3] &quot;Aphanomyces astaci&quot;               &quot;Aphanomyces cladogamus&quot;          
+##   [5] &quot;Aphanomyces cochlioides&quot;          &quot;Aphanomyces euteiches&quot;           
+##   [7] &quot;Aphanomyces frigidophilus&quot;        &quot;Aphanomyces invadans&quot;            
+##   [9] &quot;Aphanomyces laevis&quot;               &quot;Aphanomyces stellatus&quot;           
+##  [11] &quot;Bremia lactucae&quot;                  &quot;Bremia sonchicola&quot;               
+##  [13] &quot;Halophytophthora bahamensis&quot;      &quot;Halophytophthora batemanensis&quot;   
+##  [15] &quot;Halophytophthora polymorphica&quot;    &quot;Halophytophthora porrigovesica&quot;  
+##  [17] &quot;Hyaloperonospora parasitica&quot;      &quot;Peronosclerospora philippinensis&quot;
+##  [19] &quot;Peronosclerospora sacchari&quot;       &quot;Peronosclerospora sorghi&quot;        
+##  [21] &quot;Peronospora effusa&quot;               &quot;Peronospora atriplicis-hastatae&quot; 
+##  [23] &quot;Peronospora belbahrii&quot;            &quot;Peronospora boni-henrici&quot;        
+##  [25] &quot;Peronospora lepigoni&quot;             &quot;Peronospora litoralis&quot;           
+##  [27] &quot;Peronospora minor&quot;                &quot;Peronospora obovata&quot;             
+##  [29] &quot;Peronospora polycarpi&quot;            &quot;Peronospora rumicis&quot;             
+##  [31] &quot;Peronospora schachtii&quot;            &quot;Peronospora tabacina&quot;            
+##  [33] &quot;Peronospora destructor&quot;           &quot;Phytophthora agathidicida&quot;       
+##  [35] &quot;Phytophthora alni&quot;                &quot;Phytophthora amnicola&quot;           
+##  [37] &quot;Phytophthora andina&quot;              &quot;Phytophthora aquimorbida&quot;        
+##  [39] &quot;Phytophthora arecae&quot;              &quot;Phytophthora arenaria&quot;           
+##  [41] &quot;Phytophthora asiatica&quot;            &quot;Phytophthora asparagi&quot;           
+##  [43] &quot;Phytophthora austrocedri&quot;         &quot;Phytophthora betacei&quot;            
+##  [45] &quot;Phytophthora bilorbang&quot;           &quot;Phytophthora bishii&quot;             
+##  [47] &quot;Phytophthora bisheria&quot;            &quot;Phytophthora boehmeriae&quot;         
+##  [49] &quot;Phytophthora boodjera&quot;            &quot;Phytophthora borealis&quot;           
+##  [51] &quot;Phytophthora botryosa&quot;            &quot;Phytophthora brassicae&quot;          
+##  [53] &quot;Phytophthora cactorum&quot;            &quot;Phytophthora cajani&quot;             
+##  [55] &quot;Phytophthora cambivora&quot;           &quot;Phytophthora capensis&quot;           
+##  [57] &quot;Phytophthora capsici&quot;             &quot;Phytophthora captiosa&quot;           
+##  [59] &quot;Phytophthora chlamydospora&quot;       &quot;Phytophthora cinnamomi&quot;          
+##  [61] &quot;Phytophthora citrophthora&quot;        &quot;Phytophthora clandestina&quot;        
+##  [63] &quot;Phytophthora colocasiae&quot;          &quot;Phytophthora condilina&quot;          
+##  [65] &quot;Phytophthora constricta&quot;          &quot;Phytophthora cooljarloo&quot;         
+##  [67] &quot;Phytophthora crassamura&quot;          &quot;Phytophthora cryptogea&quot;          
+##  [69] &quot;Phytophthora cuyabensis&quot;          &quot;Phytophthora cyperi&quot;             
+##  [71] &quot;Phytophthora drechsleri&quot;          &quot;Phytophthora elongata&quot;           
+##  [73] &quot;Phytophthora erythroseptica&quot;      &quot;Phytophthora europaea&quot;           
+##  [75] &quot;Phytophthora fallax&quot;              &quot;Phytophthora fluvialis&quot;          
+##  [77] &quot;Phytophthora foliorum&quot;            &quot;Phytophthora fragariae&quot;          
+##  [79] &quot;Phytophthora frigida&quot;             &quot;Phytophthora gallica&quot;            
+##  [81] &quot;Phytophthora gemini&quot;              &quot;Phytophthora gibbosa&quot;            
+##  [83] &quot;Phytophthora glovera&quot;             &quot;Phytophthora gonapodyides&quot;       
+##  [85] &quot;Phytophthora gondwanensis&quot;        &quot;Phytophthora gregata&quot;            
+##  [87] &quot;Phytophthora hedraiandra&quot;         &quot;Phytophthora heveae&quot;             
+##  [89] &quot;Phytophthora hibernalis&quot;          &quot;Phytophthora himalsilva&quot;         
+##  [91] &quot;Phytophthora humicola&quot;            &quot;Phytophthora hydrogena&quot;          
+##  [93] &quot;Phytophthora hydropathica&quot;        &quot;Phytophthora idaei&quot;              
+##  [95] &quot;Phytophthora ilicis&quot;              &quot;Phytophthora infestans&quot;          
+##  [97] &quot;Phytophthora insolita&quot;            &quot;Phytophthora ipomoeae&quot;           
+##  [99] &quot;Phytophthora iranica&quot;             &quot;Phytophthora irrigata&quot;           
+## [101] &quot;Phytophthora katsurae&quot;            &quot;Phytophthora kelmania&quot;           
+## [103] &quot;Phytophthora kernoviae&quot;           &quot;Phytophthora kwongonina&quot;         
+## [105] &quot;Phytophthora lacustris&quot;           &quot;Phytophthora lagoariana&quot;         
+## [107] &quot;Phytophthora lateralis&quot;           &quot;Phytophthora litoralis&quot;          
+## [109] &quot;Phytophthora macrochlamydospora&quot;  &quot;Phytophthora meadii&quot;             
+## [111] &quot;Phytophthora medicaginis&quot;         &quot;Phytophthora megakarya&quot;          
+## [113] &quot;Phytophthora megasperma&quot;          &quot;Phytophthora melonis&quot;            
+## [115] &quot;Phytophthora mengei&quot;              &quot;Phytophthora mexicana&quot;           
+## [117] &quot;Phytophthora mirabilis&quot;           &quot;Phytophthora mirablis&quot;           
+## [119] &quot;Phytophthora moyootj&quot;             &quot;Phytophthora multivesiculata&quot;    
+## [121] &quot;Phytophthora multivora&quot;           &quot;Phytophthora nicotianae&quot;         
+## [123] &quot;Phytophthora niederhauserii&quot;      &quot;Phytophthora oreophila&quot;          
+## [125] &quot;Phytophthora ornamentata&quot;         &quot;Phytophthora cacuminis&quot;          
+## [127] &quot;Phytophthora palmivora&quot;           &quot;Phytophthora parsiana&quot;           
+## [129] &quot;Phytophthora parvispora&quot;          &quot;Phytophthora phaseoli&quot;           
+## [131] &quot;Phytophthora pini&quot;                &quot;Phytophthora pinifolia&quot;          
+## [133] &quot;Phytophthora pistaciae&quot;           &quot;Phytophthora plurivora&quot;          
+## [135] &quot;Phytophthora pluvialis&quot;           &quot;Phytophthora polonica&quot;           
+## [137] &quot;Phytophthora porri&quot;               &quot;Phytophthora primulae&quot;           
+## [139] &quot;Phytophthora pseudocryptogea&quot;     &quot;Phytophthora pseudorosacearum&quot;   
+## [141] &quot;Phytophthora pseudosyringae&quot;      &quot;Phytophthora pseudotsugae&quot;       
+## [143] &quot;Phytophthora psychrophila&quot;        &quot;Phytophthora quercetorum&quot;        
+## [145] &quot;Phytophthora quercina&quot;            &quot;Phytophthora quininea&quot;           
+## [147] &quot;Phytophthora ramorum&quot;             &quot;Phytophthora richardiae&quot;         
+## [149] &quot;Phytophthora riparia&quot;             &quot;Phytophthora rosacearum&quot;         
+## [151] &quot;Phytophthora rubi&quot;                &quot;Phytophthora sansomeana&quot;         
+## [153] &quot;Phytophthora siskiyouensis&quot;       &quot;Phytophthora sulawesiensis&quot;      
+## [155] &quot;Phytophthora syringae&quot;            &quot;Phytophthora tentaculata&quot;        
+## [157] &quot;Phytophthora thermophila&quot;         &quot;Phytophthora trifolii&quot;           
+## [159] &quot;Phytophthora tropicalis&quot;          &quot;Phytophthora uliginosa&quot;          
+## [161] &quot;Phytophthora versiformis&quot;         &quot;Phytophthora vignae&quot;             
+## [163] &quot;Phytophthora x stagnum&quot;           &quot;Phytophthora citricola&quot;          
+## [165] &quot;Phytophthora nemorosa&quot;            &quot;Phytophthora sojae&quot;              
+## [167] &quot;Phytopythium aichiense&quot;           &quot;Phytopythium carbonicum&quot;         
+## [169] &quot;Phytopythium chamaehyphon&quot;        &quot;Phytopythium citrinum&quot;           
+## [171] &quot;Phytopythium kandeliae&quot;           &quot;Phytopythium litorale&quot;           
+## [173] &quot;Phytopythium montanum&quot;            &quot;Phytopythium oedochilum&quot;         
+## [175] &quot;Phytopythium sindhum&quot;             &quot;Phytopythium vexans&quot;             
+## [177] &quot;Plasmopara halstedii&quot;             &quot;Plasmopara obducens&quot;             
+## [179] &quot;Plasmopara viticola&quot;              &quot;Pseudoperonospora cubensis&quot;      
+## [181] &quot;Pseudoperonospora humuli&quot;         &quot;Pythium abappressorium&quot;          
+## [183] &quot;Pythium acanthophoron&quot;            &quot;Pythium acrogynum&quot;               
+## [185] &quot;Pythium adhaerens&quot;                &quot;Pythium alternatum&quot;              
+## [187] &quot;Pythium anandrum&quot;                 &quot;Pythium angustatum&quot;              
+## [189] &quot;Pythium aphanidermatum&quot;           &quot;Pythium apiculatum&quot;              
+## [191] &quot;Pythium apleroticum&quot;              &quot;Pythium barbulae&quot;                
+## [193] &quot;Pythium biforme&quot;                  &quot;Pythium brachiatum&quot;              
+## [195] &quot;Pythium camurandrum&quot;              &quot;Pythium canariense&quot;              
+## [197] &quot;Pythium carolinianum&quot;             &quot;Pythium cederbergense&quot;           
+## [199] &quot;Pythium chondricola&quot;              &quot;Pythium citrinum&quot;                
+## [201] &quot;Pythium conidiophorum&quot;            &quot;Pythium contiguanum&quot;             
+## [203] &quot;Pythium cryptoirregulare&quot;         &quot;Pythium cylindrosporum&quot;          
+## [205] &quot;Pythium cystogenes&quot;               &quot;Pythium debaryanum&quot;              
+## [207] &quot;Pythium dimorphum&quot;                &quot;Pythium dissimile&quot;               
+## [209] &quot;Pythium dissotocum&quot;               &quot;Pythium echinulatum&quot;             
+## [211] &quot;Pythium emineosum&quot;                &quot;Pythium folliculosum&quot;            
+## [213] &quot;Pythium glomeratum&quot;               &quot;Pythium heterothallicum&quot;         
+## [215] &quot;Pythium hypogynum&quot;                &quot;Pythium insidiosum&quot;              
+## [217] &quot;Pythium irregulare&quot;               &quot;Pythium iwayamai&quot;                
+## [219] &quot;Pythium junctum&quot;                  &quot;Pythium kashmirense&quot;             
+## [221] &quot;Pythium kunmingense&quot;              &quot;Pythium longandrum&quot;              
+## [223] &quot;Pythium longisporangium&quot;          &quot;Pythium lucens&quot;                  
+## [225] &quot;Pythium lutarium&quot;                 &quot;Pythium lycopersicum&quot;            
+## [227] &quot;Pythium mamillatum&quot;               &quot;Pythium mastophorum&quot;             
+## [229] &quot;Phytopythium megacarpum&quot;          &quot;Pythium middletoni&quot;              
+## [231] &quot;Pythium monospermum&quot;              &quot;Pythium mercuriale&quot;              
+## [233] &quot;Pythium nagaii&quot;                   &quot;Pythium oligandrum&quot;              
+## [235] &quot;Pythium oopapillum&quot;               &quot;Pythium ornacarpum&quot;              
+## [237] &quot;Pythium ornamentatum&quot;             &quot;Pythium pachycaule&quot;              
+## [239] &quot;Pythium paddicum&quot;                 &quot;Pythium parvum&quot;                  
+## [241] &quot;Pythium pectinolyticum&quot;           &quot;Pythium periilum&quot;                
+## [243] &quot;Pythium perplexum&quot;                &quot;Pythium phragmiticola&quot;           
+## [245] &quot;Pythium phragmitis&quot;               &quot;Pythium pleroticum&quot;              
+## [247] &quot;Pythium prolatum&quot;                 &quot;Pythium radiosum&quot;                
+## [249] &quot;Pythium rhizo-oryzae&quot;             &quot;Pythium rhizosaccharum&quot;          
+## [251] &quot;Pythium rishiriense&quot;              &quot;Pythium rostratifingens&quot;         
+## [253] &quot;Pythium scleroteichum&quot;            &quot;Pythium segnitium&quot;               
+## [255] &quot;Pythium selbyi&quot;                   &quot;Pythium senticosum&quot;              
+## [257] &quot;Pythium sukuiense&quot;                &quot;Pythium takayamanum&quot;             
+## [259] &quot;Pythium terrestris&quot;               &quot;Pythium tracheiphilum&quot;           
+## [261] &quot;Pythium ultimum&quot;                  &quot;Pythium undulatum&quot;               
+## [263] &quot;Pythium utonaiense&quot;               &quot;Pythium viniferum&quot;               
+## [265] &quot;Pythium violae&quot;                   &quot;Pythium aristosporum&quot;            
+## [267] &quot;Pythium arrhenomanes&quot;             &quot;Pythium catenulatum&quot;             
+## [269] &quot;Pythium coloratum&quot;                &quot;Pythium graminicola&quot;             
+## [271] &quot;Pythium myriotylum&quot;               &quot;Pythium nunn&quot;                    
+## [273] &quot;Pythium pyrilobum&quot;                &quot;Pythium sylvaticum&quot;              
+## [275] &quot;Pythium vanterpoolii&quot;             &quot;Pythium volutum&quot;                 
+## [277] &quot;Salisapilia tartarea&quot;             &quot;Salisapilia nakagirii&quot;           
+## [279] &quot;Salisapilia sapeloensis&quot;          &quot;Saprolegnia diclina&quot;             
+## [281] &quot;Saprolegnia ferax&quot;                &quot;Saprolegnia parasitica&quot;          
+## [283] &quot;Sclerospora graminicola&quot;          &quot;Thraustotheca clavata&quot;           
+## [285] &quot;Pythium rhizoterrae&quot;              &quot;Pythium aquasilvae&quot;              
+## [287] &quot;Halophytophthora exoprolifera&quot;    &quot;Halophytophthora kandeliae&quot;      
+## [289] &quot;Lagenidium pulchrum&quot;              &quot;Lagenidium sinuatum&quot;             
+## [291] &quot;Phytopythium boreale&quot;             &quot;Phytopythium delwarense&quot;         
+## [293] &quot;Phytopythium helicoides&quot;          &quot;Phytopythium mercuriale&quot;         
+## [295] &quot;Phytopythium mirpurense&quot;          &quot;Phytopythium ostracodes&quot;         
+## [297] &quot;Pythium amasculinum&quot;              &quot;Pythium apinafurcum&quot;             
+## [299] &quot;Pythium aquatile&quot;                 &quot;Pythium attrantheridium&quot;         
+## [301] &quot;Pythium brassicum&quot;                &quot;Pythium capillosum&quot;              
+## [303] &quot;Pythium cucurbitacearum&quot;          &quot;Pythium diclinum&quot;                
+## [305] &quot;Pythium erinaceum&quot;                &quot;Pythium flevoense&quot;               
+## [307] &quot;Pythium grandisporangium&quot;         &quot;Pythium hydnosporum&quot;             
+## [309] &quot;Pythium inflatum&quot;                 &quot;Pythium intermedium&quot;             
+## [311] &quot;Pythium iriomotense&quot;              &quot;Pythium jasmonium&quot;               
+## [313] &quot;Pythium marsipum&quot;                 &quot;Pythium megalacanthum&quot;           
+## [315] &quot;Pythium middletonii&quot;              &quot;Pythium minus&quot;                   
+## [317] &quot;Pythium nodosum&quot;                  &quot;Pythium okanoganense&quot;            
+## [319] &quot;Pythium orthogonon&quot;               &quot;Pythium paroecandrum&quot;            
+## [321] &quot;Pythium periplocum&quot;               &quot;Pythium plurisporium&quot;            
+## [323] &quot;Pythium porphyrae&quot;                &quot;Pythium recalcitrans&quot;            
+## [325] &quot;Pythium salpingophorum&quot;           &quot;Pythium schmitthenneri&quot;          
+## [327] &quot;Pythium solare&quot;                   &quot;Pythium tardicrescens&quot;           
+## [329] &quot;Pythium terretris&quot;                &quot;Pythium torulosum&quot;               
+## [331] &quot;Pythium uncinulatum&quot;              &quot;Pythium volotum&quot;</code></pre>
+<pre class="r"><code>unique(names(its_ref))</code></pre>
+<pre><code>##   [1] &quot;Bremia lactucae&quot;                    
+##   [2] &quot;Hyaloperonospora erophilae&quot;         
+##   [3] &quot;Hyaloperonospora thlaspeos-arvensis&quot;
+##   [4] &quot;Hyaloperonospora parasitica&quot;        
+##   [5] &quot;Hyaloperonospora cheiranthi&quot;        
+##   [6] &quot;Phytophthora cryptogea&quot;             
+##   [7] &quot;Peronospora myosotidis&quot;             
+##   [8] &quot;Peronospora trifoliorum&quot;            
+##   [9] &quot;Peronospora trifolii-minoris&quot;       
+##  [10] &quot;Peronospora astragalina&quot;            
+##  [11] &quot;Aphanomyces euteiches&quot;              
+##  [12] &quot;Aphanomyces cochlioides&quot;            
+##  [13] &quot;Peronospora conglomerata&quot;           
+##  [14] &quot;Peronospora agrestis&quot;               
+##  [15] &quot;Peronospora flava&quot;                  
+##  [16] &quot;Phytophthora infestans&quot;             
+##  [17] &quot;Pythium ultimum&quot;                    
+##  [18] &quot;Albugo candida&quot;                     
+##  [19] &quot;Plasmopara halstedii&quot;               
+##  [20] &quot;Plasmopara obducens&quot;                
+##  [21] &quot;Plasmopara nivea&quot;                   
+##  [22] &quot;Peronospora potentillae&quot;            
+##  [23] &quot;Perofascia lepidii&quot;                 
+##  [24] &quot;Peronospora lamii&quot;                  
+##  [25] &quot;Peronospora manshurica&quot;             
+##  [26] &quot;Peronospora meliloti&quot;               
+##  [27] &quot;Peronospora alsinearum&quot;             
+##  [28] &quot;Peronospora ervi&quot;                   
+##  [29] &quot;Peronospora polygoni&quot;               
+##  [30] &quot;Pseudoperonospora urticae&quot;          
+##  [31] &quot;Phytophthora nicotianae&quot;            
+##  [32] &quot;Peronospora farinosa&quot;               
+##  [33] &quot;Phytophthora capsici&quot;               
+##  [34] &quot;Peronospora parva&quot;                  
+##  [35] &quot;Peronospora radii&quot;                  
+##  [36] &quot;Peronospora chenopodii-polyspermi&quot;  
+##  [37] &quot;Pythium graminicola&quot;                
+##  [38] &quot;Peronospora corydalis&quot;              
+##  [39] &quot;Plasmopara pusilla&quot;                 
+##  [40] &quot;Peronospora viciae&quot;                 
+##  [41] &quot;Peronospora coronillae&quot;             
+##  [42] &quot;Peronospora aestivalis&quot;             
+##  [43] &quot;Peronospora sordida&quot;                
+##  [44] &quot;Peronospora boni-henrici&quot;           
+##  [45] &quot;Peronospora chlorae&quot;                
+##  [46] &quot;Pseudoperonospora cannabina&quot;        
+##  [47] &quot;Peronospora destructor&quot;             
+##  [48] &quot;Achlya ambisexualis&quot;                
+##  [49] &quot;Achlya americana&quot;                   
+##  [50] &quot;Achlya aquatica&quot;                    
+##  [51] &quot;Achlya bisexualis&quot;                  
+##  [52] &quot;Achlya caroliniana&quot;                 
+##  [53] &quot;Achlya colorata&quot;                    
+##  [54] &quot;Achlya conspicua&quot;                   
+##  [55] &quot;Achlya dubia&quot;                       
+##  [56] &quot;Achlya flagellata&quot;                  
+##  [57] &quot;Achlya glomerata&quot;                   
+##  [58] &quot;Achlya heterosexualis&quot;              
+##  [59] &quot;Achlya oligacantha&quot;                 
+##  [60] &quot;Achlya papillosa&quot;                   
+##  [61] &quot;Achlya racemosa&quot;                    
+##  [62] &quot;Achlya radiosa&quot;                     
+##  [63] &quot;Achlya recurva&quot;                     
+##  [64] &quot;Aphanomyces cladogamus&quot;             
+##  [65] &quot;Aphanomyces iridis&quot;                 
+##  [66] &quot;Aphanomyces laevis&quot;                 
+##  [67] &quot;Apodachlya brachynema&quot;              
+##  [68] &quot;Apodachlya minima&quot;                  
+##  [69] &quot;Basidiophora entospora&quot;             
+##  [70] &quot;Brevilegnia gracilis&quot;               
+##  [71] &quot;Brevilegnia macrospora&quot;             
+##  [72] &quot;Brevilegnia unisperma&quot;              
+##  [73] &quot;Brevilegnia&quot;                        
+##  [74] &quot;Eurychasma dicksonii&quot;               
+##  [75] &quot;Halophytophthora exoprolifera&quot;      
+##  [76] &quot;Halophytophthora kandeliae&quot;         
+##  [77] &quot;Salisapilia tartarea&quot;               
+##  [78] &quot;Hyaloperonospora nesliae&quot;           
+##  [79] &quot;Hyaloperonospora sisymbrii-sophiae&quot; 
+##  [80] &quot;Lagenidium caudatum&quot;                
+##  [81] &quot;Leptolegnia caudata&quot;                
+##  [82] &quot;Peronospora aparines&quot;               
+##  [83] &quot;Peronospora calotheca&quot;              
+##  [84] &quot;Peronospora sherardiae&quot;             
+##  [85] &quot;Peronospora valerianellae&quot;          
+##  [86] &quot;Peronospora violae&quot;                 
+##  [87] &quot;Phytophthora citricola&quot;             
+##  [88] &quot;Phytophthora alni&quot;                  
+##  [89] &quot;Phytophthora alticola&quot;              
+##  [90] &quot;Phytophthora arecae&quot;                
+##  [91] &quot;Phytophthora austrocedrae&quot;          
+##  [92] &quot;Halophytophthora avicenniae&quot;        
+##  [93] &quot;Phytophthora batemanensis&quot;          
+##  [94] &quot;Phytophthora bisheria&quot;              
+##  [95] &quot;Phytophthora boehmeriae&quot;            
+##  [96] &quot;Phytophthora botryosa&quot;              
+##  [97] &quot;Phytophthora brassicae&quot;             
+##  [98] &quot;Phytophthora cactorum&quot;              
+##  [99] &quot;Phytophthora cajani&quot;                
+## [100] &quot;Phytophthora cambivora&quot;             
+## [101] &quot;Phytophthora captiosa&quot;              
+## [102] &quot;Phytophthora cinnamomi&quot;             
+## [103] &quot;Phytophthora citrophthora&quot;          
+## [104] &quot;Phytophthora clandestina&quot;           
+## [105] &quot;Phytophthora colocasiae&quot;            
+## [106] &quot;Phytophthora drechsleri&quot;            
+## [107] &quot;Halophytophthora epistomium&quot;        
+## [108] &quot;Phytophthora erythroseptica&quot;        
+## [109] &quot;Phytophthora europaea&quot;              
+## [110] &quot;Phytophthora fallax&quot;                
+## [111] &quot;Phytophthora foliorum&quot;              
+## [112] &quot;Phytophthora fragariae&quot;             
+## [113] &quot;Phytophthora frigida&quot;               
+## [114] &quot;Phytophthora gonapodyides&quot;          
+## [115] &quot;Phytophthora hedraiandra&quot;           
+## [116] &quot;Phytophthora heveae&quot;                
+## [117] &quot;Phytophthora hibernalis&quot;            
+## [118] &quot;Phytophthora himalayensis&quot;          
+## [119] &quot;Phytophthora humicola&quot;              
+## [120] &quot;Phytophthora idaei&quot;                 
+## [121] &quot;Phytophthora ilicis&quot;                
+## [122] &quot;Phytophthora inflata&quot;               
+## [123] &quot;Phytophthora insolita&quot;              
+## [124] &quot;Phytophthora inundata&quot;              
+## [125] &quot;Phytophthora ipomoeae&quot;              
+## [126] &quot;Phytophthora iranica&quot;               
+## [127] &quot;Phytophthora katsurae&quot;              
+## [128] &quot;Phytophthora kernoviae&quot;             
+## [129] &quot;Phytophthora lateralis&quot;             
+## [130] &quot;Phytophthora litchii&quot;               
+## [131] &quot;Phytophthora macrochlamydospora&quot;    
+## [132] &quot;Phytophthora meadii&quot;                
+## [133] &quot;Phytophthora medicaginis&quot;           
+## [134] &quot;Phytophthora megakarya&quot;             
+## [135] &quot;Phytophthora megasperma&quot;            
+## [136] &quot;Phytophthora melonis&quot;               
+## [137] &quot;Phytophthora mengei&quot;                
+## [138] &quot;Phytophthora mexicana&quot;              
+## [139] &quot;Phytophthora mirabilis&quot;             
+## [140] &quot;Phytophthora multivesiculata&quot;       
+## [141] &quot;Phytophthora multivora&quot;             
+## [142] &quot;Phytophthora nemorosa&quot;              
+## [143] &quot;Phytophthora palmivora&quot;             
+## [144] &quot;Phytophthora parsiana&quot;              
+## [145] &quot;Phytophthora phaseoli&quot;              
+## [146] &quot;Phytophthora pini&quot;                  
+## [147] &quot;Phytophthora pinifolia&quot;             
+## [148] &quot;Phytophthora pistaciae&quot;             
+## [149] &quot;Phytophthora plurivora&quot;             
+## [150] &quot;Phytophthora polonica&quot;              
+## [151] &quot;Halophytophthora polymorphica&quot;      
+## [152] &quot;Phytophthora porri&quot;                 
+## [153] &quot;Phytophthora primulae&quot;              
+## [154] &quot;Phytophthora pseudosyringae&quot;        
+## [155] &quot;Phytophthora pseudotsugae&quot;          
+## [156] &quot;Phytophthora psychrophila&quot;          
+## [157] &quot;Phytophthora quercetorum&quot;           
+## [158] &quot;Phytophthora quercina&quot;              
+## [159] &quot;Phytophthora quininea&quot;              
+## [160] &quot;Phytophthora ramorum&quot;               
+## [161] &quot;Phytophthora rosacearum&quot;            
+## [162] &quot;Phytophthora rubi&quot;                  
+## [163] &quot;Phytophthora sansomea&quot;              
+## [164] &quot;Phytophthora sinensis&quot;              
+## [165] &quot;Phytophthora siskiyouensis&quot;         
+## [166] &quot;Phytophthora sojae&quot;                 
+## [167] &quot;Phytophthora andina&quot;                
+## [168] &quot;Phytophthora asparagi&quot;              
+## [169] &quot;Phytophthora sulawesiensis&quot;         
+## [170] &quot;Phytophthora syringae&quot;              
+## [171] &quot;Phytophthora tabaci&quot;                
+## [172] &quot;Phytophthora tentaculata&quot;           
+## [173] &quot;Phytophthora trifolii&quot;              
+## [174] &quot;Phytophthora tropicalis&quot;            
+## [175] &quot;Phytophthora uliginosa&quot;             
+## [176] &quot;Phytophthora vignae&quot;                
+## [177] &quot;Pythium vexans&quot;                     
+## [178] &quot;Phytopythium boreale&quot;               
+## [179] &quot;Phytopythium carbonicum&quot;            
+## [180] &quot;Pythium chamaihyphon&quot;               
+## [181] &quot;Ovatisporangium citrinum&quot;           
+## [182] &quot;Phytopythium cucurbitacearum&quot;       
+## [183] &quot;Phytopythium helicoides&quot;            
+## [184] &quot;Ovatisporangium litorale&quot;           
+## [185] &quot;Phytopythium megacarpum&quot;            
+## [186] &quot;Ovatisporangium montanum&quot;           
+## [187] &quot;Phytopythium oedochilum&quot;            
+## [188] &quot;Pythium ostracodes&quot;                 
+## [189] &quot;Phytopythium sindhum&quot;               
+## [190] &quot;Plasmopara euphrasiae&quot;              
+## [191] &quot;Plasmoverna anemones-ranunculoides&quot; 
+## [192] &quot;Plectospira myriandra&quot;              
+## [193] &quot;Protoachlya paradoxa&quot;               
+## [194] &quot;Pseudoperonospora cubensis&quot;         
+## [195] &quot;Pythiogeton zeae&quot;                   
+## [196] &quot;Pythiopsis terrestris&quot;              
+## [197] &quot;Pythium abappressorium&quot;             
+## [198] &quot;Pythium acanthicum&quot;                 
+## [199] &quot;Pythium acanthophoron&quot;              
+## [200] &quot;Pythium acrogynum&quot;                  
+## [201] &quot;Pythium adhaerens&quot;                  
+## [202] &quot;Pythium afertile&quot;                   
+## [203] &quot;Pythium attrantheridium&quot;            
+## [204] &quot;Pythium macrosporum&quot;                
+## [205] &quot;Pythium oopapillum&quot;                 
+## [206] &quot;Pythium pleroticum&quot;                 
+## [207] &quot;Pythium polymastum&quot;                 
+## [208] &quot;Pythium volutum&quot;                    
+## [209] &quot;Pythium amasculinum&quot;                
+## [210] &quot;Elongisporangium anandrum&quot;          
+## [211] &quot;Pythium angustatum&quot;                 
+## [212] &quot;Pythium aphanidermatum&quot;             
+## [213] &quot;Pythium apiculatum&quot;                 
+## [214] &quot;Pythium apleroticum&quot;                
+## [215] &quot;Pythium aquatile&quot;                   
+## [216] &quot;Pythium aristosporum&quot;               
+## [217] &quot;Pythium arrhenomanes&quot;               
+## [218] &quot;Pythium buismaniae&quot;                 
+## [219] &quot;Pythium camurandrum&quot;                
+## [220] &quot;Pythium canariense&quot;                 
+## [221] &quot;Pythium capillosum&quot;                 
+## [222] &quot;Pythium carolinianum&quot;               
+## [223] &quot;Pythium catenulatum&quot;                
+## [224] &quot;Pythium chondricola&quot;                
+## [225] &quot;Pythium coloratum&quot;                  
+## [226] &quot;Pythium conidiophorum&quot;              
+## [227] &quot;Pythium contiguanum&quot;                
+## [228] &quot;Pythium cryptoirregulare&quot;           
+## [229] &quot;Pythium cylindrosporum&quot;             
+## [230] &quot;Pythium cystogenes&quot;                 
+## [231] &quot;Pythium debaryanum&quot;                 
+## [232] &quot;Pythium deliense&quot;                   
+## [233] &quot;Pythium diclinum&quot;                   
+## [234] &quot;Pythium dimorphum&quot;                  
+## [235] &quot;Pythium dissimile&quot;                  
+## [236] &quot;Pythium dissotocum&quot;                 
+## [237] &quot;Pythium echinulatum&quot;                
+## [238] &quot;Pythium emineosum&quot;                  
+## [239] &quot;Pythium erinaceum&quot;                  
+## [240] &quot;Pythium flevoense&quot;                  
+## [241] &quot;Pythium folliculosum&quot;               
+## [242] &quot;Pythium glomeratum&quot;                 
+## [243] &quot;Pythium grandisporangium&quot;           
+## [244] &quot;Pythium helicandrum&quot;                
+## [245] &quot;Pythium heterothallicum&quot;            
+## [246] &quot;Pythium hydnosporum&quot;                
+## [247] &quot;Pythium hypogynum&quot;                  
+## [248] &quot;Pythium inflatum&quot;                   
+## [249] &quot;Pythium insidiosum&quot;                 
+## [250] &quot;Pythium intermedium&quot;                
+## [251] &quot;Pythium irregulare&quot;                 
+## [252] &quot;Pythium iwayamai&quot;                   
+## [253] &quot;Pythium kashmirense&quot;                
+## [254] &quot;Pythium kunmingense&quot;                
+## [255] &quot;Pythium longandrum&quot;                 
+## [256] &quot;Pythium longisporangium&quot;            
+## [257] &quot;Pythium lucens&quot;                     
+## [258] &quot;Pythium lutarium&quot;                   
+## [259] &quot;Pythium lycopersicum&quot;               
+## [260] &quot;Pythium mamillatum&quot;                 
+## [261] &quot;Pythium marsipium&quot;                  
+## [262] &quot;Pythium mastophorum&quot;                
+## [263] &quot;Pythium megalacanthum&quot;              
+## [264] &quot;Pythium middletonii&quot;                
+## [265] &quot;Pythium minus&quot;                      
+## [266] &quot;Pythium monospermum&quot;                
+## [267] &quot;Pythium multisporum&quot;                
+## [268] &quot;Pythium myriotylum&quot;                 
+## [269] &quot;Pythium nagaii&quot;                     
+## [270] &quot;Pythium nodosum&quot;                    
+## [271] &quot;Pythium nunn&quot;                       
+## [272] &quot;Pythium okanoganense&quot;               
+## [273] &quot;Pythium oligandrum&quot;                 
+## [274] &quot;Pythium ornacarpum&quot;                 
+## [275] &quot;Pythium ornamentatum&quot;               
+## [276] &quot;Pythium orthogonon&quot;                 
+## [277] &quot;Pythium pachycaule&quot;                 
+## [278] &quot;Pythium paddicum&quot;                   
+## [279] &quot;Pythium paroecandrum&quot;               
+## [280] &quot;Pythium parvum&quot;                     
+## [281] &quot;Pythium pectinolyticum&quot;             
+## [282] &quot;Pythium periilum&quot;                   
+## [283] &quot;Pythium periplocum&quot;                 
+## [284] &quot;Pythium perplexum&quot;                  
+## [285] &quot;Pythium phragmitis&quot;                 
+## [286] &quot;Pythium plurisporium&quot;               
+## [287] &quot;Pythium porphyrae&quot;                  
+## [288] &quot;Pythium prolatum&quot;                   
+## [289] &quot;Pythium pyrilobum&quot;                  
+## [290] &quot;Pythium radiosum&quot;                   
+## [291] &quot;Pythium rhizo-oryzae&quot;               
+## [292] &quot;Pythium rhizosaccharum&quot;             
+## [293] &quot;Pythium rostratifingens&quot;            
+## [294] &quot;Pythium rostratum&quot;                  
+## [295] &quot;Pythium salpingophorum&quot;             
+## [296] &quot;Pythium scleroteichum&quot;              
+## [297] &quot;Pythium segnitium&quot;                  
+## [298] &quot;Pythium senticosum&quot;                 
+## [299] &quot;Pythium jasmonium&quot;                  
+## [300] &quot;Pythium sukuiense&quot;                  
+## [301] &quot;Pythium sulcatum&quot;                   
+## [302] &quot;Pythium sylvaticum&quot;                 
+## [303] &quot;Pythium takayamanum&quot;                
+## [304] &quot;Pythium tardicrescens&quot;              
+## [305] &quot;Pythium terrestris&quot;                 
+## [306] &quot;Pythium torulosum&quot;                  
+## [307] &quot;Pythium tracheiphilum&quot;              
+## [308] &quot;Pythium uncinulatum&quot;                
+## [309] &quot;Elongisporangium undulatum&quot;         
+## [310] &quot;Pythium vanterpoolii&quot;               
+## [311] &quot;Pythium viniferum&quot;                  
+## [312] &quot;Pythium violae&quot;                     
+## [313] &quot;Pythium zingiberis&quot;                 
+## [314] &quot;Saprolegnia anisospora&quot;             
+## [315] &quot;Saprolegnia asterophora&quot;            
+## [316] &quot;Saprolegnia delica&quot;                 
+## [317] &quot;Saprolegnia diclina&quot;                
+## [318] &quot;Saprolegnia eccentrica&quot;             
+## [319] &quot;Saprolegnia ferax&quot;                  
+## [320] &quot;Saprolegnia hypogyna&quot;               
+## [321] &quot;Saprolegnia lapponica&quot;              
+## [322] &quot;Saprolegnia litoralis&quot;              
+## [323] &quot;Saprolegnia megasperma&quot;             
+## [324] &quot;Saprolegnia mixta&quot;                  
+## [325] &quot;Saprolegnia monilifera&quot;             
+## [326] &quot;Saprolegnia monoica&quot;                
+## [327] &quot;Saprolegnia parasitica&quot;             
+## [328] &quot;Achlya rodrigueziana&quot;               
+## [329] &quot;Saprolegnia subterranea&quot;            
+## [330] &quot;Saprolegnia terrestris&quot;             
+## [331] &quot;Saprolegnia turfosa&quot;                
+## [332] &quot;Saprolegnia unispora&quot;               
+## [333] &quot;Thraustotheca clavata&quot;              
+## [334] &quot;Thraustotheca terrestris&quot;           
+## [335] &quot;Phytophthora glovera&quot;               
+## [336] &quot;Phytophthora capensis&quot;              
+## [337] &quot;Phytophthora lacustris&quot;             
+## [338] &quot;Phytophthora sansomeana&quot;            
+## [339] &quot;Phytophthora richardiae&quot;            
+## [340] &quot;Phytophthora thermophila&quot;           
+## [341] &quot;Phytophthora irrigata&quot;              
+## [342] &quot;Phytophthora hydropathica&quot;          
+## [343] &quot;Phytophthora gallica&quot;               
+## [344] &quot;Peronospora effusa&quot;                 
+## [345] &quot;Peronospora schachtii&quot;              
+## [346] &quot;Phytophthora himalsilva&quot;            
+## [347] &quot;Phytophthora hydrogena&quot;             
+## [348] &quot;Phytophthora pluvialis&quot;             
+## [349] &quot;Phytopythium citrinum&quot;              
+## [350] &quot;Pythium undulatum&quot;</code></pre>
+<p>Although there are a similar number of species, each database has a distinct set of species:</p>
+<pre class="r"><code>table(unique(names(rps_ref)) %in% unique(names(its_ref)))</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##   105   227</code></pre>
+<pre class="r"><code>table(unique(names(its_ref)) %in% unique(names(rps_ref)))</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##   123   227</code></pre>
+<p>This could influence the comparison, so we can use only species present in both to avoid that:</p>
+<pre class="r"><code>if (only_shared_species) {
+  common_species &lt;- intersect(unique(names(rps_ref)), unique(names(its_ref)))
+  rps_ref &lt;- rps_ref[names(rps_ref) %in% common_species]
+  its_ref &lt;- its_ref[names(its_ref) %in% common_species]
+}</code></pre>
+</div>
+<div id="extract-predicted-amplicons" class="section level3">
+<h3>Extract predicted amplicons</h3>
+<p>Only the amplified sequence contribute to the taxonomic resolution of the locus, so I will have to find that region in reference database sequences. Not all reference sequences will have the entire region however. Some will have the region but not the primer sites, making things more complicated.</p>
+<pre class="r"><code>primer_data &lt;- read_csv(file.path(&quot;raw_data&quot;, &quot;primer_data.csv&quot;))</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   primer_id = col_character(),
+##   locus = col_character(),
+##   direction = col_character(),
+##   sequence = col_character()
+## )</code></pre>
+<pre class="r"><code>primer_data &lt;- filter(primer_data, primer_id != &#39;rps10_f-F&#39;)
+primer_data</code></pre>
+<pre><code>## # A tibble: 4 x 4
+##   primer_id locus direction sequence             
+##   &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;                
+## 1 rps10-F   rps10 Forward   GTTGGTTAGAGYARAAGACT 
+## 2 rps10-R   rps10 Reverse   ATRYYTAGAAAGAYTYGAACT
+## 3 ITS6      ITS   Forward   GAAGGTGAAGTCGTAACAAGG
+## 4 ITS7      ITS   Reverse   AGCGTTCTTCATCGATGTGC</code></pre>
+<p>The <code>matchProbePair</code> function from the <code>Biostrings</code> package can extract a region predicted to be amplified by primers, but for some reason it does not allow for ambiguity codes, even though it is a trivial change to make it do so. Below is a modified version of the function that does allow ambiguity codes by providing the <code>fixed</code> parameter and passing it to the <code>matchPattern</code> calls.</p>
+<pre class="r"><code>matchProbePair &lt;- function(Fprobe, Rprobe, subject, algorithm=&quot;auto&quot;,
+             logfile=NULL, verbose=FALSE, fixed = FALSE)
+    {
+        ## This won&#39;t copy the data if Fprobe and Rprobe are already DNAString objects
+        F &lt;- DNAString(Fprobe)
+        R &lt;- DNAString(Rprobe)
+
+        ## F and R hits on the + strand
+        Fp_hits &lt;- start(matchPattern(F, subject, algorithm=algorithm, fixed = fixed))
+        Rp_hits &lt;- start(matchPattern(R, subject, algorithm=algorithm, fixed = fixed))
+
+        ## F and R hits on the - strand
+        Fm_hits &lt;- end(matchPattern(reverseComplement(F), subject, algorithm=algorithm, fixed = fixed))
+        Rm_hits &lt;- end(matchPattern(reverseComplement(R), subject, algorithm=algorithm, fixed = fixed))
+
+        if (verbose) {
+            cat(&quot;Fp_hits:&quot;, Fp_hits, &quot;  Rp_hits:&quot;, Rp_hits,
+                &quot;  Fm_hits:&quot;, Fm_hits, &quot;  Rm_hits:&quot;, Rm_hits, &quot;\n&quot;)
+        }
+
+        matches0 &lt;- Biostrings:::reduceProbePairMatches(c(Fp_hits, Rp_hits), c(Fm_hits, Rm_hits))
+        ans &lt;- Views(subject, start=matches0$start, end=matches0$end)
+
+        if (!is.null(logfile)) {
+            nFp &lt;- length(Fp_hits)
+            nRp &lt;- length(Rp_hits)
+            nFm &lt;- length(Fm_hits)
+            nRm &lt;- length(Rm_hits)
+            nmatches0 &lt;- length(ans)
+            ## cat(&quot;&quot;, ..., sep=&quot;\t&quot;) is a trick to get an extra tab
+            cat(&quot;&quot;, nFp, nRp, nFm, nRm, nmatches0, file=logfile, sep=&quot;\t&quot;)
+        }
+        ans
+}</code></pre>
+<p>The code below extracts predicted amplicons using primer matches, removes the primers, and aligns the trimmed amplicons to the sequences that did not have primer matches to try to find other sequences in the reference databases that do not have primer sequences but are full length matches to those that do.</p>
+<pre class="r"><code>get_amplicon_chr &lt;- function(seq) {
+  map2_chr(seq@ranges@start, seq@ranges@width, function(s, w) {
+    as.character(seq@subject[seq(from = s, length.out = w)])
+  })
+}
+
+calc_amplicons &lt;- function(seqs, forward, reverse, min_coverage = 0.9, ...) {
+  # Get simulated amplicons using primers
+  full_amps &lt;- future_map(seqs, function(s) {
+    get_amplicon_chr(matchProbePair(DNAString(s), Fprobe = forward, Rprobe = reverse))
+  })
+  
+  # Check for multiple possible amplicons per input
+  if (any(map_int(full_amps, length) &gt; 1)) {
+    stop(&#39;Some inputs have more than one amplicons.&#39;)
+  }
+  full_amps &lt;- unlist(full_amps[map_int(full_amps, length) == 1])
+  
+  # Remove primers from amplicons
+  full_amps &lt;- substr(full_amps, start = nchar(forward) + 1, stop = nchar(full_amps) - nchar(reverse))
+  
+  # Align unamplified sequences with best matching amplicons
+  unamped &lt;- seqs[! names(seqs) %in% names(full_amps)]
+  unamped_aligned &lt;- future_map_chr(unamped, function(s) {
+    aligned &lt;- pairwiseAlignment(pattern = full_amps, subject = s, 
+                                 type = &#39;global-local&#39;,
+                                 # type = &#39;overlap&#39;,
+                                 gapOpening = 10, gapExtension = 4)
+    best_score_i &lt;- which.max(aligned@score)
+    best_align &lt;- aligned[best_score_i]
+    aligned_subject_char &lt;- gsub(as.character(best_align@subject), pattern = &#39;-&#39;, replacement = &#39;&#39;)
+    aligned_amp_char &lt;- gsub(as.character(best_align@pattern), pattern = &#39;-&#39;, replacement = &#39;&#39;)
+    if (best_align@pattern@range@width &lt; best_align@pattern@unaligned@ranges@width * min_coverage || nchar(aligned_subject_char) == 0) {
+      aligned_subject_char &lt;- NA
+    }
+    aligned_subject_char
+  })
+  
+  # Add full amplicons to inferred amplicons from alignment
+  all_amps &lt;- c(full_amps, unamped_aligned[! is.na(unamped_aligned)])
+  all_amps &lt;- all_amps[is.na(all_amps) | nchar(all_amps) &gt; 0]
+  setNames(all_amps[names(seqs)], names(seqs))
+}
+
+rps_amps &lt;- calc_amplicons(rps_ref, 
+                           forward = primer_data$sequence[primer_data$direction == &#39;Forward&#39; &amp; primer_data$locus == &#39;rps10&#39;],
+                           reverse = primer_data$sequence[primer_data$direction == &#39;Reverse&#39; &amp; primer_data$locus == &#39;rps10&#39;])
+its_amps &lt;- calc_amplicons(its_ref, 
+                           forward = primer_data$sequence[primer_data$direction == &#39;Forward&#39; &amp; primer_data$locus == &#39;ITS&#39;],
+                           reverse = primer_data$sequence[primer_data$direction == &#39;Reverse&#39; &amp; primer_data$locus == &#39;ITS&#39;])</code></pre>
+<p>The amplicon could not be extracted from many sequences, probably because it was incomplete, but enough can be to compare the two methods. Here is the proportion of reference sequences with full length amplicons extracted:</p>
+<pre class="r"><code>table(is.na(rps_amps))</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##   649    48</code></pre>
+<pre class="r"><code>table(is.na(its_amps))</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##   706   544</code></pre>
+<p>Lets remove those from the databases:</p>
+<pre class="r"><code>rps_amps &lt;- rps_amps[! is.na(rps_amps)]
+its_amps &lt;- its_amps[! is.na(its_amps)]</code></pre>
+<p>Lets also remove any sequences that are duplicates (same sequence and same species name):</p>
+<pre class="r"><code>rps_amps &lt;- rps_amps[! duplicated(paste0(names(rps_amps), rps_amps))]
+its_amps &lt;- its_amps[! duplicated(paste0(names(its_amps), its_amps))]</code></pre>
+<p>And sort them by name:</p>
+<pre class="r"><code>rps_amps &lt;- rps_amps[order(names(rps_amps))]
+its_amps &lt;- its_amps[order(names(its_amps))]</code></pre>
+<p>And here is the distribution of amplicon lengths with and without primers:</p>
+<pre class="r"><code>amp_data &lt;- tibble(locus = rep(c(&#39;rps10&#39;, &#39;ITS&#39;), c(length(rps_amps), length(its_amps))),
+                   seq = c(rps_amps, its_amps),
+                   name = names(c(rps_amps, its_amps)),
+                   without_primers = nchar(seq))
+amp_data$locus &lt;- ordered(amp_data$locus, levels = c(&#39;rps10&#39;, &#39;ITS&#39;)) # order
+its_primer_length &lt;- sum(nchar(primer_data$sequence[primer_data$locus == &#39;ITS&#39;]))
+rps_primer_length &lt;- sum(nchar(primer_data$sequence[primer_data$locus == &#39;rps10&#39;]))
+amp_data &lt;- mutate(amp_data, with_primers = without_primers + ifelse(locus == &#39;ITS&#39;, its_primer_length, rps_primer_length))
+
+amp_len_plot &lt;- amp_data %&gt;%
+  gather(key = &#39;type&#39;, value = &#39;length&#39;, without_primers, with_primers) %&gt;%
+  mutate(type = c(without_primers = &#39;Without primers&#39;, with_primers = &#39;With primers&#39;)[type]) %&gt;%
+  ggplot(aes(x = length)) +
+  geom_histogram(binwidth = 1) +
+  facet_grid(type ~ locus, scales = &#39;free_x&#39;) +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank()) 
+amp_len_plot</code></pre>
+<p><img src="08--amplicon_taxonomic_resolution_files/figure-html/unnamed-chunk-20-1.png" width="960" /></p>
+<pre class="r"><code>ggsave(amp_len_plot, filename = &#39;predicted_amplicon_length.pdf&#39;, path = file.path(&#39;results&#39;), width = 10, height = 5)</code></pre>
+<p>Lets look at which species have the largest amplicons:</p>
+<pre class="r"><code>amp_data %&gt;%
+  filter(locus == &#39;rps10&#39;, with_primers &gt; 480) %&gt;%
+  arrange(desc(with_primers)) %&gt;%
+  select(name, without_primers, with_primers, seq) %&gt;%
+  group_by(name) %&gt;%
+  filter(with_primers == max(with_primers)) %&gt;%
+  filter(! duplicated(name)) %&gt;%
+  datatable()</code></pre>
+<div id="htmlwidget-2a0dd1ba32e0541469b5" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-2a0dd1ba32e0541469b5">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88"],["Phytophthora asparagi","Aphanomyces cladogamus","Halophytophthora kandeliae","Plasmopara obducens","Phytopythium boreale","Plasmopara halstedii","Aphanomyces cochlioides","Aphanomyces euteiches","Phytopythium megacarpum","Phytophthora syringae","Aphanomyces laevis","Phytophthora brassicae","Phytopythium sindhum","Halophytophthora polymorphica","Phytophthora botryosa","Phytophthora capensis","Phytophthora capsici","Phytophthora citricola","Phytophthora citrophthora","Phytophthora mengei","Phytophthora pini","Pythium catenulatum","Pythium cystogenes","Pythium folliculosum","Pythium rhizo-oryzae","Pythium torulosum","Phytopythium carbonicum","Phytopythium citrinum","Pythium jasmonium","Pythium ultimum","Phytopythium helicoides","Pythium dissimile","Pythium grandisporangium","Pythium myriotylum","Pythium plurisporium","Phytophthora alni","Phytophthora andina","Phytophthora cactorum","Phytophthora cambivora","Phytophthora cinnamomi","Phytophthora cryptogea","Phytophthora drechsleri","Phytophthora erythroseptica","Phytophthora europaea","Phytophthora foliorum","Phytophthora heveae","Phytophthora humicola","Phytophthora infestans","Phytophthora ipomoeae","Phytophthora katsurae","Phytophthora lateralis","Phytophthora megakarya","Phytophthora mirabilis","Phytophthora multivesiculata","Phytophthora nemorosa","Phytophthora nicotianae","Phytophthora palmivora","Phytophthora phaseoli","Phytophthora pluvialis","Phytophthora pseudosyringae","Phytophthora quercina","Phytophthora ramorum","Phytophthora rosacearum","Phytophthora tentaculata","Phytophthora thermophila","Pythium amasculinum","Pythium hydnosporum","Pythium lycopersicum","Pythium oligandrum","Pythium ornamentatum","Pythium periplocum","Phytophthora cajani","Phytophthora frigida","Phytophthora hibernalis","Phytophthora melonis","Phytophthora pinifolia","Phytophthora pistaciae","Phytophthora sojae","Phytophthora vignae","Phytopythium oedochilum","Pythium dimorphum","Pythium graminicola","Pythium periilum","Pythium perplexum","Pythium prolatum","Pythium senticosum","Pythium tardicrescens","Pythium undulatum"],[461,452,451,451,450,450,448,448,448,446,445,445,445,444,444,444,444,444,444,444,444,444,444,444,444,444,443,443,443,443,442,442,442,442,442,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,441,440,440,440,440,440,440,440,440,440,440,440,440,440,440,440,440,440],[502,493,492,492,491,491,489,489,489,487,486,486,486,485,485,485,485,485,485,485,485,485,485,485,485,485,484,484,484,484,483,483,483,483,483,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,482,481,481,481,481,481,481,481,481,481,481,481,481,481,481,481,481,481],["GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATCAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTTAAAATATTTAATAAATTAAAAAACATTCAAATAAAAGGAACTTTTCAAACAAAAAATAAAAATAAAATTTTCACTTTATTAAAATCACCTCATGTCAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACATCAAAAATTAATATAAAATTTGAAAATATTTTTCATTTATTAAATTTTTTAATTTTAATTAAAAAAACATTATCTGAAAATGCTTCAATGAATATTAAAATTATAAAAATAGAAAAAGAAAATCAAAAAAAAAATTAAAATTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCGAATCCGCCTCTAGACAAATTTTAAAATATCCTATCTATGTATATATTAAAAATAACAATTAAATCTTTAAAAAATATAAATAATTTGAAAATAAAATATTTATATTTATATAAAATCAAACAATTTTTAAAAAATAAAAATATAAAATTAAAGGGAAATATACAACAAAAAAAAAAAAAAACAATATATACTGTATTAAGATCACCACATGTAAATAAAAAATCGATGGAACATTTTAGCTATAATTTTTACAATAAAAATTTTTATATATTAAATAATAATTTTTATACTTTAGTTTATTTTTCAATTATTTTAAGGAAAATTTTACCGCAAAATATTTTATTAAAAATGAAAATAAAAAAAAATTAAATTTAATATGCTTATAGCTTAATAGGATAAAGCCGTAGATTGCGGATCTATTAGATGGA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAAAATAAAAAATTTTTATAAAAAATATATTTATGTATATTTTAAGAATAACTTTTAAATCAATTAAAAAAATTAATAATATAAAAAAAAATTTATTAAAATTAAAAAAAAAAAATAATTTTAAAAATATTCAAATAAATGGAATATTTAAAATAAAAAATAAAAATAAGATTTTTACAGTATTAAAATCTCCACATGTAAATAAAAAATCACGTGAACATTTTATATTTAAAAACTATATACAAAAAATAGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTCTTAATAATTGTTAAAAAAACTTTAAATGAAAATTTTATAATTAAAATAAAAATTATAAAAAATAAAAATAAAATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTTGTTTTATTAAACAATATTTTATGTATCTTCTAAGAGTAACTTTCAAATCATTTAAAATAATAAATCAACTTAAACAAAATTTATTAAAATTAAAACGCATTAATAAATTTCAAAATATCGAAATACGGGGATTATTTCAAGTAAAGAAAAAAAATAAAATTTTTACTTTATTAAAATCACCTCATGTTAATAAAAAATCCCGTGAACATTTTATTTATACAAAATATACTCCAAAAATTGATATAAAATCTGAAAATATCTTTAGATTATTAAATTTTTTAATTTTAATTAAAAAAAATTTATCTGAAAATTCATTAATAAATGTTAAAATTATTAAAGAATAATTAAAAATTATGTTTATAGCTTAATGGATAAAGTGGTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAAAATTTTTTATAAAAAAAAAAATACATTTATGTATATTTTAAGAATAACTTTTAAATCAATTAAAAAAATTAATAATATTAAAAAAAATTTATTAAAATTAAAAAAAAAAAATAATTTTAAAAATATTCAAATAAACGGAATATTTAAAATAAAAAATAAAAATAAAATTTTTACATTATTAAAATCACCACACGTAAATAAAAAATCTCGTGAACATTTTATATATAAAAATTATATACAAAAAATGGATATAAATTTTAAAGATATTTTTCAATTATTAAATTTTTTAATAGCCATAAAAAAAACTTTAAATGAAAATTATATAATTCAAATAAAAATTATAAAAAATAAAAATAAAATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGGGTCGGTGGTTCGAGTCCACCTCTAGACAATTTTTAACAATAAATATTGTAAATAATATGTATATTTTACAAATAACTTTTTCATCATTTCAAAAAAAACAACAACTTAAACAAAATTTATTAAAATTAAAATATATTAATAAATTAAAAAGTATAAAAATTCCGGGATTATTTCAGACTAAAAAAAAAAAGAAAATTTTTACTTTATTAAGATCACCTCATGTTAATAAAAAATCGCGTGAACACTTTATATATACAAAATATACACCAAAAATTAATATAAAATTCAAAGATATTGTTATGTTATTAAATTTTTTAATTTTAATTAAAAAAAATTTGTCTAAAAATTTATTAATAAATACTAAAATTAAAAAACAAAAATAAAATTATGCTTATAACTTAATTGGTAGAGTATTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTATGTCGGTGGTTCGAATCCACCTCTAGACAAATTTGAAAATAACATATGTATATATTAAAAATAACAATTAAATCTTTAAAAAATATAAATAATTTGAAAATAAAATATTTATATTTATATAAAATCAAACAATTTTTAAAAAATAAAAATATAAAATTACAAGGAAATATACAACAAAAAAAAAAAAAAACAATATATACTGTATTACGATCACCCCATGTAAATAAAAAATCTATGGAACATTTTAGTTATAATTTTTATAATAAAAATTTTTATGTATTAAATAATAATTTTTATACTTTAATTTATTTTTCAATTATTTTAAGAAAAATTTTACCACATAATATTTTATTAAAAATGAAAATAAAAAAAAATTAAATTTAATATGCTTATAGCTTAATAGGATAAAGCCGTAGATTGCGGATCTATTAGATGGA","GAAAATCTTTGTGTCGGTGGTTCGAATCCGCCTCTAGACAAATTTTAAAATAACGCATGTATATATTAAAAATAACAATTAAATCTTTAAAAAATATAAATAATTTAAAAATAAAATATTTATATTTATATAAAATCAAACAATTTTTAAAAAATAAAAATATAAAATTAAAAGGAAATATACAACAAAAAAAAAAAAAAACAATATATACAGTATTGCGATCACCCCATGTAAATAAAAAATCTATGGAACATTTTAGTTATAATTTTTATAATAAAAATTTTTATGTATTAAATAACAATTTTTATACTTTAATTTATTTTTCAATTATTTTAAGAAAAATTTTACCACATAATATTTTATTAAAAATGAAAATAAAAAGAAATTAAATTTAATATGCTTATAGCTTAATGGGATAAAGCCGTAGATTGCGGATCTATTAGATGGA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAAAATTTTTTATAAAAAAAAATACATTTATGTATATTTTAAGAATAACTTTTAAATCAATTAAAAAAATTAATAATATTAAAAAAAATTTATTAAAATTAAAAAAAAAAAATAATTTTAAAAATATTCAAATAAACGGAATATTTAAAATAAAAAATAAAAATAAAATTTTTACATTATTAAAATCACCACATGTAAATAAAAAATCTCGTGAACATTTTATATATAAAAATTATATACAAAAAATGGATATAAATTTTAAAGATATTTTTCAATTATTAAATTTTTTAATAGCCGTAAAAAAAACTTTAAATGAAAATTATATAATTCAAATAAAAATTATAAAAAATAAAAATAAAATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCACCTCCAGACATTTTTATTATTAAAAATAAAAATATGTATCTTTTAAGAATAACTTTTAAATCTTTTAAAAAAATAAATCAACTTAAACAAAATTTATTAAAAATCAAAAAATTTAATAAATTTACAAATATCAAAATAAATGGAATTTTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCTCCCCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCTAAAATAGATATAAAATTTAATAATATTTTGCAATTATTAAATTTCTTAATTTTAATTAAAAAAATATTATCTGAAAATTCTTTTATAAATATTAAAATCATAAAAAAAAATTAACATTATGTTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCGAGTCCGCCTCTAGACAAAAATAAATTATATTTATATGTATATTCTTAAAATAACAATTAAATCTTTAAAAAATATAAATAATGTAAAAATAAAATATTTATATTTATATAAAATAAAACAATTTTTAAAAAATAAAAGTATTCAAATAAAAGGAAATATACAACAAAAAAAAAAAAATACAGTTTATACTGTTTTAAGATCTCCACATGTAAATAAAAAATCTATGGAGCATTTTAATTATAGTTTTTATAAAAAAAATTTTAATATATTGAGTAACGATTTTTTTACTTTAATACATTTTATGGTTATATTAAAAAAAATATTACCAAAAAATATATTATTAAATTTTAAAATAAAAAAAAATTAAATATGCTTATAGCTTAATAGGATAAAGCCGTAGATTGCGGATCTATTAGATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACATTTTTATTATTTAAACTAAAATATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATAAACTTAAACAAAGTTTATTAAAAATAAAAAAAATTAATAAATTTCAAAATATTAAAATAAATGGAATTTTTCAAACCAAAAATAAAAATAAAATTTTTACTGTATTAAAATCACCACATGTAAATAAAAAGGCACGTGAACATTTTATTTATAAAAATTATACACCAAAAATAGATATTAAATTTAATAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAATATTATCAAAAAATTCTTTTATAAATATTAAAATTATAAAAAAAAATTAACGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAAAATCTTTTATAAAAAATACTTTTATGTATATTCTAAGAATAACTTTTAAATCAATTAAAAAAATTAATAATATTAAAAAAAATTTATTAAAATTAAAAAAAAAAAATAATTTTAAAAATATTCAAATAAATGGAATATTTAAAATAAAAAATAAAAATAAAATTTTTACATTATTAAAATCTCCTCATGTAAATAAAAAATCTCGTGAACATTTTATATATAAAAATTATATACAAAAAATAGATATAAATTTTAAAAATATTTTTCAATTATTAAATTTTTTAATAATTGTAAAAAAAACCTTAAATGAAAATTATATAATTAAAATAAAAATTATAAAAAATAAAAATAAAATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACATTTTTATTAAAATCATATTTATGTATATTTTAAGAATAACTTTTAAGTCAATACAGAAACTTAATAAATTAAAACAAAATTTATTAAAATTAAAAAACAAAAATAAATTTAAACATATTCAAATAAAAGGAATATTTAAAACAAAAAACAAAAATAAAATTTTTACATTATTAAAATCACCACATGTAAATAAAAAATCTCGTGAACATTTTTTATATAAAAATTATACACAAAAAATTGATATTAAATTTTTTAATATGTTTCAATTATTAAATTTTTTAATAATTATTAAAAAAATATTATCAGAAAATACTATAATTAATATTAAAATTATAAAAAATAAAAAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCCTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATTCAAATATCTGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTAATAAAAGTTTTAAACCAAAAATTGATATACAATTTAAAAATATTTTTCAATTATTAAATTTTATAATTTTAATAAAAAAAAAATTATCTGAAAATTTATTAATAAATATTAAAATTATAAAAAAACAAAAATAAAATTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATTCAAATATCCGGGATATTTAAAACAAAAAATAAAAATAAAATTTTTACTTTACTAAGATCACCTCATGTTAATAAAAAATCACGTGAACATTTTATTTATAAAAGTTTTATACCAAAAATTGATATAAAATTTAATAATATTTTTCAATTATTAAATTTTATAATTTTAATAAAAAAAAATTTATCAGAAAATTTATTAATGAATATTAAAATTATTAAAAAACAAAAATAAAATTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCCTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATTCAAATATCTGGAATATTTCAAACAAAAAAAAAAAATAAAATTTTTACTTTATTAAGATCACCGCATGTAAATAAAAAATCACGTGAGCACTTTATTTATAAAAGTTTTACACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTATAATTTTAATAAAAAAAAATTTATCAGAAAATTTATTAATGAATATTAAAATTATAAAAAAACAAAAATAAAATGATGCTTATAGCTTAATTGGATAAAGCACTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATTCAAATATCGGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAGTTTTACACCAAAAATTGATATAAAATTTAATAATATTTTTCAATTATTAAATTTTATAATTTTAATAAAAAAAAATTTATCAGAAAATTTATTAATGAATATTAAAATTATTAAAAAACAAAAATAAAATTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCCTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATCCAAATATCTGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTTAATAAAAAATCACGTGAACATTTTATTAATAAAAGTTTTAAACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTATAATTTTAATAAAAAAAAATTTATCTGAAAATTTATTAATGAATATTAAAATTATAAAAAAACAAAAATAAAATTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCCTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAATATTAATAAATTAAAAAATATTCAAGTATCTGGAATATTCCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTTTACACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTATAATTTTAATAAAAAAAATTTTATCAGAAAATTTATTAATGAATATTAAAATTATAAAAAAATAAAAATAAACTTATGCTTATAGCTTAATTGGATAAAGCACTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATTCAAATATCGGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAGTTTTACACCAAAAATTGATATAAAATTTAATAATATTTTTCAATTATTAAATTTTATAATTTTAATAAAAAAAAATTTATCAGAAAATTTATTAATGAATATTAAAATTATTAAAAAACAAAAATAAAATTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCGCCTCCAAACAAAACAACTTAATATAATATCTATGTATATTTTACGTATAAACTTAAAATCGGTAAAAAAATTAAATGAATTAAAAAAAAACTTAGTAAAAATAAAAGAATTGTATAAATTTAAAGATTTAAAAATAAAAGGAGTTTTTAAAGTTAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCGCATGTAAATAAAAAATCACGTGAACATTTTATATATAAAAATTATGTTCAAAAAATTGATATAAATTTTATAAATATATTTCAATTATTTAATTTCTTAATAATTTTAAAAAAAACATTATCAAAAGATTTTTTAATTAATGTTAAAATTATTAAAAATAATAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCTAGACAAAAATAAAATAAAAATAATTATGTATATTTTAAAAATAACTTTTAAGTCAATCAAAAAAATAAATAATATAAAAAAAAATTTACTAAAAATAAAAAAAATTAGTAAATTTAATAATATTCAAATTAAAGGAATATTTAAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTTAATAAAAAATCAAGAGAACATTTTATTTATAAAAATTATTCGCAAAAAATTCAAATAAATTTTTTAAATATTATTCAATTATTAAACTATATAATTCTTATTAAAAAAAAATTATCAGAAAATTTCATAATAAATTTTAAAATAATAAAAAATAATAAAAAAAAGATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCGCCTCCAAACAAAACAACTTAATATAATATCTATGTATATTTTACGTATAAACTTAAAATCGGTAAAAAAAATAAATGAATTAAAAAAAAACTTAGTAAAGATAAAAAAATTGTATAAATTTAAAGATTTAAAAATAAAAGGGGTTTTTAAAGTTAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTAAATAAAAAATCACGTGAACATTTTATATATAAAAATTATGTTCAAAAAATTGATATAAATTTTATAAATATATTTCAATTATTTAATTTCTTAATAATTTTAAAAAAAACATTATCAAAAGATTTTTTAATTAATGTTAAAATTATTAAAAATAATAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCGCCTCCAAACAAAACAACTTAATATAATATCTATGTATATTTTACGTATAAACTTAAAATCAGTAAAAAAATTAAATGAACTAAAAAAAAACTTAGTAAAGATAAAAGACTTGTATAAATTTAAAGATTTAAAAATAAAAGGGGTTTTTAAAGTTAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTAAATAAAAAATCACGTGAACATTTTATATATAAAAATTATGTTCAAAAAATTGATATAAATTTTATAAATATATTTCAATTATTTAACTTCTTAATAATTTTAAAAAAAACATTATCAAAAGATTTTTTAATTAATGTTAAAATTATTAAAAATAATAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCGCCTCCAAACAAAACAACTTAATATAATATCTATGTATATTTTACGTATAAACTTAAAATCGGTAAAAAAAATAAATGAATTAAAAAAAAACTTAGTAAAGATAAAAAAATTGTATAAATTTAAAGATTTAAAAATAAAAGGGGTTTTTAAAGTTAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTAAATAAAAAATCACGTGAACATTTTATATATAAAAATTATGTTCAAAAAATTGATATAAATTTTATAAATATATTTCAATTATTTAATTTCTTAATAATTTTAAAAAAAACATTATCAAAAAATTTTTTAATTAATGTTAAAATTATTAAAAATAATAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAAAATTTTTTATAAAAAATATTTATGTTTATTCTAAGAATAACTTTTAAGTCAATTAAAAAAATTAATAATATTAAAAAAAAATTATTAAAAATAAAAAATAAAAATAATTTTAAAAATATCTATATAAATGGTATATTTAAAATAAAAAATAAAAATAAAATCTTTACATTATTAAAATCACCTCATGTAAATAAAAAATCTCGTGAACATTTTATATATAAAAATTATATACAAAAAATAGATATAAATTTTAAAAATATTTTTCAATTATTAAATTTTTTAATAATTGTTAAAAAAATTTTAAATGAAAATTATATAATTAAAATAAAAATTATAAAAAATAAAAATAAAATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAAAATTTTTTATAAAATATATTTATGTATATTCTAAGAATAACTTTTAAATCGATTAAAAAAATTAATAATATTAAAAAAAATTTATTAAAAATCAAAAATAAAAATAATTTTAAAAATACCTTAATAAAAGGTATATTTAAAATCAAAAATAAAAATAAAATTTTTACATTATTAAAATCACCTCACGTGAATAAAAAATCTCGTGAACATTTTATATATAAAAATTATATACAAAAAATTGATATAAATTTTAAAGATGTTTTTCAATTATTAAATTTTTTAATAACTGTAAAAAAAACTTTAAATGAAAATTATATAATTAAAATAAAAATTATTAAAAATAAAAATAAAATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAAACAAAATATATTAAAATTATGTTTATTTTAAGAATAACTTTTAAATCAATACAAACTATAAATAACATTAAAATAAAATTATTAAAATTACAAAATATAAATAAATTTAAAAATATTCAAATAAATGAAATATTAAAAAAAAAAAATAAAAAAAAAATTTTTACTTTATTAAAATCTCCACATGTTAATAAAAAATCACGTGAACATTTTATATATCGAAATAATATTCAAAAAATTCAAATAAATTTTTTAAATATTATTAAACTTTTTAATTATATAATGTTTATTAAAAAAATTTTATCAAAAAATTTTATAATAAATTTTAAAATTATAAAAATAAAATAAAAAAAAAAAAATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAAAAAATTTAATAACTTAACTATGTATATTTTAAGAATAACTTTTAAATCAATACAAAAAATAAATAATATTAAAAAAAATTTATTAAAATTAAAAAAAATAAATAAATTTAAAAATATTCAAATAAAAGGAATATTTAAAATAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCTCACGTTAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACTCAAAAAATCGATGTAAAATTTTCAAATATTATTGAATTATTTAATTTTATGCTAATTGTTAAAAAAATTTTAACAGAAAATTTTATAATAAATTTTAAAATTTTAAAACAAAATAAAAAAACATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATAATATAAAAAATGTATATTTTAAGAATAACTTTTAAATCAATAAAAAAAATTAATAATATTAAAAAAAATTTATTAAAATTAAAAAAAAAAAATAATTTTAAAAATATCCAAATAAATGGTATATTTAAAATAAAAAATAAAAATAAAATATTTACATTATTAAAATCACCACATGTAAATAAAAAATCTCGTGAGCATTTTATTTATAAAAATTATATACAAAAAATAGATATAAATTTTAAAAATATTTTTCAATTATTAAATTTTTTAATACTTGTAAAAAAAATTTTGAATGAAAATTATATAATTAAAATTAAAATAATTAAAAATAATAATAAAATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCGCCTCCAAACACTTTTTAAACAAATTTATGTATACATTACGTTTAGATTTTAAATCAATAAAAAAAATAAATAAACTAAAAAAAAACCTATTAAAAATTAAAAAATTATATAATTTTAAAAATTTAAAAATAAATGGTGTTTTTAAAGTAAAAAGTAAAAATAAAATCTTTACATTATTAAAATCACCTCATGTTAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACTCATAAAATTAATTTAAACTTTATAAATATTCTTCAATTATTAAATTTTTTAATAATTTTAAAAAAAAAATTATCAAAAGATTTTTTAATTAACGTTAAAATAATAAAAAAAAATAATAATAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCGCCTCCAAACATTTTTTATTTATAAATTTTATGTATATTTTAAGAATAAATTTTAAATCAGTAACAAAAATAAATAAATTAAAACAAAATATAAAAAAATTAAAAAAAATATATAATTTTAAAAATATTAAAATAAATGGTGTTTTTAAAAATAAAAATAAAAATAAAATCATTACATTATTAAAATCACCACATGTTAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATATTCAAAAAATAGATATAAAATTTAATAATATTTTTCAATTATTAAATTTTTTGATTATTATAAAAAAAAATATTACTAAAAATATTTTAATTAATGTAAAAATTATAAAAAAAGATAACAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCGCCTCCAAACACTTTTAAACATTTATATTTATGTATACATTACGTCTTAGTTTTAAATCTGTAGAAAAAATAAACAAATTAAAAAAAAACTTACTTAGAATAAAAAAATTATATAATTTTAAAAATTTAAAAATAAAAGGTGTTTTTAAAATTAAAAATAAAAATAAAATTTTTACATTATTAAAATCACCTCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATATTCAAAAAATAGATTTAAATTTTATAAATATTTTTCAATTATTAAATTTTTTAATAATTTTAAAAAAAATATTATCTAAAAATTTTTTAATTGATATAAAAATTATAAAAAATAATAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCGCCTCCAAACACTTCATATAAACAATATCTATGTATATTTTACGCATAAACTTAAAATCAGTAAAAAAAATTAATGAATTAAAAAAAAACTTACTAAAAATAAAAAAATTTTATAAATTTAAAAATTTAAAAATAAAAGGAATTTTTAAAGTTAAAAATAAAAATAAGATTTTTACTTTATTAAAATCACCTCATGTGAACAAAAAATCACGTGAACATTTTATTTATAAAAATTATGTTCAAAAAATTGATATAAACTTTATAAATATATTTCAATTATTTAATTTTTTAATTATTTTAAGAAAAACATTATTAAAAGATATTTTAATTAATATTAAAATTATTAAAAAAAATAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAATTTAATAAATTTATAAATACCAAAATCAATGGGATATTTCAAACAAAAAAAAAAAAAAAAATTTTTACTGTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACAGTTTATTTATAATAATTATACTCCTAAAATTGATATTAAATTTATTAATATTTTTCAATTATTAAATTTTTTAATCTTAATTAAAAAAATTTTATCTGAAAATACTTTAATAAATGTTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAAACAACTTAAACAAAATTTATTAAAGTTAAAAAATATTAATAAATTAAAAAATATTCAAATACATGGAATTTTTCAAACAAAAAGTAAAAATAAAATTTTTACTTTATTAAGATCACCTCATGTTAATAAAAAATCACGTGAACATTTTATAATTAAAAATTATACACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAATTTTTATCAAAAAATACATTAATCAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCCTTTCAAAAAATAAATCAACTTAAACAGAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATTCAAATACAAGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTCTATTAAAATCTCCACATGTAAATAAAAAATCACGTGAACATTTTATAATTAAAAATTATACACCAAAAATTGATATAAAATTTAAAAATTTTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAATTTTATCAGAAAATGCATTAACAAATATTAAAATTTTAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCATTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAATTTAATAAATTCTTAAATACCAAAATCAATGGGATATTTCAAACAAAAAAAAAAAAAAAAATTTTTACTGTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACAGTTTATTTATAATAATTATACTCCTAAAATTGATATTAAATTTATTAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAATTTTATCTGAAAATACTTTAATAAATGTTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCTTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTACAAAAATTTAATAAATTAACAAATATTCAAATTAATGGAATATTTCAAACAAAACAAAATAAAAAAATTTTTACTATATTAAAATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTACAAAAATTATACTCCTAAAATTGATATTAAATTTATTAATATTTTTCAATTATTAAATTTTTTAATTTTAGTTAAAAAAATTTTATCAGAAAATACATTAATAAATATTAAAATTATAAAAAAATATTAAAATTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACATTTATTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATCAATCAACTTAAACAAAATTTATTAAAATTAAAAAAATTTAATAAATTCAAAAATATTCAAATAAAAGGGATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACCCCGAAAATAGATATAAAATTTACTAATATTTTTCAATTATTAAATTTTTTAATTTTAATCAAAAAATTTATATCTGAGAATTCATTAATAAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACATTTATTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAATTTAATAAATTCAAAAATATTCAAATAAAAGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCGCACGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACCCCTAAAATAGATATAAGATTTACTAATATTTTTCAATTATTTAATTTTTTAATTTTAATTAAAAAATTAGTATCTGAAAATTCATTAATAAATATTAAAATTATTAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACATTTATTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATCAATCAACTTAAACAAAATTTATTAAAATTAAAAAAATTTAATAAATTAAAAAATATTCAAATAAAAGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCGAAAATAGATATAAAGTTTACTAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAATTTATATCCGAGAATTCATTAATAAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAATTTAATAAATTTTTAAATACCAAAATCAATGGAATATTTCAAACAAACAAAAAAAAAAAAATTTTTACTGTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACAGTTTATTTATAATAATTATACTCCTAAAATTGATATTAAATTTTTTAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAATTTTATCTGAGAATACTTTAATAAATGTTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCCTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAATTATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATCCAAATAAATGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATAAACCAAAAATAGATATAAAATTTAATAATATTCTTCAATTAATTAATTTTTTAATTTTAAGTAAAAAATTATTATCAGAAAATTTATTAATGAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCCCTAGATTGCGGATCTATATAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAACTAAAAAATATTAATAAATTAAAAAATATTCAAATACATGGTATATTTCAAACAAAAAGTAAAAATAAAATTTTTACTTTATTAAGATCACCCCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCTAAAATAGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAATATTATCTGAAAATTCATTAATGAATATTAAAATTATAAAAAAAAATTAAAGATATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATTTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTTAAAATATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAAAAAAAATTATTAATTTTAAAAAAAATTATTAATTTTAAAAATATAAAAATAAATGGAATCTTTCAAACAAAAAAAAAAAAAAAAATTTTTACATTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATACAAATTATCAACCAAAAATTGATATAAAATTTACAAATATTTTTAAATTATTAAATTTTTTAATTATAATTAAAAAAACATTAGCAGAAAATTCATTAATGAATGTTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGAAAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAAACAACTTAAACAAAATTTATTAAAGTTAAAAAATATTAATAAATTAAAAAATATTCAAATACATGGAATTTTTCAAACAAAAAGTAAAAATAAAATTTTTACTTTATTAAGATCACCTCATGTTAATAAAAAATCACGTGAACATTTTATAATTAAAAATTATACACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAATTTTTATCAAAAAATACATTAATCAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAAACAACTTAAACAAAATTTATTAAAGTTAAAAACTATTAATAAATTAAAAAATATTCAAATACATGGAATTTTTCAAACAAAAAGTAAAAATAAAATTTTTACTTTATTAAGATCACCTCATGTTAATAAAAAATCACGTGAACATTTTATAATTAAAAATTATACACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAATTTTTATCAAAAAATACATTAATCAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTAAAAACTATTAATAAATTAAAAAATATTCAAATACATGGTATATTTCAAACAAAAAGTAAAAATAAAATTTTTACCTTATTAAGATCACCCCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCTAAAATAGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAATATTATCTGAAAATTCATTAATGAATATTAAAATTATAAAAAAAAATTAAAGATATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCACCTCCAGACAATTTTTATTATTAAAATTATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAACACAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATCCAAATAAATGGAATATTTCAAACAAAAAATAAAAATAAAATTTTCACTTTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATAAACCAAAAATAGATATAAAATTTAATAATATTTTTCAATTAATAAATTTTTTAATTTTAATCAAGAAATTATTAACAGAAAATTTATTAATGAATATAAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCATTAGATTGCGGATCTATATAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTAAAAAAACTTAATAAATTAAAAAATATTCAAATAAATGGAATATTTCAAATAAAAAATAAAAATAAAATTTTTACTTTATTACGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCAAAAATAGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTATAATTTTAATTAAAAAAATATTATCTGAAAATTCTTTAATAAATATTAAAATTATAAAAAAAAATTAAAGTCATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAAACAACTTAAACAAAATTTATTAAAGTTAAAAAATATTAATAAATTAAAAAATATTCAAATACATGGAATTTTTCAAACAAAAAGTAAAAATAAAATTTTTACTTTATTAAGATCACCTCATGTTAATAAAAAATCACGTGAACATTTTATAATTAAAAATTATACACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAGATTTTTTAATTTTAATTAAAAAATTTTTATCAAAAAATACATTAATCAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCATTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATTCAAATATGTGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTTTAATCCAAAAATTGATATAAAATTTAAAAATTTTTTTCAATTAATAAATTTTATAATTTTAATAAAAAAAATTTTATCAGAAAATTTATTAATGAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAAGTAATAAATTAAAAAATATTCAAATACATGGAATATTTCAAACAAAAAATAAAAAAAAAATTTTTACTTTATTAAGATCACCTCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCAAAAATTGATATAAAATTTAAAAGTATTTTTCAATTATTAAATTTTATAATTTTAATTAAAAAAATTTTATCTGAAAATTTATTAATAAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAACTCATTTCAAAAAATAAAACAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATTCAAATACATGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTGTATTAAAATCACCTCATGTAAATAAAAAAGCACGTGAACATTTTATAATTAAAAATTATACACCAAAAATTGATATAAAATTTAAAAATATTTTTCAGTTATTAAATTTTCTAATTTTAATTAAAAAAATTTTTTCTGAAAATATATTAATGAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCACCTCCAGACATTTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCCTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAATTTAATAAATTAAAAAATATTCAAATACATGGAATATTTCAAATAAAAAATAAAAATAAAATTTTTACAATATTAAAATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCAAAAATAGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTATAATTTTAATTAAAAAACTTTTATCAGAAAATTCATTAATGAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAAACAACTTAAACAAAATTTATTAAAGTTAAAAAATATTAATAAATTAAAAAATATTCAAATACATGGAATTTTTCAAATAAAAAGTAAAAATAAAATTTTTACTTTATTAAGATCACCTCATGTTAATAAAAAATCACGTGAACATTTTATAATTAAAAATTATACACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAATTTTTATCAAAAAATACATTAATCAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCGCCTCCAGACAACTTTTATTGTTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAAATAAAAAAAAATAATCAATTAAAAAATATTCAAATACATGGAATATTTCAAACAAAACAAAAAAATAAAATTTTTACTTTATTAAAGTCTCCGCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTTTAATTTTAATAAAAAAAATTTTATCTGAAAATTCATTAATGAATATTAAAATTCTAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCATTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAACTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAAATAAAAAAAAATAATAAATTAAAAAATATTCAAATACATGGGATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAGATCTCCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCAAAAATGGATATAAAATTTAAAAGTATTTTTCAATTATTAAATTTTATAATTTTAATAAAAAAAATCTTATCTAAAAATTCATTAATCAATATTAAAATTTTAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGATGGTTCAAATCCATCTCCAGACAATTTTCATTATTAAAAATATGTATCTGTTAAGAATAACTTTTAAATCATTTCAAAAAATAAATCAACTTAAAAAAAATTTATTAAAATTAAAAAATATTAATAAATTAAAAAATATTCGAATACATGGAATATTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCTAAAATCGATATTAAACTTAATAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAATTTTATCTAAAAATTCATTAATAAATGTTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAATTATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTAAAAAATATTCAAATAAATGGAATATTTCAAAAAAAAAATAAAAAAAAAATTTTTACTTTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCTAAAATAGATATAAAATTTACAAATATTTTTCAATTAATAAATTTTTTAATTTTAATCAAAAAATTAATATCAGAAAATTTATTAATGAATGTTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCATTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTTAAAATATGTATCTTTTACGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAACAGAATCTATTAAAATTAAAAAAAATTAATAAATTTCAAAATATTAAAATAAATGGAATCTTTCAAACAAAAAAAAAAAATAAAATTTTTACTTTATTAAGATCTCCACATGTGAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCAAAAATTGATATAAAATTTATAAATATATTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAACATTATCAGAAAATTCATTAATGAATATTAAAATTCTAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGAGAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAAATAAAACAACTTAAACAAAATTTATTAAAATTAAAAAACATAAATAAATTACAAAATATTCAAATACATGGAATATTTCAGACAAAAAAAAAAAATAAAATTTTTACTTTATTAAAATCACCCCATGTAAATAAAAAATCACGTGAACATTTTATAATTAAAAATTATACACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTTTAATTATTATTAAAAAAAATTTATCAGAAAATACATTAATCAATATCAAAATTTTAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTTAAAATATGTATCTTTTAAGAATAACTTTTAAATCCTTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTACAAAATATTAATAAATTTAAAAATATTAAAATAAATGGAATCTTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAGATCTCCCCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACTCCTAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAACATTAGCAGAAAATACGTTAATGCATATTAAAATTCTAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGAAAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCGCCTCCAAACAAATCTTATTTTAAATTTTATGTATACTTTACGTATTAGTTTTAAATCAATTAAAAAAATAGACAATTTAAAAAAAAATATATTAAAATTAAAAAAAAATTATAATTTTAAAAATATAAAAATAAAAGGTACTTTTAATATTAAAAATAAAAATAAAATTTTTACATTACTAAAGTCGCCACACGTTAATAAAAAATCAAGAGAACATTTTATATATAGAAATTATATTAAAAAAATGGATTTCCAATGTTTAAATTTTTTTCAATTATTAAATTTTTTAATTATATTAAAAAAAAGTTTAACTAAAAATTTTTTAATTAATGTTAAAATTATAAAAAATAACAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCGCCTCCAAACAAATCTTATTTTAAATTTTATGTATACTTTACGTATTAGTTTTAAATCAATTAAAAAAATAGACAATTTAAAAAAAAATATATTAAAATTAAAAAAAAATTATAATTTTAAAAATATAAAAATAAAAGGTACTTTTAATATTAAAAATAAAAATAAAATTTTTACATTACTAAAGTCGCCACACGTTAATAAAAAATCAAGAGAACATTTTATATATAGAAATTATATTAAAAAAATGGATTTCCAATGTTTAAATTTTTTTCAATTATTAAATTTTTTAATTATATTAAAAAAAAGTTTAACTAAAAATTTTTTAATTAATGTTAAAATTATAAAAAATAACAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCGCCTCCAAACAAATCTTATTTTAAATTTTATGTATACTTTACGTATTAGTTTTAAATCAATTAAAAAAATAGACAATTTAAAAAAAAATATATTAAAATTAAAAAAAAATTATAATTTTAAAAATATAAAAATAAAAGGTACTTTTAATATTAAAAATAAAAATAAAATTTTTACATTACTAAAGTCGCCACACGTTAATAAAAAATCAAGAGAACATTTTATATATAGAAATTATATTAAAAAAATGGATTTCCAATGTTTAAATTTTTTTCAATTATTAAATTTTTTAATTATATTAAAAAAAAGTTTAACTAAAAATTTTTTAATTAATGTTAAAATTATAAAAAATAACAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAGTCCGCCTCCAAACAAATCTTATTTTAAATTTTATGTATACTTTACGTATTAGTTTTAAATCAATTAAAAAAATAGACAATTTAAAAAAAAATATATTAAAATTAAAAAAAAATTATAATTTTAAAAATATAAAAATAAAAGGTACTTTTAATATCAAAAATAAAAATAAAATTTTTACATTATTAAAATCGCCACACGTTAATAAAAAATCAAGAGAACATTTTATATATAAAAATTATATTCAAAAAATGGATTTTCAATGTTTAAAATTTTTTCAATTATTAAATTTTTTAATTATATTAAAAAAAAGTTTAACTAAAAATTTTTTAATTAATGTTAAAATTATAAAAAATAACAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCGCCTCCAAACAAATCTTATTTTAAATTTTATGTATACTTTACGTATTAGTTTTAAATCAATTAAAAAAATAGACAATTTAAAAAAAAATATATTAAAATTAAAAAAAAATTATAATTTTAAAAATATAAAAATAAAAGGTACTTTTAATATTAAAAATAAAAATAAAATTTTTACATTACTAAAGTCGCCACACGTTAATAAAAAATCAAGAGAACATTTTATATATAGAAATTATATTAAAAAAATGGATTTCCAATGTTTAAATTTTTTTCAATTATTAAATTTTTTAATTATATTAAAAAAAAGTTTAACTAAAAATTTTTTAATTAATGTTAAAATTATAAAAAATAACAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCGCCTCCAAACAAATCATATTTTAAATTTTATGTATACTTTACGTATTAGTTTTAAATCAATTAAAAAAATAGACAATTTAAAAAAAAATATATTAAAATTAAAAAAAAATTATAATTTTAAAAATATAAAAATAAAAGGTACTTTTAATACTAAAAATAAAAATAAAATTTTTACATTATTAAAGTCACCACACGTTAATAAAAAATCAAGAGAACATTTTATATATAGAAATTATACACAAAAAATGGATTTCCAATGTTTAAATTTTTTTCAACTATTAAATTTTTTAATTATATTAAAAAAAAGTTTAACTAAAAATTTTTTAATTAATGTTAAAATTATAAAAAATAACAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTATTATTAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAGATTAAAAAAATTTAATAAATTTACAAATATTCAAATTAATGGAATATTTCAAACAAAAAAAAAAAAAAAATTTTTTACTTTATTAAGATCACCGCATGTAAATAAAAAATCACGTGAACATTTTATCTATAAAAATTATACTCCAAGAATTGATATTAAATTTATTAATATTTTTCAATTATTAAATTTTTTAATTCTAGTTAAAAAAATTTTATCTGAAAATGCATTAATAAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACATTTAAATCTTTTCAAAAAATAAATCAAATTAAACAAAATTTATTAGAATTAAAAAAAATTAATAAATTAAAAAATATCCAAATACAGGGAATATTTCAAACTAAAAATAAAAATAAAATTTTTACTTTATTACGTTCACCTCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTTTAAACCAAAAATTGATATAAAATTTAAAAATATTTTTCAATTATTAAATTTTATGATTTTAATAAAAAAAACTTTATCAGAAAATTTATTAATAAATATAAAAATTATTAAAACAAATTAAAGTTATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTATTATTAAAATTATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTAAAAAATTTTAATAAATTAAAAAATATACAAATAAATGGTATATTTAAAACAAAAAACAAAAATAAAATTTTTACTTTATTAAGATCACCACACGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATAATCCAAAAATAGATATTAAATTTAATAACATTTTCCAATTATTCAATTTTTTAATTTTAATTAAAAAATTATTATCTGAAAATTTATTAATGAATATTAAAATTATAAAAACAAATTAAAATTATGCTTATAGCTTAATTGGATAAAGCCTTAGATTGCGGATCTATCAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTATTAGTAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAGATTAAAAAAATTTAATAAATTTACAAATATTCAAATTAATGGAATATTTCAAACAAAAAAAAAAAAAAAAATCTTTACTTTATTAAGATCACCGCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCAAAAATTGATATTAAATTTATTAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAATTTTATCTGAAAATGCATTAATAAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTTAAAATATGTATCTTTTACGAATAACTTTTAAATCTTTTCAAAAAATAAACCAACTTAAAAAAAATTTATTAAAATTAAAAAAAATTAATAAATTTAAAAATATAAAAATAAATGGAATCTTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAGATCTCCTCATGTAAATAAAAAATCACGTGAACACTTTATTTATGAAAATTATAATCCAAAACTGGATATAAAATTTAGAAATATTTTTCAATTGTTGAATTTTCTAATTATCATTAAAAAAACATTTTCAGAAAATTCATTAATGAATATTAAGATGATAAAAAAAAATTAAAATTATGCTTATAGCTTAATTGGAAAAGCCTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTATTATCAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATCAATCAACTTAAACAAAATTTATTAAAATTAAAAAAATTTAATAAATTTATAAATATTCAAATTAATGGAATATTTCAAACAAAAAAAAAAAATAAAATTTTTACTTTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATCTATAAAAATTATACCCCAAAAATTGATATTAAATTTATTAATATTTTTCAATTATTAAATTTTTTAATTTTAGTTAAAAAAATCTTATCTGAAAATTCATTAATAAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTATGTCGGTGGTTCAAATCCACCTCCAGACAATTTTATTATTAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAATTTAATAAATTTACAAATATTCAAATTAATGGAATATTTCAAACAAAAAAAAAAAAAAAAATTTTTACGTTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATATATAAAAATTATACTCCAAAAATTGATATTAAATTTATTAATATTTTTCAATTATTAAATTTTTTAATTTTAGTTAAAAAAATTTTATCTGAAAATGCATTAATAAATATTAAAATTATAAAAAAAAATTAAAATTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTATTATTAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAGATTAAAAAAATTTAATAAATTTACAAATATTCAAATTAATGGAATATTTCAAACAAAAAAAAAAAAAAAAATTTTTACTTTATTAAGATCACCGCATGTAAATAAAAAATCACGTGAACATTTTATCTATAAAAATTATACTCCAAGAATTGATATTAAATTTATTAATATTTTTCAATTATTAAATTTTTTAATTTTAGTTAAAAAAATTTTATCTGAAAATGCATTAATAAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCATTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAAAATTTTTTATAAAAAAATGCATTTATGTATATTTTAAGAATAACTTTTAAATCTATTAAAAAAATTAATAATATTAAAAAAAAAATATTAAAATTAAAAAAAAATAATCATTTTAAAGATACTAAAATAAATGGTATTTTTAAAATAAAAAATAAAAATAAAATTTTTACATTACTAAAATCACCTCATGTGAATAAAAAATCACGGGAACATTTTATATATAAAAATTACGTACAAAATATAGATATAAATTTTAAAAATTTTTTACAATTATTAAATTTTTTATTAATTGTTAAAAAAACTTTAAATGAAAATTATATAATTAAAATAAAAATTATAAAAAATAAAATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTTTGTCGGTGGTTCAAATCCACCTCCAGACAAAATTTTAAATTTAATATGTATATATTAAGAATAACTTTTAAATCAATAGAAAAAATAAATAAACTAAAACAAAATTTATTAAAATTAAAAAAAATAAATAAATTTAAAGATATTCAAATAAAAGGAATATTTAAAATAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCTCCACATGTTAATAAAAAATCACGTGAACATTTTATATATAAAAATTACACTCAAAAAATTGATATTCAATTTTTAAATGTTTTTCAATTATTTAATTTTTTAATAATTGTTAAAAAAATTTTAAGTGAAAATCATATAATAAATATAAAAATTATAAAACATAATAAAAAAAAAATGCTTATAGCTTAATGGATAAAGCTTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCGCCTCCAAACAATCAAATCAAATATCCTATGTATATTTTACGTATAAATTTAAAATCAGTAAAAAAAGTAAATGAATTAAAAAAAAACTTATTAAAAATAAAAAAATTTTATAAATTTAAAGATTTAAAAATAAAAGGAATTTTTAAAGTTAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTGAATAAAAAATCACGTGAACATTTTATATATAAAAATTTTGTTCAAAAAATTGATATTAATTTTATAAATATATTTCAATTATTTAATTTTTTAATAATTTTGAAGAAAATATTATCAAAAGATTTTTTAATTAATATTAAAATTATTAAAAACAATAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCGCCTCCAAACAATCAAATCAAATATCCTATGTATATTTTACGTATAAATTTAAAATCAGTAAAAAAAGTAAATGAATTAAAAAAAAACTTATTAAAAATAAAAAAATTTTATAAATTTAAAGATTTAAAAATAAAAGGAATTTTTAAAGTTAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTGAATAAAAAATCACGTGAACATTTTATATATAAAAATTTTGTTCAAAAAATTGATATTAATTTTATAAATATATTCCAATTATTTAATTTTTTAATAATTTTGAAGAAAATATTATCAAAAGATTTTTTAATTAATATTAAAATTATTAAAAACAATAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCTAGACAAAAATAAAAAATAATTATGTATATTTTAAAAATAACTTTTAAATCAATACAAAAAATAAATAATATTAAAAAAAATTTATTAAAATTAAAAAAAATAAATAAATTTAAAAATATTCAAATAAAAGGAATATTTAAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCTCATGTTAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATTCTCAAAAAGTTCAAATAAATTTTTTAAACATTATTCAATTATTAAATTTTATAGTACTTGTAAAAAAAAATTTATCAGAGAATTTTATAATAAATTTTAAAATTATAAAATATAATAAAGAAAAATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTGGAAAATGAA","GAAAATCTTTTTGTCGGTGGTTCAAATCCACCTCCAGACAAAATTTTAAATTTAATATGTATATTTTAAGAATAACTTTTAAATCAATAGAAAAAATAAATAAATTAAAACAAAATTTATTAAAATTAAAAAAAATAAATAAATTTAAAAATATTCAAATAAAGGGAATATTTAAAATAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCGCCACATGTTAATAAAAAATCACGTGAACATTTTATATATAAAAATTATACTCAAAAAATTGATATTAAATTTTTTAATATTTTACAATTATTTAATTTTTTAATAATTGTTAAAAAAATATTAAGTGAAAATCATATTATAAATATAAAAATTATAAAATATAATAAAAAAAAAATGCTTATAGCTTAATGGATAAAGCTTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTTTGTCGGTGGTTCAAATCCACCTCCAGACAAAATTTTAAATTTAATATGTATATTTTAAGAATAACTTTTAAATCAATAGAAAAAATAAATAAACTAAAACAAAATTTATTAAAATTAAAAAAAATAAATAAATTTAAAGATATTCAAATAAAAGGAATATTTAAAATAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCTCCACATGTTAATAAAAAATCACGTGAACATTTTATATATAAAAATTATACCCAAAAGATTGATATTCAATTTTTAAATATTTTTCAATTATTTAATTTTTTAATAGTTGTTAAAAAAATTTTAAGTGAAAATCATATTATAAATATAAAAATTATAAAATATAATAAAAAAAAAATGCTTATAGCTTAATGGATAAAGCTTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTGTGTCGGTGGTTCAAATCCGCCTCCAAACAATCAAATCAAATATCCTATGTATATTTTACGTATAAATTTAAAATCAGTAAAAAAAGTAAATGAATTAAAAAAAAACTTATTAAAAATAAAAAAATTTTATAAATTTAAAGATTTAAAAATAAAAGGAATTTTTAAAGTTAAAAATAAAAATAAAATTTTTACTTTATTAAAATCACCACATGTGAATAAAAAATCACGTGAACATTTTATATATAAAAATTTTGTTCAAAAAATTGATATTAATTTTATAAATATATTTCAATTATTTAATTTTTTAATAATTTTGAAGAAAATATTATCAAAAGATTTTTTAATTAATATTAAAATTATTAAAAACAATAAAAAAATATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","GAAAATCTTTTTGTCGGTGGTTCAAATCCACCTCCAGACAAAATTTTAAATTTAATATGTATATATTAAGAATAACTTTTAAATCAATAGAAAAAATAAATAAACTAAAACAAAATTTATTAAAATTAAAAAAAATAAATAAATTTAAAGATATTCAAATAAAAGGAATATTTAAAATAAAAAATAAAAATAAAATTTTTACTTTATTAAAATCTCCACATGTTAATAAAAAATCACGTGAACATTTTATATATAAAAATTACACTCAAAAAATTGATATTCAATTTTTAAATGTTTTTCAATTATTTAATTTTTTAATAATTGTTAAAAAAATTTTAAGTGAAAATCATATAATAAATATAAAAATTATAAAACATAATAAAAAAAAAATGCTTATAGCTTAATGGATAAAGCTTTAGATTGCGGATCTATAAAATGAA"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>name<\/th>\n      <th>without_primers<\/th>\n      <th>with_primers<\/th>\n      <th>seq<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[2,3]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<p>and which have the shortest:</p>
+<pre class="r"><code>amp_data %&gt;%
+  filter(locus == &#39;rps10&#39;, with_primers &lt; 460) %&gt;%
+  arrange(with_primers) %&gt;%
+  select(name, without_primers, with_primers, seq) %&gt;%
+  group_by(name) %&gt;%
+  filter(with_primers == max(with_primers)) %&gt;%
+  filter(! duplicated(name)) %&gt;%
+  datatable()</code></pre>
+<div id="htmlwidget-ed4906484ed42468d86d" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ed4906484ed42468d86d">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8"],["Phytophthora fragariae","Phytophthora quercetorum","Phytophthora rubi","Salisapilia tartarea","Phytophthora lacustris","Phytophthora clandestina","Phytophthora gonapodyides","Phytophthora megasperma"],[407,408,408,410,414,415,417,417],[448,449,449,451,455,456,458,458],["ATCCACCTTCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAAAATTTATTAAAATTAAAAAAATTTATAAATACCGAAATCAATGGAATATTTCAAACAAAAAAAAAAAAAAAAATTTTTACTGTATTAAAATCACCACATGTAAATAAAAAATCACGTGAACAGTTTATTTATAATAATTATACTCCTAAAATTGATATTAAATTTATTAATATTTTTCAATTATTAAATTTTTTAATCTTAATTAAAAAATTTTTATCTGAAAATACTTTAATAAATGTTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","CCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTAAAAAAACTTAATAAATTAAAAAATATTCAAATACATGGAATATTTCAAATTAAAAAAAAAAAAAAAATTTTTACTTTATTACGATCACCACATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACACCAAAAATAGATATAAAATTTAATAATATTTTTCAATTATTAAATTTTATAATTTTAATTAAAAAAATATTATCTGAAAATTCTTTAATGAATATTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","CCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGACTAACTTTTAAATCTTTTCAAAAAATTAATCAACTTAAACAGAATTTATTAAAATTAAAAAAATTTAATAAATTTATAAATACCAAAATCAATGGGATATTTCAAACAAAAAAAAAAAAAAAAATTTTTACTGTATTAAGATCACCACATGTAAATAAAAAATCACGTGAACAGTTTATTTATAATAATTATACTCCTAAAATTGATATTAAATTTTTTAATATTTTTCAATTATTAAATTTTTTAATCTTAATTAAAAAAATTTTATCTGAAAATACTTTAATAAATGTTAAAATTATAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","TCGAGTCCGCTTCAGACATACAATCTTATATTATGTACATCTTAAGAATAACATTTAAATCAATAAAAAAATTGGATCAAATAAAAGAAAGTTTAATATTCTTTCAAAAATTTAGAAAATTTAACAATATTAAAATAAATGGAGTATTTAAAACTAAAAAAAAAAAAAAAATATTTACTGTTTTAAAATCTCCACATGTAAATAAAAAATCTAGAGAACATTTTTTATTTAATAATTATGTTCAAAAAGCTGATATTGAATTTGAAAACTTTATACAATTATTGAATTTTTCAATTTTAATAAAAAAAGTTTATACAAAACATTTTAAAATAAATTTTAAAATAATTAAGAAAAATAAAATGCTTATAGCTTAATGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","TCCACCTCTAGACAATTTTTATTATTTAAATATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAAATAAAAAAAATTAATAAATTTAAAAATATTAAAATAAATGGAATTTTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAGATCGCCTCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATACCCCTAAAATTGATATAAAATTTACAAATATTTTTCAATTATTAAATTTTTTAATTATAATTAAAAAAACATTAGTAGAAAATTCATTAATAAATATTAAAATTTTAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","TCCACCTCCAGACAATTTTTATTATTAAAAATATGTATCTTTTAAGAATAACTTTTAAATCATTTCAAAAACTAAAACAACTTAAACAAAATTTATTAAAATTAAAAAACATTAATAGATTACAAAATATTCAAGTACATGGAATATTTCAAACAAAAAAAAAAAAGAAAATTTTTACTTTATTAAGATCACCTCATGTAAATAAAAAATCACGGGAACATTTTATAAGTAAAAATTATACACCAAAAATTGATATCAAATTTAAAAATATTTTTCAATTATTAAATTTTTTAATAATAATTAAAAAAAATTTATCAGAAAATACATTAATTAATATCAAAATTCTAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGATAAAGCGTTAGATTGCGGATCTATAAAATGAA","AATCCACCTCCAGACAATTTCTATTATTTAAGATATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTAAAAAAAATTAATAAATTTAAAAATATTAAAATAAACGGAATCTTTCAAACAAAAAATAAAAATAAAATTTTTACTTTATTAAGATCTCCTCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATAATCCAAAAATTGATATAAAATTTTTAAATATTTTTCAATTATTAAATTTTTTAATTTTAATAAAAAAAATATTATCTGAAAATTCGTTAATGAAAATTAAAATTCTAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGAGAAAGCGTTAGATTGCGGATCTATAAAATGAA","AATCCACCTCCAGACAATTTTTATTATTTAAAATATGTATCTTTTAAGAATAACTTTTAAATCTTTTCAAAAAATAAATCAACTTAAACAAAATTTATTAAAATTACAAAAAATTAATAAATTTAAAAATATTAAAATAAACGGAATCTTCCAAATAAAAAATAAAAATAAAATTTTTACTTTATTAAGATCTCCTCATGTAAATAAAAAATCACGTGAACATTTTATTTATAAAAATTATATGCCAAAAATTGATATAAAATTTACTAATATTTTTCAATTATTAAATTTTTTAATTTTAATTAAAAAAACATTATCAGAAAATTCATTAATGAATATTAAAATTCTAAAAAAAAATTAAAGTTATGCTTATAGCTTAATTGGAAAAAGCGTTAGATTGCGGATCTATAAAATGAA"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>name<\/th>\n      <th>without_primers<\/th>\n      <th>with_primers<\/th>\n      <th>seq<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[2,3]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<p>I will save FASTA files of the amplicons for use in other analyses</p>
+<pre class="r"><code>paste0(&quot;&gt;&quot;, names(rps_amps), &quot;\n&quot;, rps_amps) %&gt;%
+  write_lines(file = file.path(&#39;intermediate_data&#39;, &#39;reference_databases&#39;, &#39;predicted_amplicons_rps10.fa&#39;))
+paste0(&quot;&gt;&quot;, names(its_amps), &quot;\n&quot;, its_amps) %&gt;%
+  write_lines(file = file.path(&#39;intermediate_data&#39;, &#39;reference_databases&#39;, &#39;predicted_amplicons_its1.fa&#39;))</code></pre>
+<p>I will also save a CSV version of this:</p>
+<pre class="r"><code>amp_data %&gt;%
+  filter(locus == &#39;rps10&#39;) %&gt;%
+  arrange(desc(with_primers)) %&gt;%
+  select(name, without_primers, with_primers, amplicon = seq) %&gt;%
+  group_by(name) %&gt;%
+  filter(with_primers == max(with_primers)) %&gt;%
+  filter(! duplicated(name)) %&gt;%
+  write_csv(file = file.path(&#39;results&#39;, &#39;rps10_predicted_amplicon_length.csv&#39;))</code></pre>
+<p>Again, lets only use species present in both</p>
+<pre class="r"><code>if (only_shared_species) {
+  common_species &lt;- intersect(unique(names(rps_amps)), unique(names(its_amps)))
+  rps_amps &lt;- rps_amps[names(rps_amps) %in% common_species]
+  its_amps &lt;- its_amps[names(its_amps) %in% common_species]
+}
+unique(names(rps_amps))</code></pre>
+<pre><code>##  [1] &quot;Hyaloperonospora parasitica&quot; &quot;Phytophthora andina&quot;        
+##  [3] &quot;Phytophthora brassicae&quot;      &quot;Phytophthora cactorum&quot;      
+##  [5] &quot;Phytophthora cambivora&quot;      &quot;Phytophthora capensis&quot;      
+##  [7] &quot;Phytophthora capsici&quot;        &quot;Phytophthora cinnamomi&quot;     
+##  [9] &quot;Phytophthora citricola&quot;      &quot;Phytophthora citrophthora&quot;  
+## [11] &quot;Phytophthora cryptogea&quot;      &quot;Phytophthora drechsleri&quot;    
+## [13] &quot;Phytophthora erythroseptica&quot; &quot;Phytophthora gonapodyides&quot;  
+## [15] &quot;Phytophthora hydropathica&quot;   &quot;Phytophthora infestans&quot;     
+## [17] &quot;Phytophthora kernoviae&quot;      &quot;Phytophthora megakarya&quot;     
+## [19] &quot;Phytophthora megasperma&quot;     &quot;Phytophthora melonis&quot;       
+## [21] &quot;Phytophthora multivora&quot;      &quot;Phytophthora nicotianae&quot;    
+## [23] &quot;Phytophthora palmivora&quot;      &quot;Phytophthora plurivora&quot;     
+## [25] &quot;Phytophthora quercetorum&quot;    &quot;Phytophthora sojae&quot;         
+## [27] &quot;Phytophthora syringae&quot;       &quot;Phytopythium carbonicum&quot;    
+## [29] &quot;Phytopythium citrinum&quot;       &quot;Phytopythium megacarpum&quot;    
+## [31] &quot;Phytopythium sindhum&quot;        &quot;Pseudoperonospora cubensis&quot; 
+## [33] &quot;Pythium abappressorium&quot;      &quot;Pythium acrogynum&quot;          
+## [35] &quot;Pythium apiculatum&quot;          &quot;Pythium attrantheridium&quot;    
+## [37] &quot;Pythium camurandrum&quot;         &quot;Pythium cryptoirregulare&quot;   
+## [39] &quot;Pythium cylindrosporum&quot;      &quot;Pythium cystogenes&quot;         
+## [41] &quot;Pythium debaryanum&quot;          &quot;Pythium emineosum&quot;          
+## [43] &quot;Pythium glomeratum&quot;          &quot;Pythium hydnosporum&quot;        
+## [45] &quot;Pythium irregulare&quot;          &quot;Pythium jasmonium&quot;          
+## [47] &quot;Pythium kashmirense&quot;         &quot;Pythium kunmingense&quot;        
+## [49] &quot;Pythium lucens&quot;              &quot;Pythium mamillatum&quot;         
+## [51] &quot;Pythium megalacanthum&quot;       &quot;Pythium middletonii&quot;        
+## [53] &quot;Pythium minus&quot;               &quot;Pythium monospermum&quot;        
+## [55] &quot;Pythium ornacarpum&quot;          &quot;Pythium paroecandrum&quot;       
+## [57] &quot;Pythium pectinolyticum&quot;      &quot;Pythium pleroticum&quot;         
+## [59] &quot;Pythium rhizo-oryzae&quot;        &quot;Pythium rhizosaccharum&quot;     
+## [61] &quot;Pythium rostratifingens&quot;     &quot;Pythium segnitium&quot;          
+## [63] &quot;Pythium senticosum&quot;          &quot;Pythium sylvaticum&quot;         
+## [65] &quot;Pythium takayamanum&quot;         &quot;Pythium terrestris&quot;         
+## [67] &quot;Pythium ultimum&quot;             &quot;Pythium viniferum&quot;</code></pre>
+</div>
+<div id="align-predicted-amplicons" class="section level3">
+<h3>Align predicted amplicons</h3>
+<p>To make a distance matrix, I will align the amplicons:</p>
+<pre class="r"><code>nj_tree &lt;- function(seqs, ...) {
+  # Align sequences:
+  aligned &lt;- seqs %&gt;%
+    insect::char2dna() %&gt;%
+    ips::mafft(method = &#39;localpair&#39;, exec = &#39;/usr/bin/mafft&#39;)
+  
+  # Make distance matrix
+  dist &lt;- ape::dist.dna(aligned, ...)
+  
+  # Make tree
+  tree &lt;- ape::nj(dist)
+  tree &lt;- ape::ladderize(tree)
+  tree &lt;- phangorn::midpoint(tree)
+  
+  tree
+}
+
+calc_align &lt;- function(amps) {
+  amps %&gt;%
+    gsub(pattern = &#39;[^AGCTN-]&#39;, replacement = &#39;N&#39;) %&gt;%
+    char2dna() %&gt;%
+    mafft(method = &quot;globalpair&quot;, exec = &#39;mafft&#39;)
+}
+
+plot_align &lt;- function(amps, aligned, title, spot = &quot;top&quot;, start = 1, end = ncol(aligned)) {
+  # aligned &lt;- rps_amp_aligned; amps &lt;- rps_amps; title &lt;- &quot;Rps10&quot;; spot = &quot;top&quot;; start = 50; end = ncol(aligned)
+  
+  # Subset alignment to region to plot       horiz = TRUE, xpd = TRUE)
+  aligned &lt;- aligned[, start:end]
+  
+  # Make tree and order alignments to match tree
+  tree &lt;- nj_tree(amps)
+  tree &lt;- ladderize(tree)
+  aligned &lt;- aligned[rev(tree$tip.label[tree$edge[tree$edge[,2] &lt;= length(tree$tip.label), 2]]), ]
+  
+  # Get sequence conservation at each position 
+  major_allele_prop &lt;- unlist(lapply(1:ncol(aligned), function(index) {
+    chars &lt;- as.character(aligned[, index, drop = TRUE])
+    most_common_base &lt;- sort(table(chars), decreasing = TRUE)[1]
+    return(most_common_base / nrow(aligned))
+  }))
+  barplot_data &lt;- data.frame(prop = major_allele_prop,
+                             fill = 1 - major_allele_prop)
+  
+  # Get consensus sequence
+  consensus &lt;- as.DNAbin(matrix(names(major_allele_prop), nrow = 1))
+  rownames(consensus) &lt;- &quot;Consensus  &quot;
+  
+  make_one_plot &lt;- function(y_offset) {
+    # The barplot at the top
+    par(fig=c(0.206, 1, 0.95 - y_offset, 1 - y_offset), new = TRUE, mar = c(0.5, 4, 1, 0.37))
+    barplot(t(as.matrix(barplot_data)), cex.axis = 1, ylab = &quot;PID&quot;, col = c(&#39;grey&#39;, &#39;red&#39;), border = NA, space = 0, at = c(0, 1))
+    # The consensus
+    par(fig=c(0.3, 1, 0.94 - y_offset, 0.95 - y_offset), new = TRUE, mar = c(0.1, 0, 0, 2))
+    image(consensus, cex.lab = 0.7, show.label = TRUE, yaxt = &quot;n&quot;, xaxt = &quot;n&quot;, legend = FALSE)
+    # The alignment 
+    par(fig=c(0.3, 1, 0.5 - y_offset, 0.95 - y_offset), new = TRUE, mar = c(5, 0, 1, 2))
+    image(aligned, cex.lab = 0.5, show.label = FALSE, yaxt = &quot;n&quot;, xlab = &quot;Alignment position&quot;, legend = FALSE)
+    # The tree and labels 
+    par(fig=c(0, 0.35, 0.5 - y_offset, 0.951 - y_offset), new = TRUE, mar = c(3.9, 4, 0, 0))
+    plot(tree, use.edge.length = FALSE, adj = 1, cex = 0.6)
+    # The subfigure label
+    mtext(title, cex = 2, adj = 0, padj = -1.5)
+  }
+  
+  # Make plots
+  if (spot == &quot;top&quot;) {
+    make_one_plot(0)
+  } else {
+    make_one_plot(.5)
+  }
+}
+
+rps_amp_aligned &lt;- calc_align(rps_amps)
+its_amp_aligned &lt;- calc_align(its_amps)
+
+pdf(file = file.path(&#39;results&#39;, &#39;alignment_plot.pdf&#39;), width = 8, height = 11)
+# png(file = file.path(&#39;results&#39;, &#39;alignment_plot.png&#39;), width = 2000, height = 3000, pointsize = 28)
+plot_align(rps_amps, rps_amp_aligned, title = expression(italic(&quot;rps10&quot;)), start = 34)</code></pre>
+<pre><code>## Warning in par(fig = c(0.206, 1, 0.95 - y_offset, 1 - y_offset), new = TRUE, :
+## calling par(new=TRUE) with no plot</code></pre>
+<pre><code>## Warning in plot.window(xlim, ylim, log = log, ...): &quot;at&quot; is not a graphical
+## parameter</code></pre>
+<pre><code>## Warning in title(main = main, sub = sub, xlab = xlab, ylab = ylab, ...): &quot;at&quot; is
+## not a graphical parameter</code></pre>
+<pre class="r"><code>plot_align(its_amps, its_amp_aligned, title = &quot;ITS1&quot;, start = 39, spot = &quot;bottom&quot;)</code></pre>
+<pre><code>## Warning in plot.window(xlim, ylim, log = log, ...): &quot;at&quot; is not a graphical
+## parameter
+
+## Warning in plot.window(xlim, ylim, log = log, ...): &quot;at&quot; is not a graphical
+## parameter</code></pre>
+<pre class="r"><code># Add legend
+par(fig=c(0.15, 0.5, 0.51, 0.61), new = TRUE, mar = c(0, 0, 0, 0))
+legend(0, 0, legend = c(&#39;A&#39;, &#39;G&#39;, &#39;C&#39;, &#39;T&#39;, &#39;-&#39;), pch = 22, pt.bg = c(&quot;red&quot;, &quot;yellow&quot;, &quot;green&quot;, &quot;blue&quot;, &quot;black&quot;), 
+       pt.cex = 2, bty = &quot;n&quot;, xjust = 0.5, yjust = 0.5, 
+       horiz = TRUE, xpd = TRUE)
+dev.off()</code></pre>
+<pre><code>## png 
+##   2</code></pre>
+<pre class="r"><code>include_graphics(file.path(&#39;results&#39;, &#39;alignment_plot.pdf&#39;))</code></pre>
+<p><embed src="results/alignment_plot.pdf" /><!-- --></p>
+<p>Caption: Multiple sequence alignments of the region predicted to be amplified by each method, not including the primer binding sites. The sequences used represent the subset of species present in both reference databases. The sequences are ordered vertically based on a neighbour-joining tree. Along the top of each alignment there is a barchart representing the proportion of sequences matching the consensus sequence at each alignment position, with gray representing matches and red representing mismatches.</p>
+</div>
+<div id="calculate-distance-to-nearest-non-target" class="section level3">
+<h3>Calculate distance to nearest non-target</h3>
+<p>Being able to differentiate different species is key to metabarcoding. Therefore, the number of differences between a sequence and the nearest sequence assigned to a different species is useful information. First I will find which species share identical sequences;</p>
+<pre class="r"><code>calc_identical_sp &lt;- function(aligned, threshold = 1) {
+  my_dist &lt;- dist.dna(aligned, model = &#39;N&#39;, as.matrix = TRUE)
+  identical_sp &lt;- map(1:nrow(my_dist), function(i) {
+    sp_dists &lt;- my_dist[i, -i]
+    identical_sp &lt;- unique(names(sp_dists[sp_dists &lt; threshold]))
+    identical_sp[identical_sp != rownames(my_dist)[i]]
+  })
+  names(identical_sp) &lt;- rownames(my_dist)
+  unique_identical_sp &lt;- map(unique(names(identical_sp)), function(x) {
+    unique(unlist(identical_sp[names(identical_sp) == x]))
+  })
+  names(unique_identical_sp) &lt;- unique(names(identical_sp))
+  out &lt;- lapply(seq_along(unique_identical_sp), function(index) {
+  sort(c(names(unique_identical_sp)[index], unique_identical_sp[[index]]))
+  })
+  out[map_dbl(out, length) &gt; 1 &amp; ! duplicated(out)]
+}
+
+rps_ident_sp &lt;- calc_identical_sp(rps_amp_aligned)
+its_ident_sp &lt;- calc_identical_sp(its_amp_aligned)</code></pre>
+<p>and save the results in a table:</p>
+<pre class="r"><code>tibble(locus = rep(c(&#39;RPS10&#39;, &#39;ITS1&#39;), c(length(rps_ident_sp), length(its_ident_sp))), 
+       identical_seqs = c(map_chr(rps_ident_sp, paste0, collapse = &#39; ; &#39;), 
+                          map_chr(its_ident_sp, paste0, collapse = &#39; ; &#39;))) %&gt;%
+  write_csv(file = file.path(&#39;results&#39;, &#39;species_resolution_table.csv&#39;))</code></pre>
+<p>I will also make a plot of the number of differences between each sequence and their nearest sequence from another species.</p>
+<pre class="r"><code>calc_nearest_seq_diff &lt;- function(aligned) {
+  my_dist &lt;- dist.dna(aligned, model = &#39;N&#39;, as.matrix = TRUE)
+  out &lt;- map_dbl(1:nrow(my_dist), function(i) {
+    sp_dists &lt;- my_dist[i, -i]
+    min(sp_dists[names(sp_dists) != rownames(my_dist)[i]], na.rm = TRUE)
+  })
+  names(out) &lt;- rownames(my_dist)
+  out
+}
+
+calc_nearest_seq_diff_dist &lt;- function(aligned, max = 5) {
+  diffs &lt;- calc_nearest_seq_diff(aligned)
+  uniq_sp_names &lt;- unique(names(diffs))
+  diffs &lt;- map_dbl(uniq_sp_names, function(n) {
+    max(diffs[names(diffs) == n], na.rm = TRUE)
+  })
+  names(diffs) &lt;- uniq_sp_names
+  out &lt;- map_int(1:max - 1, function(n) {
+    sum(diffs == n)
+  })
+  out[max + 1] &lt;- sum(diffs &gt;= max) 
+  names(out) &lt;- c(1:max - 1, paste0(max, &#39;+&#39;))
+  out / length(diffs)
+}</code></pre>
+<p>and make a table of that as well:</p>
+<pre class="r"><code>diff_props &lt;- c(calc_nearest_seq_diff_dist(its_amp_aligned), calc_nearest_seq_diff_dist(rps_amp_aligned))
+diff_props_data &lt;- tibble(prop = diff_props,
+       n = names(diff_props),
+       locus = ordered(rep(c(&#39;ITS1&#39;, &#39;rps10&#39;), each = 6), levels =  c(&#39;rps10&#39;, &#39;ITS1&#39;)))
+print(diff_props_data)</code></pre>
+<pre><code>## # A tibble: 12 x 3
+##      prop n     locus
+##     &lt;dbl&gt; &lt;chr&gt; &lt;ord&gt;
+##  1 0.294  0     ITS1 
+##  2 0.235  1     ITS1 
+##  3 0.162  2     ITS1 
+##  4 0.103  3     ITS1 
+##  5 0.0441 4     ITS1 
+##  6 0.162  5+    ITS1 
+##  7 0.147  0     rps10
+##  8 0.0147 1     rps10
+##  9 0.0735 2     rps10
+## 10 0.0441 3     rps10
+## 11 0.0441 4     rps10
+## 12 0.676  5+    rps10</code></pre>
+<p>We can plot this in a few ways:</p>
+<pre class="r"><code>sp_diff_plot &lt;- diff_props_data %&gt;%
+  ggplot(aes(x = n, y = prop, fill = locus)) +
+  geom_bar(stat = &#39;identity&#39;, position = &quot;dodge2&quot;) +
+  geom_hline(aes(yintercept = 1), linetype = &quot;dashed&quot;) +
+  scale_fill_viridis_d(begin = 0.8, end = 0.2) +
+  labs(x = &#39;Base pairs different from most similar species&#39;, y = &#39;Proportion of species&#39;, fill = &#39;Locus&#39;) +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = c(0.1, 0.8),
+        legend.background = element_rect(fill=NA))
+sp_diff_plot</code></pre>
+<p><img src="08--amplicon_taxonomic_resolution_files/figure-html/unnamed-chunk-32-1.png" width="480" /></p>
+<pre class="r"><code>ggsave(sp_diff_plot, filename = &#39;sp_resolution_barchart.pdf&#39;, path = file.path(&#39;results&#39;), width = 5, height = 5)</code></pre>
+<p>Figure #: The distribution of the number of base pairs different each species is to the most similar species base on pairwise alignments of predicted amplicons in the Rps10 and ITS1 databases. Only sequences with unambiguous, species-level taxonomic classifications that contain the entire amplicon are included. Zero differences for a species mean that there is at least one other species that is predicted to have an identical amplicon sequence.</p>
+<pre class="r"><code>rps_diffs &lt;- calc_nearest_seq_diff(rps_amp_aligned)
+its_diffs &lt;- calc_nearest_seq_diff(its_amp_aligned)
+diff_boxplot &lt;- tibble(locus = ordered(rep(c(&#39;ITS1&#39;, &#39;rps10&#39;), c(length(its_diffs), length(rps_diffs))), levels =  c(&#39;rps10&#39;, &#39;ITS1&#39;)),
+       species = c(names(its_diffs), names(rps_diffs)),
+       diff = c(its_diffs, rps_diffs)) %&gt;%
+  ggplot(aes(x = locus, y = diff, fill = locus)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(begin = 0.8, end = 0.2) +
+  guides(fill = FALSE) +
+  labs(x = &#39;Locus&#39;, y = &#39;Base pairs different from most similar species&#39;, fill = NULL) +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = &quot;bottom&quot;)
+diff_boxplot</code></pre>
+<p><img src="08--amplicon_taxonomic_resolution_files/figure-html/unnamed-chunk-33-1.png" width="192" /></p>
+<pre class="r"><code>ggsave(diff_boxplot, filename = &#39;sp_resolution_boxplot.pdf&#39;, path = file.path(&#39;results&#39;), width = 2, height = 4)</code></pre>
+<p>We can combine the two plots like so:</p>
+<pre class="r"><code>diff_plot_combined &lt;- ggarrange(diff_boxplot, sp_diff_plot,
+          labels = c(&quot;A&quot;, &quot;B&quot;),
+          widths = c(0.3, 1),
+          ncol = 2, nrow = 1)
+diff_plot_combined</code></pre>
+<p><img src="08--amplicon_taxonomic_resolution_files/figure-html/unnamed-chunk-34-1.png" width="672" /></p>
+<pre class="r"><code>ggsave(diff_plot_combined, filename = &#39;sp_resolution_combined.pdf&#39;, path = file.path(&#39;results&#39;), width = 7, height = 5)</code></pre>
+<p>Figure #: The distribution of the number of base pairs different each species is to the most similar species based on pairwise alignments of predicted amplicons in the Rps10 and ITS1 databases. Only sequences for species present in both databases are included. A) The distribution of differences for each locus. B) Proportion of species with each difference count. Zero differences for a species mean that there is at least one other species that is predicted to have an identical amplicon sequence.</p>
+</div>
+</div>
+<div id="software-used" class="section level2">
+<h2>Software used</h2>
+<pre class="r"><code>sessioninfo::session_info()</code></pre>
+<pre><code>## ─ Session info ───────────────────────────────────────────────────────────────
+##  setting  value                       
+##  version  R version 4.0.3 (2020-10-10)
+##  os       Pop!_OS 20.04 LTS           
+##  system   x86_64, linux-gnu           
+##  ui       X11                         
+##  language en_US:en                    
+##  collate  en_US.UTF-8                 
+##  ctype    en_US.UTF-8                 
+##  tz       America/Vancouver           
+##  date     2021-05-20                  
+## 
+## ─ Packages ───────────────────────────────────────────────────────────────────
+##  package      * version    date       lib source        
+##  abind          1.4-5      2016-07-21 [1] CRAN (R 4.0.3)
+##  ade4           1.7-16     2020-10-28 [1] CRAN (R 4.0.3)
+##  ape          * 5.4-1      2020-08-13 [1] CRAN (R 4.0.2)
+##  aphid          1.3.3      2019-05-08 [1] CRAN (R 4.0.3)
+##  askpass        1.1        2019-01-13 [1] CRAN (R 4.0.2)
+##  assertthat     0.2.1      2019-03-21 [1] CRAN (R 4.0.2)
+##  backports      1.2.0      2020-11-02 [1] CRAN (R 4.0.3)
+##  BiocGenerics * 0.34.0     2020-04-27 [1] Bioconductor  
+##  Biostrings   * 2.56.0     2020-04-27 [1] Bioconductor  
+##  bold           1.1.0      2020-06-17 [1] CRAN (R 4.0.2)
+##  broom          0.7.2      2020-10-20 [1] CRAN (R 4.0.3)
+##  car            3.0-10     2020-09-29 [1] CRAN (R 4.0.3)
+##  carData        3.0-4      2020-05-22 [1] CRAN (R 4.0.3)
+##  cellranger     1.1.0      2016-07-27 [1] CRAN (R 4.0.2)
+##  cli            2.1.0      2020-10-12 [1] CRAN (R 4.0.3)
+##  cluster        2.1.0      2019-06-19 [4] CRAN (R 4.0.0)
+##  codetools      0.2-16     2018-12-24 [4] CRAN (R 4.0.0)
+##  colorspace     1.4-1      2019-03-18 [1] CRAN (R 4.0.2)
+##  conditionz     0.1.0      2019-04-24 [1] CRAN (R 4.0.2)
+##  cowplot        1.1.0      2020-09-08 [1] CRAN (R 4.0.2)
+##  crayon         1.3.4      2017-09-16 [1] CRAN (R 4.0.2)
+##  crosstalk      1.1.0.1    2020-03-13 [1] CRAN (R 4.0.2)
+##  crul           1.0.0      2020-07-30 [1] CRAN (R 4.0.2)
+##  curl           4.3        2019-12-02 [1] CRAN (R 4.0.2)
+##  data.table     1.13.2     2020-10-19 [1] CRAN (R 4.0.3)
+##  digest         0.6.27     2020-10-24 [1] CRAN (R 4.0.3)
+##  dplyr        * 1.0.2      2020-08-18 [1] CRAN (R 4.0.2)
+##  DT           * 0.16       2020-10-13 [1] CRAN (R 4.0.3)
+##  ellipsis       0.3.1      2020-05-15 [1] CRAN (R 4.0.2)
+##  evaluate       0.14       2019-05-28 [1] CRAN (R 4.0.2)
+##  fansi          0.4.1      2020-01-08 [1] CRAN (R 4.0.2)
+##  farver         2.0.3      2020-01-16 [1] CRAN (R 4.0.2)
+##  fastmatch      1.1-0      2017-01-28 [1] CRAN (R 4.0.2)
+##  forcats      * 0.5.0      2020-03-01 [1] CRAN (R 4.0.2)
+##  foreach        1.5.1      2020-10-15 [1] CRAN (R 4.0.3)
+##  foreign        0.8-80     2020-05-24 [1] CRAN (R 4.0.2)
+##  furrr        * 0.2.1      2020-10-21 [1] CRAN (R 4.0.3)
+##  future       * 1.19.1     2020-09-22 [1] CRAN (R 4.0.3)
+##  generics       0.1.0      2020-10-31 [1] CRAN (R 4.0.3)
+##  ggplot2      * 3.3.2      2020-06-19 [1] CRAN (R 4.0.2)
+##  ggpubr       * 0.4.0      2020-06-27 [1] CRAN (R 4.0.3)
+##  ggsignif       0.6.0      2019-08-08 [1] CRAN (R 4.0.3)
+##  globals        0.13.1     2020-10-11 [1] CRAN (R 4.0.3)
+##  glue           1.4.2      2020-08-27 [1] CRAN (R 4.0.2)
+##  gridExtra      2.3        2017-09-09 [1] CRAN (R 4.0.3)
+##  gtable         0.3.0      2019-03-25 [1] CRAN (R 4.0.2)
+##  haven          2.3.1      2020-06-01 [1] CRAN (R 4.0.2)
+##  hms            0.5.3      2020-01-08 [1] CRAN (R 4.0.2)
+##  htmltools      0.5.1.1    2021-01-22 [1] CRAN (R 4.0.3)
+##  htmlwidgets    1.5.2      2020-10-03 [1] CRAN (R 4.0.3)
+##  httpcode       0.3.0      2020-04-10 [1] CRAN (R 4.0.2)
+##  igraph         1.2.6      2020-10-06 [1] CRAN (R 4.0.3)
+##  insect       * 1.2.0      2018-11-25 [1] CRAN (R 4.0.3)
+##  ips          * 0.0.11     2019-07-04 [1] CRAN (R 4.0.3)
+##  IRanges      * 2.22.2     2020-05-21 [1] Bioconductor  
+##  iterators      1.0.13     2020-10-15 [1] CRAN (R 4.0.3)
+##  jsonlite       1.7.1      2020-09-07 [1] CRAN (R 4.0.2)
+##  kmer           1.1.2      2019-05-20 [1] CRAN (R 4.0.3)
+##  knitr        * 1.30       2020-09-22 [1] CRAN (R 4.0.2)
+##  labeling       0.4.2      2020-10-20 [1] CRAN (R 4.0.3)
+##  lattice      * 0.20-41    2020-04-02 [4] CRAN (R 4.0.0)
+##  lifecycle      0.2.0      2020-03-06 [1] CRAN (R 4.0.2)
+##  listenv        0.8.0      2019-12-05 [1] CRAN (R 4.0.3)
+##  magrittr       1.5        2014-11-22 [1] CRAN (R 4.0.2)
+##  MASS           7.3-53     2020-09-09 [4] CRAN (R 4.0.2)
+##  Matrix         1.2-18     2019-11-27 [4] CRAN (R 4.0.0)
+##  metacoder    * 0.3.4      2020-04-29 [1] CRAN (R 4.0.3)
+##  mgcv           1.8-33     2020-08-27 [4] CRAN (R 4.0.2)
+##  munsell        0.5.0      2018-06-12 [1] CRAN (R 4.0.2)
+##  nlme           3.1-149    2020-08-23 [4] CRAN (R 4.0.2)
+##  openssl        1.4.3      2020-09-18 [1] CRAN (R 4.0.2)
+##  openxlsx       4.2.3      2020-10-27 [1] CRAN (R 4.0.3)
+##  permute      * 0.9-5      2019-03-12 [1] CRAN (R 4.0.2)
+##  phangorn       2.5.5      2019-06-19 [1] CRAN (R 4.0.2)
+##  phylogram      2.1.0      2018-06-25 [1] CRAN (R 4.0.3)
+##  pillar         1.4.6      2020-07-10 [1] CRAN (R 4.0.2)
+##  pkgconfig      2.0.3      2019-09-22 [1] CRAN (R 4.0.2)
+##  plyr           1.8.6      2020-03-03 [1] CRAN (R 4.0.2)
+##  prettyunits    1.1.1      2020-01-24 [1] CRAN (R 4.0.2)
+##  progress       1.2.2      2019-05-16 [1] CRAN (R 4.0.2)
+##  purrr        * 0.3.4      2020-04-17 [1] CRAN (R 4.0.2)
+##  qsubmitter   * 0.1        2020-11-11 [1] local         
+##  quadprog       1.5-8      2019-11-20 [1] CRAN (R 4.0.2)
+##  R6             2.5.0      2020-10-28 [1] CRAN (R 4.0.3)
+##  RANN           2.6.1      2019-01-08 [1] CRAN (R 4.0.3)
+##  Rcpp           1.0.5      2020-07-06 [1] CRAN (R 4.0.2)
+##  readr        * 1.4.0      2020-10-05 [1] CRAN (R 4.0.3)
+##  readxl         1.3.1      2019-03-13 [1] CRAN (R 4.0.2)
+##  reshape        0.8.8      2018-10-23 [1] CRAN (R 4.0.2)
+##  rio            0.5.16     2018-11-26 [1] CRAN (R 4.0.3)
+##  rlang          0.4.10     2020-12-30 [1] CRAN (R 4.0.3)
+##  rmarkdown      2.5        2020-10-21 [1] CRAN (R 4.0.3)
+##  rstatix        0.6.0      2020-06-18 [1] CRAN (R 4.0.3)
+##  rstudioapi     0.11       2020-02-07 [1] CRAN (R 4.0.2)
+##  S4Vectors    * 0.26.1     2020-05-16 [1] Bioconductor  
+##  scales         1.1.1      2020-05-11 [1] CRAN (R 4.0.2)
+##  seqinr         4.2-4      2020-10-10 [1] CRAN (R 4.0.3)
+##  sessioninfo  * 1.1.1      2018-11-05 [1] CRAN (R 4.0.2)
+##  sharedbib      0.1.0.9003 2020-10-16 [1] local         
+##  stringi        1.5.3      2020-09-09 [1] CRAN (R 4.0.2)
+##  stringr      * 1.4.0      2019-02-10 [1] CRAN (R 4.0.2)
+##  taxa         * 0.3.4      2020-04-29 [1] CRAN (R 4.0.3)
+##  taxize       * 0.9.99     2020-10-30 [1] CRAN (R 4.0.3)
+##  tibble         3.0.4      2020-10-12 [1] CRAN (R 4.0.3)
+##  tidyr        * 1.1.2      2020-08-27 [1] CRAN (R 4.0.2)
+##  tidyselect     1.1.0      2020-05-11 [1] CRAN (R 4.0.2)
+##  utf8           1.1.4      2018-05-24 [1] CRAN (R 4.0.2)
+##  uuid           0.1-4      2020-02-26 [1] CRAN (R 4.0.2)
+##  vctrs          0.3.4      2020-08-29 [1] CRAN (R 4.0.2)
+##  vegan        * 2.5-6      2019-09-01 [1] CRAN (R 4.0.2)
+##  viridis      * 0.5.1      2018-03-29 [1] CRAN (R 4.0.3)
+##  viridisLite  * 0.3.0      2018-02-01 [1] CRAN (R 4.0.2)
+##  withr          2.3.0      2020-09-22 [1] CRAN (R 4.0.3)
+##  xfun           0.19       2020-10-30 [1] CRAN (R 4.0.3)
+##  XML            3.99-0.5   2020-07-23 [1] CRAN (R 4.0.2)
+##  xml2           1.3.2      2020-04-23 [1] CRAN (R 4.0.2)
+##  XVector      * 0.28.0     2020-04-27 [1] Bioconductor  
+##  yaml           2.2.1      2020-02-01 [1] CRAN (R 4.0.2)
+##  zip            2.1.1      2020-08-27 [1] CRAN (R 4.0.3)
+##  zlibbioc       1.34.0     2020-04-27 [1] Bioconductor  
+##  zoo            1.8-8      2020-05-02 [1] CRAN (R 4.0.2)
+## 
+## [1] /home/fosterz/R/x86_64-pc-linux-gnu-library/4.0
+## [2] /usr/local/lib/R/site-library
+## [3] /usr/lib/R/site-library
+## [4] /usr/lib/R/library</code></pre>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

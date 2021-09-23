@@ -1,4 +1,5 @@
 name: "Comparing ITS1 and RPS10 for Oomycete Metabacoding"
+output_dir: "docs"
 navbar:
   title: "Comparing ITS1 and RPS10 for Oomycete Metabacoding"
   type: inverse

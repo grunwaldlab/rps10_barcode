@@ -1,14 +1,7 @@
----
-title: "Introduction"
----
+## Analysis code for "A new oomycete metabarcoding method using the rps10 gene"
+
+Authors: Zachary S. L. Foster, Felipe E Albornoz, Valerie J Fieland, Meredith M Larsen, Frank Andrew Jones, Brett M Tyler, Hai D. T. Nguyen, Treena I Burgess, Carolyn Riddell, Hermann Voglmayr, Frank N Martin, Niklaus J Grunwald
+
+bioRxiv 2021.09.22.460084; doi: https://doi.org/10.1101/2021.09.22.460084
 
 This analysis evaluates the effectiveness of the rps10 locus and the primers we designed for use in Oomycete metabarcoding compared to the current ITS1-based method using ITS6 and ITS7.
-The criteria for an ideal barcode and assocaited primers for metabarcoding are: 
-
-1) The primers can amplify the gene in all of the target group of organisms.
-2) The primers do not amplify the gene in any organisms not in the target group.
-3) The sequence amplified can differentiate all members of the target group.
-4) The reference database contains sequences for all members of the target group.
-
-We have attempted to evaluate each of these criteria to compared methods using RPS10 and ITS1.
-This website is the output of the analysis we used to create the results reported in [insert publication].

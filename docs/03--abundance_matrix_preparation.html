@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Abundance matrix and taxonomic assignment</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-inverse  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Comparing ITS1 and RPS10 for Oomycete Metabacoding</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Analysis
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="01--prepare_reference_database.html">Reference database preparation</a>
+    </li>
+    <li>
+      <a href="02--preparation_and_quality_filtering.html">Read processing and quality filtering</a>
+    </li>
+    <li>
+      <a href="03--abundance_matrix_preparation.html">Abundance matrix and taxonomic assignment</a>
+    </li>
+    <li>
+      <a href="04--blast_classification.html">Alternative taxonomic assignment using BLAST</a>
+    </li>
+    <li>
+      <a href="05--otu_clustering_threshold.html">OTU clustering threshold estimation</a>
+    </li>
+    <li>
+      <a href="06--mock_community.html">Mock community evaluation</a>
+    </li>
+    <li>
+      <a href="07--nontarget_amplification.html">Non-target amplification</a>
+    </li>
+    <li>
+      <a href="08--amplicon_taxonomic_resolution.html">Taxonomic resolution</a>
+    </li>
+    <li>
+      <a href="09--simulated_pcr_results.html">Plotting of simulated PCR results</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/grunwaldlab/rps10_barcode">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Abundance matrix and taxonomic assignment</h1>
+
+</div>
+
+
+<p>This is an analysis of the data from the MiSeq run testing the rps10 barcode and associated primers. Multiple mock community samples and environmental samples were sequenced. This will roughly follow the <a href="https://benjjneb.github.io/dada2/ITS_workflow.html">DADA2 ITS Pipeline Workflow (1.8)</a> and the <a href="https://benjjneb.github.io/dada2/tutorial.html">DADA2 Pipeline Tutorial (1.12)</a>.</p>
+<div id="prepare" class="section level2">
+<h2>Prepare</h2>
+<div id="notes-on-how-to-use-this-analysis" class="section level3">
+<h3>Notes on how to use this analysis</h3>
+<p>Some of the long running operations that produce output files only run if their output does not exist. To rerun them, delete the corresponding file in the intermediate data folder.</p>
+</div>
+<div id="packages-used" class="section level3">
+<h3>Packages used</h3>
+<pre class="r"><code>library(dada2)
+library(ShortRead)
+library(Biostrings)
+library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(gridExtra)
+library(sessioninfo)
+library(Biostrings)
+library(stringr)
+library(metacoder)</code></pre>
+</div>
+<div id="parameters" class="section level3">
+<h3>Parameters</h3>
+<pre class="r"><code>seed &lt;- 9999
+set.seed(seed)
+min_read_merging_overlap &lt;- 15 # Default is 12
+max_read_merging_mismatch &lt;- 2 # Default is 0
+remove_chimeras &lt;- TRUE # Default is TRUE
+min_asv_length &lt;- 50
+its_clustering_threshold &lt;- 0.99
+rps10_clustering_threshold &lt;- 0.96</code></pre>
+</div>
+<div id="parallel-processing" class="section level3">
+<h3>Parallel processing</h3>
+<p>Commands that have “future” in them are run on multiple cores using the <code>furrr</code> and <code>future</code> packages.</p>
+<pre class="r"><code>plan(multiprocess)</code></pre>
+<pre><code>## Warning: [ONE-TIME WARNING] Forked processing (&#39;multicore&#39;) is disabled
+## in future (&gt;= 1.13.0) when running R from RStudio, because it is
+## considered unstable. Because of this, plan(&quot;multicore&quot;) will fall
+## back to plan(&quot;sequential&quot;), and plan(&quot;multiprocess&quot;) will fall back to
+## plan(&quot;multisession&quot;) - not plan(&quot;multicore&quot;) as in the past. For more details,
+## how to control forked processing or not, and how to silence this warning in
+## future R sessions, see ?future::supportsMulticore</code></pre>
+</div>
+</div>
+<div id="learn-the-error-rates" class="section level2">
+<h2>Learn the Error Rates</h2>
+<p>Error rates of incorrect base calls during sequencing must be estimated to do ASV calling. This process will estimate those error rates from the data. First I will load the data for the fastq files for each sample that was generated previously.</p>
+<pre class="r"><code>fastq_data &lt;- read_csv(file.path(&quot;intermediate_data&quot;, &quot;fastq_data.csv&quot;))</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   file_id = col_character(),
+##   sample_id = col_character(),
+##   direction = col_character(),
+##   raw_path = col_character(),
+##   prefiltered_path = col_character(),
+##   trimmed_path = col_character(),
+##   untrimmed_path = col_character(),
+##   filtered_path = col_character()
+## )</code></pre>
+<p>and join this with the sample metadata so that I can distinguish rps10 from ITS1 samples.</p>
+<pre class="r"><code>metadata &lt;- read_csv(file.path(&#39;intermediate_data&#39;, &#39;metadata.csv&#39;))</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   sample_id = col_character(),
+##   primer_pair_id = col_character(),
+##   dna_type = col_character(),
+##   dna_sample_id = col_character(),
+##   locus = col_character(),
+##   forward = col_character(),
+##   reverse = col_character(),
+##   sample_type = col_character()
+## )</code></pre>
+<pre class="r"><code>fastq_data &lt;- metadata %&gt;%
+  select(sample_id, locus, primer_pair_id) %&gt;%
+  right_join(fastq_data, by = &quot;sample_id&quot;) %&gt;%
+  mutate(file_name = paste0(file_id, &#39;.fastq.gz&#39;))
+print(fastq_data)</code></pre>
+<pre><code>## # A tibble: 96 x 11
+##    sample_id locus primer_pair_id file_id direction raw_path prefiltered_path
+##    &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;     &lt;chr&gt;    &lt;chr&gt;           
+##  1 A1        rps10 rps10_Final    A1_R1   Forward   raw_dat… intermediate_da…
+##  2 A1        rps10 rps10_Final    A1_R2   Reverse   raw_dat… intermediate_da…
+##  3 A2        rps10 rps10_Final    A2_R1   Forward   raw_dat… intermediate_da…
+##  4 A2        rps10 rps10_Final    A2_R2   Reverse   raw_dat… intermediate_da…
+##  5 A3        rps10 rps10_Felipe   A3_R1   Forward   raw_dat… intermediate_da…
+##  6 A3        rps10 rps10_Felipe   A3_R2   Reverse   raw_dat… intermediate_da…
+##  7 A4        rps10 rps10_Felipe   A4_R1   Forward   raw_dat… intermediate_da…
+##  8 A4        rps10 rps10_Felipe   A4_R2   Reverse   raw_dat… intermediate_da…
+##  9 A5        ITS   ITS6/7         A5_R1   Forward   raw_dat… intermediate_da…
+## 10 A5        ITS   ITS6/7         A5_R2   Reverse   raw_dat… intermediate_da…
+## # … with 86 more rows, and 4 more variables: trimmed_path &lt;chr&gt;,
+## #   untrimmed_path &lt;chr&gt;, filtered_path &lt;chr&gt;, file_name &lt;chr&gt;</code></pre>
+<p>To simplify the following code, I will make a function to get the fastq file paths for a particular combination of primer pair and read direction.</p>
+<pre class="r"><code>get_fastq_paths &lt;- function(my_direction, my_primer_pair_id) {
+  fastq_data %&gt;%
+    filter(direction == my_direction, primer_pair_id == my_primer_pair_id, file.exists(filtered_path)) %&gt;%
+    pull(filtered_path)
+}</code></pre>
+<p>Next, I will make a function to infer the error profile (for each type of nucleotide mutation) for each a given read direction (forward/reverse) and primer pair, and use that information to infer ASVs using dada2.</p>
+<pre class="r"><code>infer_asvs &lt;- function(my_direction, my_primer_pair_id, plot_error_rates = TRUE) {
+  # Get relevant FASTQ files 
+  fastq_paths &lt;- get_fastq_paths(my_direction, my_primer_pair_id)
+  
+  # Infer error rates for each type of nucleotide mutation
+  error_profile &lt;- learnErrors(fastq_paths, multithread = TRUE)
+  
+  # Plot error rates
+  if (plot_error_rates) {
+    cat(paste0(&#39;Error rate plot for the &#39;, my_direction, &#39; read of primer pair &#39;, my_primer_pair_id, &#39; \n&#39;))
+    print(plotErrors(error_profile, nominalQ = TRUE))
+  }
+  
+  # Infer ASVs
+  asv_data &lt;- dada(fastq_paths, err = error_profile, multithread = TRUE)
+  return(asv_data)
+}</code></pre>
+<p>Now I can infer the ASVs for each sample, with different error profiles for each combination of read direction and primer pair.</p>
+<p><strong>This will take a while.</strong></p>
+<pre class="r"><code>denoised_data_path &lt;- file.path(&quot;intermediate_data&quot;, &quot;denoised_data.Rdata&quot;)
+if (file.exists(denoised_data_path)) {
+  load(denoised_data_path)
+} else {
+  run_dada &lt;- function(direction) {
+    lapply(unique(fastq_data$primer_pair_id), function(primer_pair_id) infer_asvs(direction, primer_pair_id)) %&gt;%
+      unlist(recursive = FALSE)
+  }
+  dada_forward &lt;- run_dada(&quot;Forward&quot;)
+  dada_reverse &lt;- run_dada(&quot;Reverse&quot;)
+  save(dada_forward, dada_reverse, file = denoised_data_path)
+}</code></pre>
+<pre><code>## 111854287 total bases in 398029 reads from 1 samples will be used for learning the error rates.
+## Error rate plot for the Forward read of primer pair rps10_Final</code></pre>
+<pre><code>## Warning: Transformation introduced infinite values in continuous y-axis</code></pre>
+<p><img src="03--abundance_matrix_preparation_files/figure-html/asv_inference-1.png" width="960" /></p>
+<pre><code>## Sample 1 - 398029 reads in 91057 unique sequences.
+## Sample 2 - 7728 reads in 3409 unique sequences.
+## Sample 3 - 498193 reads in 167283 unique sequences.
+## Sample 4 - 28152 reads in 16116 unique sequences.
+## Sample 5 - 295536 reads in 80471 unique sequences.
+## Sample 6 - 28340 reads in 15177 unique sequences.
+## Sample 7 - 232302 reads in 84893 unique sequences.
+## Sample 8 - 47482 reads in 24754 unique sequences.
+## Sample 9 - 460310 reads in 126303 unique sequences.
+## Sample 10 - 30339 reads in 18348 unique sequences.
+## Sample 11 - 553096 reads in 133557 unique sequences.
+## Sample 12 - 30220 reads in 13806 unique sequences.
+## Sample 13 - 135125 reads in 65992 unique sequences.
+## Sample 14 - 41128 reads in 19192 unique sequences.
+## Sample 15 - 107774 reads in 83365 unique sequences.
+## 171161268 total bases in 606995 reads from 1 samples will be used for learning the error rates.
+## Error rate plot for the Forward read of primer pair rps10_Felipe</code></pre>
+<pre><code>## Warning: Transformation introduced infinite values in continuous y-axis</code></pre>
+<p><img src="03--abundance_matrix_preparation_files/figure-html/asv_inference-2.png" width="960" /></p>
+<pre><code>## Sample 1 - 606995 reads in 192125 unique sequences.
+## Sample 2 - 74275 reads in 16169 unique sequences.
+## Sample 3 - 737779 reads in 222168 unique sequences.
+## Sample 4 - 54970 reads in 21080 unique sequences.
+## Sample 5 - 279748 reads in 77262 unique sequences.
+## Sample 6 - 43762 reads in 19228 unique sequences.
+## Sample 7 - 364288 reads in 124906 unique sequences.
+## Sample 8 - 68014 reads in 27565 unique sequences.
+## Sample 9 - 600878 reads in 151052 unique sequences.
+## Sample 10 - 57295 reads in 21704 unique sequences.
+## Sample 11 - 729071 reads in 244504 unique sequences.
+## Sample 12 - 63777 reads in 27830 unique sequences.
+## Sample 13 - 115084 reads in 54507 unique sequences.
+## Sample 14 - 92136 reads in 35475 unique sequences.
+## Sample 15 - 145193 reads in 39886 unique sequences.
+## Sample 16 - 273 reads in 242 unique sequences.
+## 102059660 total bases in 395228 reads from 1 samples will be used for learning the error rates.
+## Error rate plot for the Forward read of primer pair ITS6/7</code></pre>
+<pre><code>## Warning: Transformation introduced infinite values in continuous y-axis</code></pre>
+<p><img src="03--abundance_matrix_preparation_files/figure-html/asv_inference-3.png" width="960" /></p>
+<pre><code>## Sample 1 - 395228 reads in 65083 unique sequences.
+## Sample 2 - 48295 reads in 14153 unique sequences.
+## Sample 3 - 386983 reads in 64521 unique sequences.
+## Sample 4 - 320680 reads in 83377 unique sequences.
+## Sample 5 - 120162 reads in 37292 unique sequences.
+## Sample 6 - 290916 reads in 85737 unique sequences.
+## Sample 7 - 394643 reads in 85438 unique sequences.
+## Sample 8 - 187827 reads in 43382 unique sequences.
+## Sample 9 - 573625 reads in 116363 unique sequences.
+## Sample 10 - 447258 reads in 136129 unique sequences.
+## Sample 11 - 536425 reads in 86863 unique sequences.
+## Sample 12 - 455345 reads in 138292 unique sequences.
+## Sample 13 - 185410 reads in 46514 unique sequences.
+## Sample 14 - 594308 reads in 154614 unique sequences.
+## Sample 15 - 20730 reads in 5090 unique sequences.
+## Sample 16 - 288548 reads in 73307 unique sequences.
+## 111441028 total bases in 398029 reads from 1 samples will be used for learning the error rates.
+## Error rate plot for the Reverse read of primer pair rps10_Final</code></pre>
+<pre><code>## Warning: Transformation introduced infinite values in continuous y-axis</code></pre>
+<p><img src="03--abundance_matrix_preparation_files/figure-html/asv_inference-4.png" width="960" /></p>
+<pre><code>## Sample 1 - 398029 reads in 152628 unique sequences.
+## Sample 2 - 7728 reads in 4292 unique sequences.
+## Sample 3 - 498193 reads in 222788 unique sequences.
+## Sample 4 - 28152 reads in 15641 unique sequences.
+## Sample 5 - 295536 reads in 104357 unique sequences.
+## Sample 6 - 28340 reads in 15736 unique sequences.
+## Sample 7 - 232302 reads in 100639 unique sequences.
+## Sample 8 - 47482 reads in 25504 unique sequences.
+## Sample 9 - 460310 reads in 158163 unique sequences.
+## Sample 10 - 30339 reads in 18604 unique sequences.
+## Sample 11 - 553096 reads in 173505 unique sequences.
+## Sample 12 - 30220 reads in 20289 unique sequences.
+## Sample 13 - 135125 reads in 65807 unique sequences.
+## Sample 14 - 41128 reads in 26465 unique sequences.
+## Sample 15 - 107774 reads in 60381 unique sequences.
+## 169953582 total bases in 606995 reads from 1 samples will be used for learning the error rates.
+## Error rate plot for the Reverse read of primer pair rps10_Felipe</code></pre>
+<pre><code>## Warning: Transformation introduced infinite values in continuous y-axis</code></pre>
+<p><img src="03--abundance_matrix_preparation_files/figure-html/asv_inference-5.png" width="960" /></p>
+<pre><code>## Sample 1 - 606995 reads in 268925 unique sequences.
+## Sample 2 - 74275 reads in 19208 unique sequences.
+## Sample 3 - 737779 reads in 317309 unique sequences.
+## Sample 4 - 54970 reads in 25721 unique sequences.
+## Sample 5 - 279748 reads in 106764 unique sequences.
+## Sample 6 - 43762 reads in 22069 unique sequences.
+## Sample 7 - 364288 reads in 148840 unique sequences.
+## Sample 8 - 68014 reads in 31442 unique sequences.
+## Sample 9 - 600878 reads in 203331 unique sequences.
+## Sample 10 - 57295 reads in 33463 unique sequences.
+## Sample 11 - 729071 reads in 256841 unique sequences.
+## Sample 12 - 63777 reads in 37916 unique sequences.
+## Sample 13 - 115084 reads in 58951 unique sequences.
+## Sample 14 - 92136 reads in 49192 unique sequences.
+## Sample 15 - 145193 reads in 41835 unique sequences.
+## Sample 16 - 273 reads in 252 unique sequences.
+## 102260557 total bases in 395228 reads from 1 samples will be used for learning the error rates.
+## Error rate plot for the Reverse read of primer pair ITS6/7</code></pre>
+<pre><code>## Warning: Transformation introduced infinite values in continuous y-axis</code></pre>
+<p><img src="03--abundance_matrix_preparation_files/figure-html/asv_inference-6.png" width="960" /></p>
+<pre><code>## Sample 1 - 395228 reads in 109035 unique sequences.
+## Sample 2 - 48295 reads in 23241 unique sequences.
+## Sample 3 - 386983 reads in 110404 unique sequences.
+## Sample 4 - 320680 reads in 107845 unique sequences.
+## Sample 5 - 120162 reads in 55204 unique sequences.
+## Sample 6 - 290916 reads in 119691 unique sequences.
+## Sample 7 - 394643 reads in 108999 unique sequences.
+## Sample 8 - 187827 reads in 58944 unique sequences.
+## Sample 9 - 573625 reads in 152927 unique sequences.
+## Sample 10 - 447258 reads in 194390 unique sequences.
+## Sample 11 - 536425 reads in 113914 unique sequences.
+## Sample 12 - 455345 reads in 211397 unique sequences.
+## Sample 13 - 185410 reads in 61984 unique sequences.
+## Sample 14 - 594308 reads in 212644 unique sequences.
+## Sample 15 - 20730 reads in 10251 unique sequences.
+## Sample 16 - 288548 reads in 112963 unique sequences.</code></pre>
+</div>
+<div id="merge-paired-reads" class="section level2">
+<h2>Merge paired reads</h2>
+<p>This will combine the forward and reverse reads into a single read based on overlaps.</p>
+<pre class="r"><code>merged_read_data_path &lt;- file.path(&#39;intermediate_data&#39;, &#39;merged_reads.rds&#39;)
+if (file.exists(merged_read_data_path)) {
+  merged_reads &lt;- readRDS(merged_read_data_path)
+} else {
+  merged_reads &lt;- mergePairs(dadaF = dada_forward,
+                             derepF = file.path(&#39;intermediate_data&#39;, &#39;filtered_sequences&#39;, names(dada_forward)),
+                             dadaR = dada_reverse,
+                             derepR = file.path(&#39;intermediate_data&#39;, &#39;filtered_sequences&#39;, names(dada_reverse)),
+                             minOverlap = min_read_merging_overlap,
+                             maxMismatch = max_read_merging_mismatch,
+                             returnRejects = TRUE, 
+                             verbose = TRUE)
+  saveRDS(merged_reads, file = merged_read_data_path)
+}</code></pre>
+<p>I will plot the amount of overlap and percent identity in the overlap region to get an idea of how each locus is getting merged. First I will combine all the read merging output into a single table with a new column for which sample it came from:</p>
+<pre class="r"><code>non_empty_merged_reads &lt;- merged_reads[map_dbl(merged_reads, nrow) &gt; 0]
+merge_data &lt;- non_empty_merged_reads %&gt;%
+  bind_rows() %&gt;%
+  mutate(file_name = rep(names(non_empty_merged_reads), map_int(non_empty_merged_reads, nrow)),
+         sample_id = gsub(file_name, pattern = &#39;_.+$&#39;, replacement = &#39;&#39;)) %&gt;%
+  as_tibble()</code></pre>
+<p>Next I will add columns for the metadata so I can tell which samples are for each locus</p>
+<pre class="r"><code>metadata &lt;- read_csv(file.path(&#39;intermediate_data&#39;, &#39;metadata.csv&#39;))</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   sample_id = col_character(),
+##   primer_pair_id = col_character(),
+##   dna_type = col_character(),
+##   dna_sample_id = col_character(),
+##   locus = col_character(),
+##   forward = col_character(),
+##   reverse = col_character(),
+##   sample_type = col_character()
+## )</code></pre>
+<pre class="r"><code>merge_data &lt;- left_join(merge_data, metadata, by = &#39;sample_id&#39;)</code></pre>
+<p>and remove any unneeded columns</p>
+<pre class="r"><code>merge_data &lt;- select(merge_data, locus, nmatch, nmismatch, nindel, accept)
+merge_data</code></pre>
+<pre><code>## # A tibble: 96,858 x 5
+##    locus nmatch nmismatch nindel accept
+##    &lt;chr&gt;  &lt;int&gt;     &lt;int&gt;  &lt;int&gt; &lt;lgl&gt; 
+##  1 rps10    117         0      0 TRUE  
+##  2 rps10    116         0      1 TRUE  
+##  3 rps10    120         0      1 TRUE  
+##  4 rps10    120         0      0 TRUE  
+##  5 rps10    126         0      0 TRUE  
+##  6 rps10    117         0      0 TRUE  
+##  7 rps10    135         0      0 TRUE  
+##  8 rps10    129         0      0 TRUE  
+##  9 rps10    117         0      1 TRUE  
+## 10 rps10    120         0      1 TRUE  
+## # … with 96,848 more rows</code></pre>
+<p>I will add new columns for overlap length and percent ID:</p>
+<pre class="r"><code>merge_data &lt;- mutate(merge_data,
+                     overlap = nmatch + nmismatch,
+                     mismatch = nmismatch + nindel,
+                     identity = (overlap - mismatch) / overlap)</code></pre>
+<p>and now I can reformat the data for plotting and plot</p>
+<pre class="r"><code>merge_plot &lt;- merge_data %&gt;%
+  select(locus, mismatch,  accept, overlap) %&gt;%
+  rename(&#39;Locus&#39; = locus, &#39;Mismatches and Indels&#39; = mismatch, &#39;Merged&#39; = accept, &#39;Overlap Length&#39; = overlap) %&gt;%
+  gather(key = &#39;stat&#39;, value = &#39;value&#39;, -Locus, -Merged) %&gt;%
+  ggplot(aes(x = value, fill = Merged)) +
+  facet_grid(Locus ~ stat, scales = &#39;free&#39;) +
+  geom_histogram(bins = 30) +
+  scale_fill_viridis_d(begin = 0.8, end = 0.2) +
+  labs(x = &#39;&#39;, y = &#39;ASV count&#39;, fill = &#39;Merged&#39;) +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position=&quot;bottom&quot;) 
+ggsave(merge_plot, filename = &#39;read_merging.png&#39;, path = &#39;results&#39;, width = 8, height = 8)
+merge_plot</code></pre>
+<p><img src="03--abundance_matrix_preparation_files/figure-html/unnamed-chunk-12-1.png" width="768" /></p>
+</div>
+<div id="create-asv-abundance-matrix" class="section level2">
+<h2>Create ASV abundance matrix</h2>
+<p>This will create the long-sought-after abundance matrix (ASV table).</p>
+<pre class="r"><code>raw_abundance_data &lt;- map(merged_reads, function(x) filter(x, accept == TRUE)) %&gt;%
+  makeSequenceTable()
+hist(nchar(getSequences(raw_abundance_data)))</code></pre>
+<p><img src="03--abundance_matrix_preparation_files/figure-html/unnamed-chunk-13-1.png" width="960" /></p>
+</div>
+<div id="create-otu-abundance-matrix" class="section level2">
+<h2>Create OTU abundance matrix</h2>
+<p>I will also create an OTU abundance matrix so I can evaluate the two methods with an OTU-based approch. Clustering is a greedy algorithm with sequences presorted by abundance and automatically masked for low-complexity regions.</p>
+<pre class="r"><code>vserach_cluster &lt;- function(seqs, seq_abund, id_threshold = 0.97, method = &quot;fast&quot;) {
+  # Check that VSEARCH is installed
+  tryCatch(system2(&quot;vsearch&quot;, args = &quot;--version&quot;, stdout = FALSE, stderr = FALSE),
+           warning=function(w) {
+             stop(&quot;vsearch cannot be found on PATH. Is it installed?&quot;)
+           })
+  
+  # Run VSEARCH
+  # seqs &lt;- seqs[order(seq_abund, decreasing = TRUE)]
+  input_fasta_path &lt;- tempfile()
+  write_lines(paste0(&#39;&gt;&#39;, seq_along(seqs), &#39;;size=&#39;, seq_abund, &#39;\n&#39;, seqs), path = input_fasta_path)
+  otu_centroid_path &lt;- tempfile()
+  command_args &lt;- paste(paste0(&quot;--cluster_&quot;, method), 
+                        input_fasta_path,
+                        &quot;--threads&quot;, detectCores() - 1,
+                        &quot;--id&quot;, id_threshold,
+                        &quot;--sizein&quot;,
+                        &quot;--strand plus&quot;,
+                        &quot;--fasta_width 0&quot;, # 0 = no wrapping in fasta file
+                        &quot;--centroids&quot;, otu_centroid_path)
+  system2(&quot;vsearch&quot;, args = command_args, stdout = FALSE, stderr = FALSE)
+  
+  # Return OTU sequences
+  centroids &lt;- read_fasta(otu_centroid_path)
+  names(centroids) &lt;- str_match(names(centroids), pattern = &#39;size=(.+)$&#39;)[, 2]
+  return(centroids)
+}
+
+merged_read_seqs &lt;- unlist(map(merged_reads, function(x) {
+  x$sequence[x$accept]
+}))
+unique_merged_read_seqs &lt;- unique(merged_read_seqs)
+length(unique_merged_read_seqs)</code></pre>
+<pre><code>## [1] 39580</code></pre>
+<pre class="r"><code>unique_read_counts &lt;- map_dbl(unique_merged_read_seqs, function(s) {
+  sum(map_dbl(merged_reads, function(sample_data) {
+    sum(sample_data$abundance[sample_data$sequence == s &amp; sample_data$accept])
+  }))
+})
+otu_its_seqs &lt;- vserach_cluster(seqs = unique_merged_read_seqs,
+                               seq_abund = unique_read_counts,
+                               id_threshold = its_clustering_threshold,
+                               method = &#39;size&#39;) %&gt;%
+  toupper()</code></pre>
+<pre><code>## Warning: The `path` argument of `write_lines()` is deprecated as of readr 1.4.0.
+## Please use the `file` argument instead.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
+<pre class="r"><code>otu_rps10_seqs &lt;- vserach_cluster(seqs = unique_merged_read_seqs,
+                               seq_abund = unique_read_counts,
+                               id_threshold = rps10_clustering_threshold,
+                               method = &#39;size&#39;) %&gt;%
+  toupper()</code></pre>
+<p>Now I will create the OTU abundance matrix in the same format as dada2 outputs.</p>
+<pre class="r"><code>metadata &lt;- read_csv(file.path(&#39;intermediate_data&#39;, &#39;metadata.csv&#39;))</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   sample_id = col_character(),
+##   primer_pair_id = col_character(),
+##   dna_type = col_character(),
+##   dna_sample_id = col_character(),
+##   locus = col_character(),
+##   forward = col_character(),
+##   reverse = col_character(),
+##   sample_type = col_character()
+## )</code></pre>
+<pre class="r"><code>otus_per_sample &lt;- map(rownames(raw_abundance_data), function(sample) {
+  sample_id &lt;- str_match(sample, pattern = &#39;^(.+)_.+$&#39;)[, 2]
+  if (metadata$locus[metadata$sample_id == sample_id] == &quot;rps10&quot;) {
+    otu_seqs &lt;- otu_rps10_seqs
+  } else {
+    otu_seqs &lt;- otu_its_seqs
+  }
+  merged_read_data &lt;- merged_reads[[sample]]
+  sample_otu_counts &lt;- map_int(otu_seqs, function(s) {
+    sum(merged_read_data$abundance[merged_read_data$sequence == s &amp; merged_read_data$accept])
+  })
+  names(sample_otu_counts) &lt;- otu_seqs
+  all_unique_otus &lt;- unique(c(otu_rps10_seqs, otu_its_seqs))
+  out &lt;- as.integer(rep(0, length(all_unique_otus)))
+  names(out) &lt;- all_unique_otus
+  out[names(sample_otu_counts)] &lt;- sample_otu_counts
+  out
+  return(out)
+})
+
+raw_otu_abundance_data &lt;- do.call(rbind, otus_per_sample)
+rownames(raw_otu_abundance_data) &lt;- rownames(raw_abundance_data)</code></pre>
+<p>and remove and OTUs with no data (these might be OTUs for rps10 clustered at the 99% level for example)</p>
+<pre class="r"><code>raw_otu_abundance_data &lt;- raw_otu_abundance_data[, colSums(raw_otu_abundance_data) &gt; 0]</code></pre>
+</div>
+<div id="chimera-removal" class="section level2">
+<h2>Chimera removal</h2>
+<p><strong>This might take a while</strong></p>
+<pre class="r"><code>if (remove_chimeras) {
+  # ASVs
+  asv_abundance_data &lt;- removeBimeraDenovo(raw_abundance_data,
+                                           method = &quot;consensus&quot;, 
+                                           multithread = TRUE, 
+                                           verbose = TRUE)
+  dim(asv_abundance_data)
+  print(sum(asv_abundance_data)/sum(raw_abundance_data))
+  
+  # OTUs
+  otu_abundance_data &lt;- removeBimeraDenovo(raw_otu_abundance_data,
+                                           method = &quot;consensus&quot;, 
+                                           multithread = TRUE, 
+                                           verbose = TRUE)
+  dim(otu_abundance_data)
+  print(sum(otu_abundance_data)/sum(raw_otu_abundance_data))
+} else {
+  asv_abundance_data &lt;- raw_abundance_data
+  otu_abundance_data &lt;- raw_otu_abundance_data
+}</code></pre>
+<pre><code>## Identified 30052 bimeras out of 39580 input sequences.</code></pre>
+<pre><code>## [1] 0.8993971</code></pre>
+<pre><code>## Identified 354 bimeras out of 7604 input sequences.</code></pre>
+<pre><code>## [1] 0.9895649</code></pre>
+</div>
+<div id="remove-short-sequences" class="section level2">
+<h2>Remove short sequences</h2>
+<p>Sequences that are less than 50 cannot be assigned a taxonomy.</p>
+<pre class="r"><code>asv_abundance_data &lt;- asv_abundance_data[, nchar(colnames(asv_abundance_data)) &gt;= min_asv_length]
+otu_abundance_data &lt;- otu_abundance_data[, nchar(colnames(otu_abundance_data)) &gt;= min_asv_length]</code></pre>
+</div>
+<div id="assign-taxonomy" class="section level2">
+<h2>Assign taxonomy</h2>
+<p>Since there are two loci used, I will need to use two different reference databases. First I will split abundance matrix in to RPS10 and ITS samples:</p>
+<pre class="r"><code>fastq_data</code></pre>
+<pre><code>## # A tibble: 96 x 11
+##    sample_id locus primer_pair_id file_id direction raw_path prefiltered_path
+##    &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;     &lt;chr&gt;    &lt;chr&gt;           
+##  1 A1        rps10 rps10_Final    A1_R1   Forward   raw_dat… intermediate_da…
+##  2 A1        rps10 rps10_Final    A1_R2   Reverse   raw_dat… intermediate_da…
+##  3 A2        rps10 rps10_Final    A2_R1   Forward   raw_dat… intermediate_da…
+##  4 A2        rps10 rps10_Final    A2_R2   Reverse   raw_dat… intermediate_da…
+##  5 A3        rps10 rps10_Felipe   A3_R1   Forward   raw_dat… intermediate_da…
+##  6 A3        rps10 rps10_Felipe   A3_R2   Reverse   raw_dat… intermediate_da…
+##  7 A4        rps10 rps10_Felipe   A4_R1   Forward   raw_dat… intermediate_da…
+##  8 A4        rps10 rps10_Felipe   A4_R2   Reverse   raw_dat… intermediate_da…
+##  9 A5        ITS   ITS6/7         A5_R1   Forward   raw_dat… intermediate_da…
+## 10 A5        ITS   ITS6/7         A5_R2   Reverse   raw_dat… intermediate_da…
+## # … with 86 more rows, and 4 more variables: trimmed_path &lt;chr&gt;,
+## #   untrimmed_path &lt;chr&gt;, filtered_path &lt;chr&gt;, file_name &lt;chr&gt;</code></pre>
+<pre class="r"><code>rps10_abund_asv &lt;- asv_abundance_data[rownames(asv_abundance_data) %in% fastq_data$file_name[fastq_data$locus == &quot;rps10&quot;], ]
+its_abund_asv &lt;- asv_abundance_data[rownames(asv_abundance_data) %in% fastq_data$file_name[fastq_data$locus == &quot;ITS&quot;], ]
+rps10_abund_otu &lt;- otu_abundance_data[rownames(otu_abundance_data) %in% fastq_data$file_name[fastq_data$locus == &quot;rps10&quot;], ]
+its_abund_otu &lt;- otu_abundance_data[rownames(otu_abundance_data) %in% fastq_data$file_name[fastq_data$locus == &quot;ITS&quot;], ]</code></pre>
+<p>Since there are two different loci, ASVs should either be in one locus or another but not both, so we can remove any ASVs that are not present in the two groups. If there is an ASV that is in both, I will assign it to the one with more reads.</p>
+<pre class="r"><code># ASVs
+in_both &lt;- colSums(rps10_abund_asv) != 0 &amp; colSums(its_abund_asv) != 0
+assign_to_its &lt;- in_both &amp; colSums(its_abund_asv) &gt; colSums(rps10_abund_asv)
+assign_to_rps &lt;- in_both &amp; colSums(its_abund_asv) &lt; colSums(rps10_abund_asv)
+is_rps &lt;- (colSums(rps10_abund_asv) != 0 &amp; colSums(its_abund_asv) == 0) | assign_to_rps
+is_its &lt;- (colSums(its_abund_asv) != 0 &amp; colSums(rps10_abund_asv) == 0) | assign_to_its
+rps10_abund_asv &lt;- rps10_abund_asv[ , is_rps]
+its_abund_asv &lt;- its_abund_asv[ , is_its]
+
+# OTUs
+in_both &lt;- colSums(rps10_abund_otu) != 0 &amp; colSums(its_abund_otu) != 0
+assign_to_its &lt;- in_both &amp; colSums(its_abund_otu) &gt; colSums(rps10_abund_otu)
+assign_to_rps &lt;- in_both &amp; colSums(its_abund_otu) &lt; colSums(rps10_abund_otu)
+is_rps &lt;- (colSums(rps10_abund_otu) != 0 &amp; colSums(its_abund_otu) == 0) | assign_to_rps
+is_its &lt;- (colSums(its_abund_otu) != 0 &amp; colSums(rps10_abund_otu) == 0) | assign_to_its
+rps10_abund_otu &lt;- rps10_abund_otu[ , is_rps]
+its_abund_otu &lt;- its_abund_otu[ , is_its]</code></pre>
+<p>The number of ASVs left in the two groups should sum to the total number of ASVs, since there should be no overlap.</p>
+<pre class="r"><code>stopifnot(ncol(rps10_abund_asv) + ncol(its_abund_asv) == ncol(asv_abundance_data))
+stopifnot(ncol(rps10_abund_otu) + ncol(its_abund_otu) == ncol(otu_abundance_data))</code></pre>
+<p>Then I can assign the taxonomy on each database separately:</p>
+<pre class="r"><code># ASVs
+tax_results_rps10_asv &lt;- assignTaxonomy(rps10_abund_asv, 
+                                        refFasta = file.path(&quot;intermediate_data&quot;, &quot;reference_databases&quot;, &quot;rps10_reference_db.fa&quot;), 
+                                        taxLevels = c(&quot;Domaine&quot;, &quot;Kingdom&quot;, &quot;Phylum&quot;, &quot;Class&quot;, &quot;Order&quot;, &quot;Family&quot;, &quot;Genus&quot;, &quot;Species&quot;, &quot;Reference&quot;),
+                                        minBoot = 0,
+                                        tryRC = TRUE,
+                                        outputBootstraps = TRUE,
+                                        multithread = TRUE)
+tax_results_its_asv &lt;- assignTaxonomy(its_abund_asv, 
+                                      refFasta = file.path(&quot;intermediate_data&quot;, &quot;reference_databases&quot;, &quot;its1_reference_db.fa&quot;), 
+                                      taxLevels = c(&quot;Domaine&quot;, &quot;Kingdom&quot;, &quot;Phylum&quot;, &quot;Class&quot;, &quot;Order&quot;, &quot;Family&quot;, &quot;Genus&quot;, &quot;Species&quot;, &quot;Reference&quot;),
+                                      minBoot = 0,
+                                      tryRC = TRUE,
+                                      outputBootstraps = TRUE,
+                                      multithread = TRUE)</code></pre>
+<pre><code>## Warning in .Call2(&quot;fasta_index&quot;, filexp_list, nrec, skip, seek.first.rec, :
+## reading FASTA file intermediate_data/reference_databases/its1_reference_db.fa:
+## ignored 13 invalid one-letter sequence codes</code></pre>
+<pre class="r"><code># OTUs
+tax_results_rps10_otu &lt;- assignTaxonomy(rps10_abund_otu, 
+                                        refFasta = file.path(&quot;intermediate_data&quot;, &quot;reference_databases&quot;, &quot;rps10_reference_db.fa&quot;), 
+                                        taxLevels = c(&quot;Domaine&quot;, &quot;Kingdom&quot;, &quot;Phylum&quot;, &quot;Class&quot;, &quot;Order&quot;, &quot;Family&quot;, &quot;Genus&quot;, &quot;Species&quot;, &quot;Reference&quot;),
+                                        minBoot = 0,
+                                        tryRC = TRUE,
+                                        outputBootstraps = TRUE,
+                                        multithread = TRUE)
+tax_results_its_otu &lt;- assignTaxonomy(its_abund_otu, 
+                                      refFasta = file.path(&quot;intermediate_data&quot;, &quot;reference_databases&quot;, &quot;its1_reference_db.fa&quot;), 
+                                      taxLevels = c(&quot;Domaine&quot;, &quot;Kingdom&quot;, &quot;Phylum&quot;, &quot;Class&quot;, &quot;Order&quot;, &quot;Family&quot;, &quot;Genus&quot;, &quot;Species&quot;, &quot;Reference&quot;),
+                                      minBoot = 0,
+                                      tryRC = TRUE,
+                                      outputBootstraps = TRUE,
+                                      multithread = TRUE)</code></pre>
+<pre><code>## Warning in .Call2(&quot;fasta_index&quot;, filexp_list, nrec, skip, seek.first.rec, :
+## reading FASTA file intermediate_data/reference_databases/its1_reference_db.fa:
+## ignored 13 invalid one-letter sequence codes</code></pre>
+</div>
+<div id="align-to-reference-sequence-for-percent-id" class="section level2">
+<h2>Align to reference sequence for percent ID</h2>
+<p>A high bootstrap value does not necessarily mean a good match to the reference sequence. As long as the match is much better than any other match, the bootstrap will be high, even if the best match is not that great. Therefore I will also align the ASV sequences to the reference sequence they were assigned to get a percent identity.</p>
+<pre class="r"><code>its_seqs &lt;- read_fasta(file.path(&#39;intermediate_data&#39;, &#39;reference_databases&#39;, &#39;its1_reference_db.fa&#39;))
+rps10_seqs &lt;- read_fasta(file.path(&#39;intermediate_data&#39;, &#39;reference_databases&#39;, &#39;rps10_reference_db.fa&#39;))
+
+get_ref_seq &lt;- function(tax_result, db) {
+  ref_i &lt;- as.integer(str_match(tax_result$tax[, &#39;Reference&#39;], &#39;^.+_([0-9]+)$&#39;)[ ,2])
+  db[ref_i]
+}
+
+get_align_pid &lt;- function(ref, asv) {
+  mat &lt;- nucleotideSubstitutionMatrix(match = 1, mismatch = -3, baseOnly = TRUE)
+  align &lt;-  pairwiseAlignment(pattern = asv, subject = ref, type = &#39;global-local&#39;)
+  is_match &lt;- strsplit(as.character(align@pattern), &#39;&#39;)[[1]] == strsplit(as.character(align@subject), &#39;&#39;)[[1]]
+  sum(is_match) / length(is_match)
+}
+
+get_pids &lt;- function(tax_result, db) {
+  ref_seq &lt;- get_ref_seq(tax_result, db)
+  asv_seq &lt;- rownames(tax_result$tax)
+  future_map2_dbl(ref_seq, asv_seq, get_align_pid) * 100
+}
+
+rps10_pids_asv &lt;- get_pids(tax_results_rps10_asv, rps10_seqs)
+its_pids_asv &lt;- get_pids(tax_results_its_asv, its_seqs)
+rps10_pids_otu &lt;- get_pids(tax_results_rps10_otu, rps10_seqs)
+its_pids_otu &lt;- get_pids(tax_results_its_otu, its_seqs)</code></pre>
+<p>Now I can add these PIDs into the taxonomy assignment results as another rank, with its percent identity to its assigned reference sequence as a level in the taxonomy.</p>
+<pre class="r"><code>add_pid_to_tax &lt;- function(tax_result, pid) {
+  tax_result$tax &lt;- cbind(tax_result$tax, ASV = rownames(tax_result$tax))   
+  tax_result$boot &lt;- cbind(tax_result$boot, ASV = pid)
+  tax_result
+}
+
+tax_results_rps10_asv &lt;- add_pid_to_tax(tax_results_rps10_asv, rps10_pids_asv)
+tax_results_its_asv &lt;- add_pid_to_tax(tax_results_its_asv, its_pids_asv)
+tax_results_rps10_otu &lt;- add_pid_to_tax(tax_results_rps10_otu, rps10_pids_otu)
+tax_results_its_otu &lt;- add_pid_to_tax(tax_results_its_otu, its_pids_otu)</code></pre>
+</div>
+<div id="make-classificationbootstrap-vector" class="section level2">
+<h2>Make classification/bootstrap vector</h2>
+<p>I will combine the taxonomic assignments and bootstrap values for each locus into a single classification vector. This will store all the taxonomic and bootstrap information in a single vector.</p>
+<pre class="r"><code>assignTax_as_char &lt;- function(res) {
+  out &lt;- vapply(1:nrow(res$tax), FUN.VALUE = character(1), function(i) {
+    paste(res$tax[i, ],
+          res$boot[i, ],
+          colnames(res$tax), 
+          sep = &#39;--&#39;, collapse = &#39;;&#39;)
+  })
+  names(out) &lt;- rownames(res$tax)
+  return(out)
+}
+
+seq_tax_asv &lt;- c(assignTax_as_char(tax_results_rps10_asv), assignTax_as_char(tax_results_its_asv))
+seq_tax_otu &lt;- c(assignTax_as_char(tax_results_rps10_otu), assignTax_as_char(tax_results_its_otu))</code></pre>
+<p>Again, let make sure that there is a single taxonomic assignment for each ASV.</p>
+<pre class="r"><code>stopifnot(all(names(seq_tax_asv) %in% colnames(asv_abundance_data)))
+stopifnot(all(! duplicated(names(seq_tax_asv))))
+stopifnot(all(names(seq_tax_otu) %in% colnames(otu_abundance_data)))
+stopifnot(all(! duplicated(names(seq_tax_otu))))</code></pre>
+</div>
+<div id="reformat-asv-table" class="section level2">
+<h2>Reformat ASV table</h2>
+<p>I will reformat the abundance matrix to something I like more and is compatible with the <code>taxa</code> package.</p>
+<pre class="r"><code># ASVs
+formatted_abund_asv &lt;- t(asv_abundance_data)
+colnames(formatted_abund_asv) &lt;- sub(colnames(formatted_abund_asv), pattern = &quot;_.+$&quot;, replacement = &quot;&quot;)
+formatted_abund_asv &lt;- cbind(sequence = rownames(formatted_abund_asv), 
+                             taxonomy = seq_tax_asv[rownames(formatted_abund_asv)], 
+                             formatted_abund_asv)
+formatted_abund_asv &lt;- as_tibble(formatted_abund_asv)
+write_csv(formatted_abund_asv, path = file.path(&#39;intermediate_data&#39;, &#39;abundance_asv.csv&#39;))</code></pre>
+<pre><code>## Warning: The `path` argument of `write_csv()` is deprecated as of readr 1.4.0.
+## Please use the `file` argument instead.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
+<pre class="r"><code>print(formatted_abund_asv)</code></pre>
+<pre><code>## # A tibble: 9,528 x 49
+##    sequence taxonomy A1    A2    B1    B2    C1    C2    D1    D2    E1    E2   
+##    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+##  1 AGTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  2 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  3 GAAAATC… Eukaryo… 0     0     18    10732 17    15744 72491 19351 23080 0    
+##  4 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  5 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  6 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  7 AGTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  8 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  9 AGTCCAC… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+## 10 GAAAATC… Eukaryo… 0     0     0     0     0     0     79940 1739  71434 0    
+## # … with 9,518 more rows, and 37 more variables: F1 &lt;chr&gt;, F2 &lt;chr&gt;, G1 &lt;chr&gt;,
+## #   G2 &lt;chr&gt;, H1 &lt;chr&gt;, A3 &lt;chr&gt;, A4 &lt;chr&gt;, B3 &lt;chr&gt;, B4 &lt;chr&gt;, C3 &lt;chr&gt;,
+## #   C4 &lt;chr&gt;, D3 &lt;chr&gt;, D4 &lt;chr&gt;, E3 &lt;chr&gt;, E4 &lt;chr&gt;, F3 &lt;chr&gt;, F4 &lt;chr&gt;,
+## #   G3 &lt;chr&gt;, G4 &lt;chr&gt;, H3 &lt;chr&gt;, H4 &lt;chr&gt;, A5 &lt;chr&gt;, A6 &lt;chr&gt;, B5 &lt;chr&gt;,
+## #   B6 &lt;chr&gt;, C5 &lt;chr&gt;, C6 &lt;chr&gt;, D5 &lt;chr&gt;, D6 &lt;chr&gt;, E5 &lt;chr&gt;, E6 &lt;chr&gt;,
+## #   F5 &lt;chr&gt;, F6 &lt;chr&gt;, G5 &lt;chr&gt;, G6 &lt;chr&gt;, H5 &lt;chr&gt;, H6 &lt;chr&gt;</code></pre>
+<pre class="r"><code># OTUs
+formatted_abund_otu &lt;- t(otu_abundance_data)
+colnames(formatted_abund_otu) &lt;- sub(colnames(formatted_abund_otu), pattern = &quot;_.+$&quot;, replacement = &quot;&quot;)
+formatted_abund_otu &lt;- cbind(sequence = rownames(formatted_abund_otu), 
+                             taxonomy = seq_tax_otu[rownames(formatted_abund_otu)], 
+                             formatted_abund_otu)
+formatted_abund_otu &lt;- as_tibble(formatted_abund_otu)
+write_csv(formatted_abund_otu, path = file.path(&#39;intermediate_data&#39;, &#39;abundance_otu.csv&#39;))
+print(formatted_abund_otu)</code></pre>
+<pre><code>## # A tibble: 7,250 x 49
+##    sequence taxonomy A1    A2    B1    B2    C1    C2    D1    D2    E1    E2   
+##    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+##  1 AGTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  2 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  3 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  4 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  5 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  6 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  7 AGTCCAC… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  8 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+##  9 AGTCCAC… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+## 10 TTTCCGT… Eukaryo… 0     0     0     0     0     0     0     0     0     0    
+## # … with 7,240 more rows, and 37 more variables: F1 &lt;chr&gt;, F2 &lt;chr&gt;, G1 &lt;chr&gt;,
+## #   G2 &lt;chr&gt;, H1 &lt;chr&gt;, A3 &lt;chr&gt;, A4 &lt;chr&gt;, B3 &lt;chr&gt;, B4 &lt;chr&gt;, C3 &lt;chr&gt;,
+## #   C4 &lt;chr&gt;, D3 &lt;chr&gt;, D4 &lt;chr&gt;, E3 &lt;chr&gt;, E4 &lt;chr&gt;, F3 &lt;chr&gt;, F4 &lt;chr&gt;,
+## #   G3 &lt;chr&gt;, G4 &lt;chr&gt;, H3 &lt;chr&gt;, H4 &lt;chr&gt;, A5 &lt;chr&gt;, A6 &lt;chr&gt;, B5 &lt;chr&gt;,
+## #   B6 &lt;chr&gt;, C5 &lt;chr&gt;, C6 &lt;chr&gt;, D5 &lt;chr&gt;, D6 &lt;chr&gt;, E5 &lt;chr&gt;, E6 &lt;chr&gt;,
+## #   F5 &lt;chr&gt;, F6 &lt;chr&gt;, G5 &lt;chr&gt;, G6 &lt;chr&gt;, H5 &lt;chr&gt;, H6 &lt;chr&gt;</code></pre>
+</div>
+<div id="readasv-counts-throughout-pipeline" class="section level2">
+<h2>Read/ASV counts throughout pipeline</h2>
+<p>I will track how many reads/ASVs were preserved at each step of the process in order to help identify any problems.</p>
+<p>Get raw read counts for steps before read merging:</p>
+<ul>
+<li>raw reads</li>
+<li>prefilterd for Ns</li>
+<li>primers removed</li>
+<li>quality filtered</li>
+</ul>
+<p>First I will make a table with the metadata and file names for each step combined:</p>
+<pre class="r"><code># Get file paths for just forward reads (counts are the same for both directions)
+forward_fastq_data &lt;- fastq_data %&gt;%
+  filter(direction == &quot;Forward&quot;) %&gt;%
+  select(sample_id, raw_path, prefiltered_path, trimmed_path, untrimmed_path, filtered_path, file_name)
+
+# Combine with metadata
+count_data &lt;- metadata %&gt;%
+  filter(primer_pair_id %in% c(&#39;rps10_Final&#39;, &#39;ITS6/7&#39;), dna_type != &#39;mock1&#39;) %&gt;%
+  select(sample_id, locus, dna_type, sample_type) %&gt;%
+  left_join(forward_fastq_data, by = &quot;sample_id&quot;)</code></pre>
+<p>Then count the reads in each file:</p>
+<pre class="r"><code>count_reads_in_fastqgz &lt;- function(path) {
+  count &lt;- system(paste(&#39;zcat&#39;, path, &#39;|&#39;, &#39;wc&#39;, &#39;-l&#39;), intern = TRUE)
+  as.numeric(count) / 4
+}
+
+count_data$raw_reads &lt;- map_dbl(count_data$raw_path, count_reads_in_fastqgz)
+count_data$n_filtered_reads &lt;- map_dbl(count_data$prefiltered_path, count_reads_in_fastqgz)
+count_data$trimmed_reads &lt;- map_dbl(count_data$trimmed_path, count_reads_in_fastqgz)
+count_data$qual_filtered_reads &lt;- map_dbl(count_data$filtered_path, count_reads_in_fastqgz)
+
+# remove columns no longer needed
+count_data &lt;- select(count_data, -prefiltered_path, -trimmed_path, -untrimmed_path, -filtered_path, -raw_path)</code></pre>
+<p>Get read counts after read merging:</p>
+<pre class="r"><code>count_merged_reads &lt;- function(read_data, merged) {
+  if (is.null(read_data)) {
+    return(0)
+  }
+  filter(read_data, accept == merged) %&gt;%
+    pull(abundance) %&gt;%
+    sum()
+}
+
+count_data$merged_reads &lt;- map_dbl(merged_reads[count_data$file_name], count_merged_reads, merged = FALSE) + map_dbl(merged_reads[count_data$file_name], count_merged_reads, merged = TRUE)
+count_data$merged_seqs &lt;- map_dbl(merged_reads, nrow)[count_data$file_name]
+count_data$filtered_merged_reads &lt;- map_dbl(merged_reads[count_data$file_name], count_merged_reads, merged = TRUE)
+count_data$filtered_merged_seqs &lt;- map_dbl(merged_reads, function(x) sum(x$accept))[count_data$file_name]</code></pre>
+<p>Get read/ASV counts after asv inference:</p>
+<pre class="r"><code>count_data$raw_asvs &lt;- apply(raw_abundance_data, MARGIN = 1, function(x) sum(!is.na(x) &amp; x &gt; 0))[count_data$file_name]
+count_data$raw_asv_reads &lt;- apply(raw_abundance_data, MARGIN = 1, sum, na.rm = TRUE)[count_data$file_name]</code></pre>
+<p>Get read/ASV counts after chimera removal and short sequence filtering:</p>
+<pre class="r"><code>count_data$chimera_filtered_asvs &lt;- apply(asv_abundance_data, MARGIN = 1, function(x) sum(!is.na(x) &amp; x &gt; 0, na.rm = TRUE))[count_data$file_name]
+count_data$chimera_filtered_reads &lt;- apply(asv_abundance_data, MARGIN = 1, sum, na.rm = TRUE)[count_data$file_name]</code></pre>
+<p>Get read/ASV counts after low-abundance sequence filtering</p>
+<pre class="r"><code>count_data$abund_filtered_asvs &lt;- apply(asv_abundance_data, MARGIN = 1, function(x) sum(!is.na(x) &amp; x &gt;= 30, na.rm = TRUE))[count_data$file_name]
+count_data$abund_filtered_reads &lt;- apply(asv_abundance_data, MARGIN = 1, function(x) sum(x[x &gt;= 30], na.rm = TRUE))[count_data$file_name]</code></pre>
+<p>Save data:</p>
+<pre class="r"><code>write_csv(count_data, file = file.path(&#39;results&#39;, &#39;read_asv_counts.csv&#39;))</code></pre>
+<p>Prepare data for plotting:</p>
+<pre class="r"><code>plot_data &lt;- pivot_longer(count_data, colnames(count_data)[-(1:5)], names_to = &#39;stat&#39;, values_to = &#39;count&#39;)
+plot_data$type &lt;- str_extract(plot_data$stat, pattern = &#39;([a-z]+)$&#39;)
+plot_data$type[plot_data$type == &quot;seqs&quot;] &lt;- &quot;asvs&quot;
+stage_key &lt;- c(raw_reads = &quot;Raw reads&quot;, 
+               n_filtered_reads = &quot;N prefiltered&quot;, 
+               trimmed_reads = &quot;Primers trimmed&quot;, 
+               qual_filtered_reads = &quot;Quality filtered&quot;,
+               merged_reads = &quot;Merged reads&quot;, 
+               merged_seqs = &quot;Merged reads&quot;, 
+               filtered_merged_reads = &quot;Filtered merged reads&quot;, 
+               filtered_merged_seqs = &quot;Filtered merged reads&quot;,
+               raw_asvs = &quot;Raw ASVs&quot;, 
+               raw_asv_reads = &quot;Raw ASVs&quot;,
+               chimera_filtered_asvs = &quot;Chimera/short filtered&quot;, 
+               chimera_filtered_reads = &quot;Chimera/short filtered&quot;,
+               abund_filtered_asvs = &quot;Abundance filtered&quot;, 
+               abund_filtered_reads = &quot;Abundance filtered&quot;)
+plot_data$stage &lt;- factor(stage_key[plot_data$stat], levels = unique(stage_key), ordered = TRUE)</code></pre>
+<p>Plot all samples:</p>
+<pre class="r"><code>ggplot(plot_data, aes(x = stage, y = count, group = sample_id, color = locus)) + 
+  facet_grid(type ~ ., scales = &quot;free_y&quot;) +
+  # theme_minimal() +
+  expand_limits(y = 0) +
+  # scale_y_continuous(trans=&#39;log10&#39;) +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) +
+  geom_line(aes(linetype = sample_type))</code></pre>
+<pre><code>## Warning: Removed 8 row(s) containing missing values (geom_path).</code></pre>
+<p><img src="03--abundance_matrix_preparation_files/figure-html/unnamed-chunk-35-1.png" width="960" /></p>
+<p>Plot just mock community samples:</p>
+<pre class="r"><code>plot_data %&gt;%
+  filter(sample_type == &quot;Mock community&quot;) %&gt;%
+  ggplot(aes(x = stage, y = count, group = sample_id, color = locus)) + 
+  facet_grid(type ~ ., scales = &quot;free_y&quot;) +
+  # theme_minimal() +
+  expand_limits(y = 0) +
+  scale_y_continuous(trans=&#39;log10&#39;) +
+  theme(axis.text.x = element_text(angle=45,hjust=1)) +
+  geom_line()</code></pre>
+<pre><code>## Warning: Transformation introduced infinite values in continuous y-axis</code></pre>
+<p><img src="03--abundance_matrix_preparation_files/figure-html/unnamed-chunk-36-1.png" width="960" /></p>
+</div>
+<div id="software-used" class="section level2">
+<h2>Software used</h2>
+<pre class="r"><code>sessioninfo::session_info()</code></pre>
+<pre><code>## ─ Session info ───────────────────────────────────────────────────────────────
+##  setting  value                       
+##  version  R version 4.0.3 (2020-10-10)
+##  os       Pop!_OS 20.04 LTS           
+##  system   x86_64, linux-gnu           
+##  ui       X11                         
+##  language en_US:en                    
+##  collate  en_US.UTF-8                 
+##  ctype    en_US.UTF-8                 
+##  tz       America/Vancouver           
+##  date     2021-05-04                  
+## 
+## ─ Packages ───────────────────────────────────────────────────────────────────
+##  package              * version    date       lib source        
+##  assertthat             0.2.1      2019-03-21 [1] CRAN (R 4.0.2)
+##  Biobase              * 2.48.0     2020-04-27 [1] Bioconductor  
+##  BiocGenerics         * 0.34.0     2020-04-27 [1] Bioconductor  
+##  BiocParallel         * 1.22.0     2020-04-27 [1] Bioconductor  
+##  Biostrings           * 2.56.0     2020-04-27 [1] Bioconductor  
+##  bitops                 1.0-6      2013-08-17 [1] CRAN (R 4.0.2)
+##  cli                    2.1.0      2020-10-12 [1] CRAN (R 4.0.3)
+##  codetools              0.2-16     2018-12-24 [4] CRAN (R 4.0.0)
+##  colorspace             1.4-1      2019-03-18 [1] CRAN (R 4.0.2)
+##  crayon                 1.3.4      2017-09-16 [1] CRAN (R 4.0.2)
+##  dada2                * 1.16.0     2020-04-27 [1] Bioconductor  
+##  DelayedArray         * 0.14.1     2020-07-14 [1] Bioconductor  
+##  digest                 0.6.27     2020-10-24 [1] CRAN (R 4.0.3)
+##  dplyr                * 1.0.2      2020-08-18 [1] CRAN (R 4.0.2)
+##  ellipsis               0.3.1      2020-05-15 [1] CRAN (R 4.0.2)
+##  evaluate               0.14       2019-05-28 [1] CRAN (R 4.0.2)
+##  fansi                  0.4.1      2020-01-08 [1] CRAN (R 4.0.2)
+##  farver                 2.0.3      2020-01-16 [1] CRAN (R 4.0.2)
+##  furrr                * 0.2.1      2020-10-21 [1] CRAN (R 4.0.3)
+##  future               * 1.19.1     2020-09-22 [1] CRAN (R 4.0.3)
+##  generics               0.1.0      2020-10-31 [1] CRAN (R 4.0.3)
+##  GenomeInfoDb         * 1.24.2     2020-06-15 [1] Bioconductor  
+##  GenomeInfoDbData       1.2.3      2020-09-12 [1] Bioconductor  
+##  GenomicAlignments    * 1.24.0     2020-04-27 [1] Bioconductor  
+##  GenomicRanges        * 1.40.0     2020-04-27 [1] Bioconductor  
+##  ggplot2              * 3.3.2      2020-06-19 [1] CRAN (R 4.0.2)
+##  globals                0.13.1     2020-10-11 [1] CRAN (R 4.0.3)
+##  glue                   1.4.2      2020-08-27 [1] CRAN (R 4.0.2)
+##  gridExtra            * 2.3        2017-09-09 [1] CRAN (R 4.0.3)
+##  gtable                 0.3.0      2019-03-25 [1] CRAN (R 4.0.2)
+##  hms                    0.5.3      2020-01-08 [1] CRAN (R 4.0.2)
+##  htmltools              0.5.1.1    2021-01-22 [1] CRAN (R 4.0.3)
+##  hwriter                1.3.2      2014-09-10 [1] CRAN (R 4.0.3)
+##  IRanges              * 2.22.2     2020-05-21 [1] Bioconductor  
+##  jpeg                   0.1-8.1    2019-10-24 [1] CRAN (R 4.0.3)
+##  jsonlite               1.7.1      2020-09-07 [1] CRAN (R 4.0.2)
+##  knitr                  1.30       2020-09-22 [1] CRAN (R 4.0.2)
+##  labeling               0.4.2      2020-10-20 [1] CRAN (R 4.0.3)
+##  lattice                0.20-41    2020-04-02 [4] CRAN (R 4.0.0)
+##  latticeExtra           0.6-29     2019-12-19 [1] CRAN (R 4.0.3)
+##  lifecycle              0.2.0      2020-03-06 [1] CRAN (R 4.0.2)
+##  listenv                0.8.0      2019-12-05 [1] CRAN (R 4.0.3)
+##  magrittr               1.5        2014-11-22 [1] CRAN (R 4.0.2)
+##  Matrix                 1.2-18     2019-11-27 [4] CRAN (R 4.0.0)
+##  matrixStats          * 0.57.0     2020-09-25 [1] CRAN (R 4.0.3)
+##  metacoder            * 0.3.4      2020-04-29 [1] CRAN (R 4.0.3)
+##  munsell                0.5.0      2018-06-12 [1] CRAN (R 4.0.2)
+##  pillar                 1.4.6      2020-07-10 [1] CRAN (R 4.0.2)
+##  pkgconfig              2.0.3      2019-09-22 [1] CRAN (R 4.0.2)
+##  plyr                   1.8.6      2020-03-03 [1] CRAN (R 4.0.2)
+##  png                    0.1-7      2013-12-03 [1] CRAN (R 4.0.3)
+##  purrr                * 0.3.4      2020-04-17 [1] CRAN (R 4.0.2)
+##  R6                     2.5.0      2020-10-28 [1] CRAN (R 4.0.3)
+##  RColorBrewer           1.1-2      2014-12-07 [1] CRAN (R 4.0.2)
+##  Rcpp                 * 1.0.5      2020-07-06 [1] CRAN (R 4.0.2)
+##  RcppParallel           5.0.2      2020-06-24 [1] CRAN (R 4.0.3)
+##  RCurl                  1.98-1.2   2020-04-18 [1] CRAN (R 4.0.2)
+##  readr                * 1.4.0      2020-10-05 [1] CRAN (R 4.0.3)
+##  reshape2               1.4.4      2020-04-09 [1] CRAN (R 4.0.2)
+##  rlang                  0.4.10     2020-12-30 [1] CRAN (R 4.0.3)
+##  rmarkdown              2.5        2020-10-21 [1] CRAN (R 4.0.3)
+##  Rsamtools            * 2.4.0      2020-04-27 [1] Bioconductor  
+##  rstudioapi             0.11       2020-02-07 [1] CRAN (R 4.0.2)
+##  S4Vectors            * 0.26.1     2020-05-16 [1] Bioconductor  
+##  scales                 1.1.1      2020-05-11 [1] CRAN (R 4.0.2)
+##  sessioninfo          * 1.1.1      2018-11-05 [1] CRAN (R 4.0.2)
+##  sharedbib              0.1.0.9003 2020-10-16 [1] local         
+##  ShortRead            * 1.46.0     2020-04-27 [1] Bioconductor  
+##  stringi                1.5.3      2020-09-09 [1] CRAN (R 4.0.2)
+##  stringr              * 1.4.0      2019-02-10 [1] CRAN (R 4.0.2)
+##  SummarizedExperiment * 1.18.2     2020-07-09 [1] Bioconductor  
+##  taxa                 * 0.3.4      2020-04-29 [1] CRAN (R 4.0.3)
+##  tibble                 3.0.4      2020-10-12 [1] CRAN (R 4.0.3)
+##  tidyr                * 1.1.2      2020-08-27 [1] CRAN (R 4.0.2)
+##  tidyselect             1.1.0      2020-05-11 [1] CRAN (R 4.0.2)
+##  utf8                   1.1.4      2018-05-24 [1] CRAN (R 4.0.2)
+##  vctrs                  0.3.4      2020-08-29 [1] CRAN (R 4.0.2)
+##  viridisLite            0.3.0      2018-02-01 [1] CRAN (R 4.0.2)
+##  withr                  2.3.0      2020-09-22 [1] CRAN (R 4.0.3)
+##  xfun                   0.19       2020-10-30 [1] CRAN (R 4.0.3)
+##  XVector              * 0.28.0     2020-04-27 [1] Bioconductor  
+##  yaml                   2.2.1      2020-02-01 [1] CRAN (R 4.0.2)
+##  zlibbioc               1.34.0     2020-04-27 [1] Bioconductor  
+## 
+## [1] /home/fosterz/R/x86_64-pc-linux-gnu-library/4.0
+## [2] /usr/local/lib/R/site-library
+## [3] /usr/lib/R/site-library
+## [4] /usr/lib/R/library</code></pre>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Alternative taxonomic assignment using BLAST</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-inverse  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Comparing ITS1 and RPS10 for Oomycete Metabacoding</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Analysis
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="01--prepare_reference_database.html">Reference database preparation</a>
+    </li>
+    <li>
+      <a href="02--preparation_and_quality_filtering.html">Read processing and quality filtering</a>
+    </li>
+    <li>
+      <a href="03--abundance_matrix_preparation.html">Abundance matrix and taxonomic assignment</a>
+    </li>
+    <li>
+      <a href="04--blast_classification.html">Alternative taxonomic assignment using BLAST</a>
+    </li>
+    <li>
+      <a href="05--otu_clustering_threshold.html">OTU clustering threshold estimation</a>
+    </li>
+    <li>
+      <a href="06--mock_community.html">Mock community evaluation</a>
+    </li>
+    <li>
+      <a href="07--nontarget_amplification.html">Non-target amplification</a>
+    </li>
+    <li>
+      <a href="08--amplicon_taxonomic_resolution.html">Taxonomic resolution</a>
+    </li>
+    <li>
+      <a href="09--simulated_pcr_results.html">Plotting of simulated PCR results</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/grunwaldlab/rps10_barcode">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Alternative taxonomic assignment using BLAST</h1>
+
+</div>
+
+
+<div id="prepare" class="section level2">
+<h2>Prepare</h2>
+<div id="packages-used" class="section level3">
+<h3>Packages used</h3>
+<pre class="r"><code>library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(sessioninfo)
+library(metacoder)
+library(vegan)
+library(viridis)
+library(DT)
+library(stringr)
+library(qsubmitter)
+library(taxize)</code></pre>
+</div>
+<div id="parameters" class="section level3">
+<h3>Parameters</h3>
+<pre class="r"><code>cgrb &lt;- remote_server$new(server = &quot;shell.cgrb.oregonstate.edu&quot;, user = &quot;fosterz&quot;, port  = 732)
+files &lt;- remote_server$new(server = &quot;files.cgrb.oregonstate.edu&quot;, user = &quot;fosterz&quot;, port  = 732)
+remote_repository_path &lt;- &quot;/dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode&quot;</code></pre>
+</div>
+<div id="parameters-1" class="section level3">
+<h3>Parameters</h3>
+<pre class="r"><code>seed &lt;- 1
+min_evalue &lt;- &#39;1e-3&#39;
+set.seed(seed)</code></pre>
+</div>
+</div>
+<div id="blast" class="section level2">
+<h2>BLAST</h2>
+<p>A blast-based classification will be useful for the the non-target sequences detection. It will also be useful for verifying the <code>dada2</code>-based classification.</p>
+<div id="make-query-file" class="section level3">
+<h3>Make query file</h3>
+<p>I will make FASTA files of ASV and OTU sequences with header containing their row indexes in the abundance matrix.</p>
+<pre class="r"><code># ASVs
+abundance_asv &lt;- read_csv(file.path(&#39;intermediate_data&#39;, &#39;abundance_asv.csv&#39;))</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   .default = col_double(),
+##   sequence = col_character(),
+##   taxonomy = col_character()
+## )
+## ℹ Use `spec()` for the full column specifications.</code></pre>
+<pre class="r"><code>query_seq_path_asv &lt;- file.path(&#39;intermediate_data&#39;, &#39;blast_query_asv.fa&#39;)
+paste0(&#39;&gt;asv_&#39;, 1:nrow(abundance_asv), &#39;\n&#39;, abundance_asv$sequence) %&gt;%
+  write_lines(file = query_seq_path_asv)
+
+# OTUs
+abundance_otu &lt;- read_csv(file.path(&#39;intermediate_data&#39;, &#39;abundance_otu.csv&#39;))</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   .default = col_double(),
+##   sequence = col_character(),
+##   taxonomy = col_character()
+## )
+## ℹ Use `spec()` for the full column specifications.</code></pre>
+<pre class="r"><code>query_seq_path_otu &lt;- file.path(&#39;intermediate_data&#39;, &#39;blast_query_otu.fa&#39;)
+paste0(&#39;&gt;otu_&#39;, 1:nrow(abundance_otu), &#39;\n&#39;, abundance_otu$sequence) %&gt;%
+  write_lines(file = query_seq_path_otu)</code></pre>
+</div>
+<div id="run-blast" class="section level3">
+<h3>Run BLAST</h3>
+<p>First I will need to transfer the file from this computer to the CGRB cluster.</p>
+<pre class="r"><code># ASVs
+remote_query_path_asv &lt;- file.path(remote_repository_path, &#39;blast_query_asv.fa&#39;)
+rsync_push(local_path = query_seq_path_asv, remote_path = remote_query_path_asv, remote = files)
+
+# OTUs
+remote_query_path_otu &lt;- file.path(remote_repository_path, &#39;blast_query_otu.fa&#39;)
+rsync_push(local_path = query_seq_path_otu, remote_path = remote_query_path_otu, remote = files)</code></pre>
+<p>Then I can run blast remotely.</p>
+<pre class="r"><code>out_cols &lt;- &#39;qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids sskingdoms score sscinames&#39;
+run_blast_remotely &lt;- function(query_path, out_path, ...) {
+  blast_command &lt;- paste(&#39;blastn&#39;,
+                         &quot;-query&quot;, query_path,
+                         &quot;-db nt&quot;,
+                         &quot;-dust no&quot;,
+                         paste(&quot;-evalue&quot;, min_evalue),
+                         # &quot;-perc_identity 70&quot;,
+                         paste0(&quot;-outfmt &#39;10 &quot;, out_cols, &quot;&#39;&quot;),
+                         &quot;-max_hsps 1&quot;,
+                         &quot;-max_target_seqs 100&quot;,
+                         &#39;-num_threads 8&#39;,
+                         &#39;-out&#39;, out_path)
+  qsub(command = blast_command,
+       remote = cgrb,
+       remote_cwd = remote_repository_path,
+       cores = 8,
+       queue = &#39;bpp@!(uncia)&#39;, # For some reason, I was getting errors on uncia, so this avoids that node
+       ...)
+}
+
+# ASVs
+remote_blast_out_asv &lt;- file.path(remote_repository_path, &#39;blast_result_asv.csv&#39;)
+run_blast_remotely(query_path = remote_query_path_asv, out_path = remote_blast_out_asv)</code></pre>
+<pre><code>## Command:
+##  blastn -query /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode/blast_query_asv.fa -db nt -dust no -evalue 1e-3 -outfmt &#39;10 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids sskingdoms score sscinames&#39; -max_hsps 1 -max_target_seqs 100 -num_threads 8 -out /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode/blast_result_asv.csv</code></pre>
+<pre><code>## Job 9386752 sumbitted.</code></pre>
+<pre><code>## Submission script: /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode/qsub_records/blastn.i9386752.sh</code></pre>
+<pre><code>## Current working directory: /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode</code></pre>
+<pre><code>## Started: 2021-05-04 12:14:44</code></pre>
+<pre><code>## Finished: 2021-05-04 12:53:17</code></pre>
+<pre><code>## Duration: 39 mins</code></pre>
+<pre><code>## Standard output: /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode/qsub_records/blastn.o9386752</code></pre>
+<pre><code>## Standard error: /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode/qsub_records/blastn.e9386752</code></pre>
+<pre class="r"><code># OTUs
+remote_blast_out_otu &lt;- file.path(remote_repository_path, &#39;blast_result_otu.csv&#39;)
+run_blast_remotely(query_path = remote_query_path_otu, out_path = remote_blast_out_otu)</code></pre>
+<pre><code>## Command:
+##  blastn -query /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode/blast_query_otu.fa -db nt -dust no -evalue 1e-3 -outfmt &#39;10 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids sskingdoms score sscinames&#39; -max_hsps 1 -max_target_seqs 100 -num_threads 8 -out /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode/blast_result_otu.csv</code></pre>
+<pre><code>## Job 9386827 sumbitted.</code></pre>
+<pre><code>## Submission script: /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode/qsub_records/blastn.i9386827.sh</code></pre>
+<pre><code>## Current working directory: /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode</code></pre>
+<pre><code>## Started: 2021-05-04 12:53:24</code></pre>
+<pre><code>## Finished: 2021-05-04 13:19:04</code></pre>
+<pre><code>## Duration: 26 mins</code></pre>
+<pre><code>## Standard output: /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode/qsub_records/blastn.o9386827</code></pre>
+<pre><code>## Standard error: /dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode/qsub_records/blastn.e9386827</code></pre>
+<p>and download the results:</p>
+<pre class="r"><code># ASVs
+blast_result_path_asv &lt;- file.path(&#39;intermediate_data&#39;, &#39;blast_results_asv.csv&#39;)
+rsync_pull(local_path = blast_result_path_asv, remote_path = remote_blast_out_asv, remote = files)
+
+# OTUs
+blast_result_path_otu &lt;- file.path(&#39;intermediate_data&#39;, &#39;blast_results_otu.csv&#39;)
+rsync_pull(local_path = blast_result_path_otu, remote_path = remote_blast_out_otu, remote = files)</code></pre>
+<p>and read them into R:</p>
+<pre class="r"><code>blast_results_asv &lt;- read_csv(blast_result_path_asv, col_names = strsplit(out_cols, split = &#39; &#39;)[[1]], col_types = &#39;ccddddddddddcccc&#39;)</code></pre>
+<pre><code>## Warning: 14 parsing failures.
+##    row col   expected     actual                                      file
+## 157446  -- 16 columns 17 columns &#39;intermediate_data/blast_results_asv.csv&#39;
+## 165606  -- 16 columns 17 columns &#39;intermediate_data/blast_results_asv.csv&#39;
+## 236317  -- 16 columns 17 columns &#39;intermediate_data/blast_results_asv.csv&#39;
+## 245796  -- 16 columns 17 columns &#39;intermediate_data/blast_results_asv.csv&#39;
+## 258836  -- 16 columns 19 columns &#39;intermediate_data/blast_results_asv.csv&#39;
+## ...... ... .......... .......... .........................................
+## See problems(...) for more details.</code></pre>
+<pre class="r"><code>blast_results_otu &lt;- read_csv(blast_result_path_otu, col_names = strsplit(out_cols, split = &#39; &#39;)[[1]], col_types = &#39;ccddddddddddcccc&#39;)</code></pre>
+<pre><code>## Warning: 13 parsing failures.
+##    row col   expected     actual                                      file
+##  64328  -- 16 columns 17 columns &#39;intermediate_data/blast_results_otu.csv&#39;
+##  69450  -- 16 columns 17 columns &#39;intermediate_data/blast_results_otu.csv&#39;
+## 129574  -- 16 columns 17 columns &#39;intermediate_data/blast_results_otu.csv&#39;
+## 140223  -- 16 columns 19 columns &#39;intermediate_data/blast_results_otu.csv&#39;
+## 140224  -- 16 columns 19 columns &#39;intermediate_data/blast_results_otu.csv&#39;
+## ...... ... .......... .......... .........................................
+## See problems(...) for more details.</code></pre>
+<p>There might be some warnings about parsing errors caused by <code>,</code> in the <code>sscinames</code> column, but these should not affect the analysis since that information is not used and there are no columns after it to mess up. I will select the best hit for each ASV based on e-value and percent identity:</p>
+<pre class="r"><code>select_best_blast_hit &lt;- function(blast_results) {
+  blast_results %&gt;%
+    group_by(qseqid) %&gt;%
+    filter(evalue == min(evalue)) %&gt;%
+    filter(pident == max(pident)) %&gt;%
+    filter(row_number() == 1) # break ties by picking first value
+}
+
+blast_results_asv &lt;- select_best_blast_hit(blast_results_asv)
+blast_results_otu &lt;- select_best_blast_hit(blast_results_otu)</code></pre>
+<p>Then I can look up the taxonomic info from the NCBI taxonomy database using the taxon ID that blast returns:</p>
+<pre class="r"><code>lookup_tax &lt;- function(blast_results) {
+  blast_results$staxids &lt;- sub(blast_results$staxids, pattern = &#39;;.+$&#39;, replacement = &#39;&#39;)
+  classification(as.uid(unique(blast_results$staxids), check = FALSE), db = &#39;ncbi&#39;)
+}
+
+blast_class_asv &lt;- lookup_tax(blast_results_asv)
+blast_class_otu &lt;- lookup_tax(blast_results_otu)</code></pre>
+<p>and add that to the results table</p>
+<pre class="r"><code>get_classification &lt;- function(x) {
+  if (is.logical(x)) {
+    return(NA)
+  } else {
+    return(paste(x$name, collapse = &#39;;&#39;))
+  }
+}
+
+blast_results_asv$blast_tax &lt;- map_chr(blast_class_asv, get_classification)[blast_results_asv$staxids]
+blast_results_otu$blast_tax &lt;- map_chr(blast_class_otu, get_classification)[blast_results_otu$staxids]</code></pre>
+<p>and combine that with the abundance matrix</p>
+<pre class="r"><code>add_to_abund &lt;- function(abundance, blast_results) {
+  blast_results %&gt;%
+    ungroup() %&gt;%
+    transmute(sequence = abundance$sequence[as.numeric(sub(qseqid, pattern = &#39;^asv_|otu_&#39;, replacement = &#39;&#39;))],
+              blast_pid = pident,
+              blast_cov = c(qend - qstart) / nchar(sequence) * 100,
+              blast_tax = blast_tax) %&gt;%
+    right_join(abundance, by = &#39;sequence&#39;)
+}
+
+abundance_asv &lt;- add_to_abund(abundance_asv, blast_results_asv)
+abundance_otu &lt;- add_to_abund(abundance_otu, blast_results_otu)</code></pre>
+<p>Finally, lets save that modified matrix for further analyses. Note that this overwrites the abundance matrix.</p>
+<pre class="r"><code>write_csv(abundance_asv, file.path(&#39;intermediate_data&#39;, &#39;abundance_asv.csv&#39;))
+write_csv(abundance_otu, file.path(&#39;intermediate_data&#39;, &#39;abundance_otu.csv&#39;))</code></pre>
+</div>
+</div>
+<div id="software-used" class="section level2">
+<h2>Software used</h2>
+<pre class="r"><code>sessioninfo::session_info()</code></pre>
+<pre><code>## ─ Session info ───────────────────────────────────────────────────────────────
+##  setting  value                       
+##  version  R version 4.0.3 (2020-10-10)
+##  os       Pop!_OS 20.04 LTS           
+##  system   x86_64, linux-gnu           
+##  ui       X11                         
+##  language en_US:en                    
+##  collate  en_US.UTF-8                 
+##  ctype    en_US.UTF-8                 
+##  tz       America/Vancouver           
+##  date     2021-05-04                  
+## 
+## ─ Packages ───────────────────────────────────────────────────────────────────
+##  package     * version    date       lib source        
+##  ape           5.4-1      2020-08-13 [1] CRAN (R 4.0.2)
+##  assertthat    0.2.1      2019-03-21 [1] CRAN (R 4.0.2)
+##  bold          1.1.0      2020-06-17 [1] CRAN (R 4.0.2)
+##  cli           2.1.0      2020-10-12 [1] CRAN (R 4.0.3)
+##  cluster       2.1.0      2019-06-19 [4] CRAN (R 4.0.0)
+##  codetools     0.2-16     2018-12-24 [4] CRAN (R 4.0.0)
+##  colorspace    1.4-1      2019-03-18 [1] CRAN (R 4.0.2)
+##  conditionz    0.1.0      2019-04-24 [1] CRAN (R 4.0.2)
+##  crayon        1.3.4      2017-09-16 [1] CRAN (R 4.0.2)
+##  crul          1.0.0      2020-07-30 [1] CRAN (R 4.0.2)
+##  curl          4.3        2019-12-02 [1] CRAN (R 4.0.2)
+##  data.table    1.13.2     2020-10-19 [1] CRAN (R 4.0.3)
+##  digest        0.6.27     2020-10-24 [1] CRAN (R 4.0.3)
+##  dplyr       * 1.0.2      2020-08-18 [1] CRAN (R 4.0.2)
+##  DT          * 0.16       2020-10-13 [1] CRAN (R 4.0.3)
+##  ellipsis      0.3.1      2020-05-15 [1] CRAN (R 4.0.2)
+##  evaluate      0.14       2019-05-28 [1] CRAN (R 4.0.2)
+##  fansi         0.4.1      2020-01-08 [1] CRAN (R 4.0.2)
+##  foreach       1.5.1      2020-10-15 [1] CRAN (R 4.0.3)
+##  furrr       * 0.2.1      2020-10-21 [1] CRAN (R 4.0.3)
+##  future      * 1.19.1     2020-09-22 [1] CRAN (R 4.0.3)
+##  generics      0.1.0      2020-10-31 [1] CRAN (R 4.0.3)
+##  ggplot2     * 3.3.2      2020-06-19 [1] CRAN (R 4.0.2)
+##  globals       0.13.1     2020-10-11 [1] CRAN (R 4.0.3)
+##  glue          1.4.2      2020-08-27 [1] CRAN (R 4.0.2)
+##  gridExtra     2.3        2017-09-09 [1] CRAN (R 4.0.3)
+##  gtable        0.3.0      2019-03-25 [1] CRAN (R 4.0.2)
+##  hms           0.5.3      2020-01-08 [1] CRAN (R 4.0.2)
+##  htmltools     0.5.1.1    2021-01-22 [1] CRAN (R 4.0.3)
+##  htmlwidgets   1.5.2      2020-10-03 [1] CRAN (R 4.0.3)
+##  httpcode      0.3.0      2020-04-10 [1] CRAN (R 4.0.2)
+##  iterators     1.0.13     2020-10-15 [1] CRAN (R 4.0.3)
+##  jsonlite      1.7.1      2020-09-07 [1] CRAN (R 4.0.2)
+##  knitr         1.30       2020-09-22 [1] CRAN (R 4.0.2)
+##  lattice     * 0.20-41    2020-04-02 [4] CRAN (R 4.0.0)
+##  lifecycle     0.2.0      2020-03-06 [1] CRAN (R 4.0.2)
+##  listenv       0.8.0      2019-12-05 [1] CRAN (R 4.0.3)
+##  magrittr      1.5        2014-11-22 [1] CRAN (R 4.0.2)
+##  MASS          7.3-53     2020-09-09 [4] CRAN (R 4.0.2)
+##  Matrix        1.2-18     2019-11-27 [4] CRAN (R 4.0.0)
+##  metacoder   * 0.3.4      2020-04-29 [1] CRAN (R 4.0.3)
+##  mgcv          1.8-33     2020-08-27 [4] CRAN (R 4.0.2)
+##  munsell       0.5.0      2018-06-12 [1] CRAN (R 4.0.2)
+##  nlme          3.1-149    2020-08-23 [4] CRAN (R 4.0.2)
+##  permute     * 0.9-5      2019-03-12 [1] CRAN (R 4.0.2)
+##  pillar        1.4.6      2020-07-10 [1] CRAN (R 4.0.2)
+##  pkgconfig     2.0.3      2019-09-22 [1] CRAN (R 4.0.2)
+##  plyr          1.8.6      2020-03-03 [1] CRAN (R 4.0.2)
+##  purrr       * 0.3.4      2020-04-17 [1] CRAN (R 4.0.2)
+##  qsubmitter  * 0.1        2020-11-11 [1] local         
+##  R6            2.5.0      2020-10-28 [1] CRAN (R 4.0.3)
+##  Rcpp          1.0.5      2020-07-06 [1] CRAN (R 4.0.2)
+##  readr       * 1.4.0      2020-10-05 [1] CRAN (R 4.0.3)
+##  reshape       0.8.8      2018-10-23 [1] CRAN (R 4.0.2)
+##  rlang         0.4.10     2020-12-30 [1] CRAN (R 4.0.3)
+##  rmarkdown     2.5        2020-10-21 [1] CRAN (R 4.0.3)
+##  rstudioapi    0.11       2020-02-07 [1] CRAN (R 4.0.2)
+##  scales        1.1.1      2020-05-11 [1] CRAN (R 4.0.2)
+##  sessioninfo * 1.1.1      2018-11-05 [1] CRAN (R 4.0.2)
+##  sharedbib     0.1.0.9003 2020-10-16 [1] local         
+##  stringi       1.5.3      2020-09-09 [1] CRAN (R 4.0.2)
+##  stringr     * 1.4.0      2019-02-10 [1] CRAN (R 4.0.2)
+##  taxa        * 0.3.4      2020-04-29 [1] CRAN (R 4.0.3)
+##  taxize      * 0.9.99     2020-10-30 [1] CRAN (R 4.0.3)
+##  tibble        3.0.4      2020-10-12 [1] CRAN (R 4.0.3)
+##  tidyr       * 1.1.2      2020-08-27 [1] CRAN (R 4.0.2)
+##  tidyselect    1.1.0      2020-05-11 [1] CRAN (R 4.0.2)
+##  triebeard     0.3.0      2016-08-04 [1] CRAN (R 4.0.2)
+##  urltools      1.7.3      2019-04-14 [1] CRAN (R 4.0.2)
+##  uuid          0.1-4      2020-02-26 [1] CRAN (R 4.0.2)
+##  vctrs         0.3.4      2020-08-29 [1] CRAN (R 4.0.2)
+##  vegan       * 2.5-6      2019-09-01 [1] CRAN (R 4.0.2)
+##  viridis     * 0.5.1      2018-03-29 [1] CRAN (R 4.0.3)
+##  viridisLite * 0.3.0      2018-02-01 [1] CRAN (R 4.0.2)
+##  withr         2.3.0      2020-09-22 [1] CRAN (R 4.0.3)
+##  xfun          0.19       2020-10-30 [1] CRAN (R 4.0.3)
+##  xml2          1.3.2      2020-04-23 [1] CRAN (R 4.0.2)
+##  yaml          2.2.1      2020-02-01 [1] CRAN (R 4.0.2)
+##  zoo           1.8-8      2020-05-02 [1] CRAN (R 4.0.2)
+## 
+## [1] /home/fosterz/R/x86_64-pc-linux-gnu-library/4.0
+## [2] /usr/local/lib/R/site-library
+## [3] /usr/lib/R/site-library
+## [4] /usr/lib/R/library</code></pre>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

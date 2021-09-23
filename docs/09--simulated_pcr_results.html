@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Plotting simulated PCR results</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-inverse  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Comparing ITS1 and RPS10 for Oomycete Metabacoding</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Analysis
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="01--prepare_reference_database.html">Reference database preparation</a>
+    </li>
+    <li>
+      <a href="02--preparation_and_quality_filtering.html">Read processing and quality filtering</a>
+    </li>
+    <li>
+      <a href="03--abundance_matrix_preparation.html">Abundance matrix and taxonomic assignment</a>
+    </li>
+    <li>
+      <a href="04--blast_classification.html">Alternative taxonomic assignment using BLAST</a>
+    </li>
+    <li>
+      <a href="05--otu_clustering_threshold.html">OTU clustering threshold estimation</a>
+    </li>
+    <li>
+      <a href="06--mock_community.html">Mock community evaluation</a>
+    </li>
+    <li>
+      <a href="07--nontarget_amplification.html">Non-target amplification</a>
+    </li>
+    <li>
+      <a href="08--amplicon_taxonomic_resolution.html">Taxonomic resolution</a>
+    </li>
+    <li>
+      <a href="09--simulated_pcr_results.html">Plotting of simulated PCR results</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/grunwaldlab/rps10_barcode">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Plotting simulated PCR results</h1>
+
+</div>
+
+
+<div id="prepare" class="section level2">
+<h2>Prepare</h2>
+<pre class="r"><code>library(ape)
+library(metacoder)</code></pre>
+<pre><code>## Loading required package: taxa</code></pre>
+<pre><code>## This is metacoder verison 0.3.4 (stable)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;metacoder&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:ape&#39;:
+## 
+##     complement</code></pre>
+<pre class="r"><code>library(tibble)</code></pre>
+</div>
+<div id="read-in-results" class="section level2">
+<h2>Read in results</h2>
+<p>These results were generated by Felipe Albornoz using Geneious. They consist of two FASTA files: the reference sequences used for the simulated PCR and the predicted amplicons.</p>
+<pre class="r"><code>ref_seqs &lt;- read.FASTA(file.path(&quot;raw_data&quot;, &quot;felipes_sim_pcr_results&quot;, &quot;all.ref.seqs.rps10.fasta&quot;))
+amp_seqs &lt;- read.FASTA(file.path(&quot;raw_data&quot;, &quot;felipes_sim_pcr_results&quot;, &quot;PCR product.fasta&quot;))</code></pre>
+<p>I will check that all names in <code>amp_seqs</code> are in <code>ref_seqs</code></p>
+<pre class="r"><code>if (! all(names(amp_seqs) %in% names(ref_seqs))) {
+  stop(&quot;All names in `amp_seqs` must be in `ref_seqs`&quot;)
+}</code></pre>
+<p>Save location of named seqs in reference</p>
+<pre class="r"><code>amped_indexes &lt;- match(names(amp_seqs), names(ref_seqs))</code></pre>
+</div>
+<div id="clean-up-headers" class="section level2">
+<h2>Clean up headers</h2>
+<p>The taxonomic information in the FASTA headers need to be cleaned up to be useful for computational analysis and presentation.</p>
+<pre class="r"><code>clean_headers &lt;- function(headers) {
+  # remove _F , _sp
+  headers &lt;- sub(headers, pattern = &quot;_F$&quot;, replacement = &quot;&quot;)
+  headers &lt;- sub(headers, pattern = &quot;_sp$&quot;, replacement = &quot;&quot;)
+  
+  # Remove existing classifcaitons and only use seq ID
+  headers[grepl(headers, pattern = &quot;_Eukaryota;&quot;)] &lt;- gsub(headers[grepl(headers, pattern = &quot;_Eukaryota;&quot;)],
+                                                           pattern = &quot;_Eukaryota;.+$&quot;, replacement = &quot;&quot;)
+  
+  # Remove everything after species name
+  matches &lt;- stringr::str_match(headers, &quot;^([a-zA-Z]+_[a-zA-Z]+).*$&quot;)[,2]
+  headers[! is.na(matches)] &lt;- matches[! is.na(matches)]
+  
+  headers &lt;- sub(headers, pattern = &quot;_sp$&quot;, replacement = &quot;&quot;)
+  headers &lt;- sub(headers, pattern = &quot;_x$&quot;, replacement = &quot;&quot;)
+  
+  # Remove underscores
+  # headers &lt;- gsub(headers, pattern = &quot;([a-zA-Z]{3,})_&quot;, replacement = &quot;\\1 &quot;)
+  
+  headers &lt;- sub(headers, pattern = &quot;Peronosppora&quot;, replacement = &quot;Peronospora&quot;)
+  headers &lt;- sub(headers, pattern = &quot;Scleroderma&quot;, replacement = &quot;Sclerospora&quot;)
+  
+  return(headers)
+}
+cleaned_headers &lt;- clean_headers(names(ref_seqs))</code></pre>
+<p>Some headers have species names, others have genbank ids. I will read in seq ids and names separately and combine classifications. Since looking up the taxonomy data can be unreliable depending on internet connection, I will cache the results of this in an .rds file.</p>
+<p>Seq IDs:</p>
+<pre class="r"><code>seq_id_obj_data_path &lt;- file.path(&#39;intermediate_data&#39;, &#39;seq_id_obj.rds&#39;)
+if (file.exists(seq_id_obj_data_path)) {
+  seq_id_obj &lt;- readRDS(seq_id_obj_data_path)
+} else {
+  seq_id_obj &lt;- lookup_tax_data(cleaned_headers, type = &quot;seq_id&quot;)
+  saveRDS(seq_id_obj, file = seq_id_obj_data_path)
+}
+# seq_id_obj &lt;- remove_redundant_names(seq_id_obj)
+seq_id_classes &lt;- classifications(seq_id_obj)[names(seq_id_obj$data$query_data)]</code></pre>
+<p>Seq names:</p>
+<pre class="r"><code>genus_part &lt;- sub(cleaned_headers, pattern = &quot;^([a-zA-Z]+)_.*$&quot;,
+                  replacement = &quot;\\1&quot;)
+species_part &lt;- sub(cleaned_headers, pattern = &quot;^[a-zA-Z]+_([a-zA-Z]+)$&quot;,
+                  replacement = &quot;\\1&quot;)</code></pre>
+<p>I will also save the results of this database search, since it can take a while and it requires manual input when synonyms are encountered, so cannot be included in an Rmd otherwise.</p>
+<pre class="r"><code>taxon_name_obj_data_path &lt;- file.path(&#39;intermediate_data&#39;, &#39;taxon_name_obj.rds&#39;)
+if (file.exists(taxon_name_obj_data_path)) {
+  taxon_name_obj &lt;- readRDS(taxon_name_obj_data_path)
+} else {
+  taxon_name_obj &lt;- lookup_tax_data(genus_part, type = &quot;taxon_name&quot;)
+  saveRDS(taxon_name_obj, file = taxon_name_obj_data_path)
+}
+taxon_name_classes &lt;- classifications(taxon_name_obj)[names(taxon_name_obj$data$query_data)]</code></pre>
+<p>Combine the classifications from the name and ID searches:</p>
+<pre class="r"><code>taxon_name_classes[taxon_name_classes != &quot;unknown taxon&quot;] &lt;- paste0(taxon_name_classes, &quot;;&quot;, species_part)[taxon_name_classes != &quot;unknown taxon&quot;]
+
+combined_class &lt;- unname(seq_id_classes)
+combined_class[combined_class == &quot;unknown taxon&quot;] &lt;- taxon_name_classes[combined_class == &quot;unknown taxon&quot;]</code></pre>
+<p>Convert to taxmap format for plotting:</p>
+<pre class="r"><code>obj &lt;- parse_tax_data(combined_class,
+                      datasets = list(original_names = names(ref_seqs)),
+                      mappings = c(&quot;{{index}}&quot; = &quot;{{index}}&quot;))</code></pre>
+</div>
+<div id="filter-out-ambigous-taxa-and-atrifacts" class="section level2">
+<h2>Filter out ambigous taxa and atrifacts</h2>
+<p>This will make the tree cleaner and easier to interpret.</p>
+<pre class="r"><code>cleaned_obj &lt;- obj %&gt;%
+  filter_taxa(is_leaf, taxon_names %in% c(&quot;Glomus&quot;, &quot;Phytophthora&quot;), invert = TRUE) %&gt;%
+  filter_taxa(grepl(taxon_names, pattern = &#39;unclassified&#39;, ignore.case = TRUE), invert = TRUE) %&gt;%
+  filter_taxa(grepl(taxon_names, pattern = &#39;endosymbiont&#39;, ignore.case = TRUE), invert = TRUE) %&gt;%
+  filter_ambiguous_taxa() %&gt;%
+  filter_taxa(grepl(taxon_names, pattern =  &quot;^[a-zA-Z ]+$&quot;))
+
+cleaned_obj$data$tax_data &lt;- tibble(taxon_id = names(cleaned_obj$data$tax_data), 
+                                    input = cleaned_obj$data$tax_data)</code></pre>
+</div>
+<div id="plot-what-was-amplified" class="section level2">
+<h2>Plot what was amplified</h2>
+<p>I will find which portions of the taxonomy have all of their leaves amplified …</p>
+<pre class="r"><code>cleaned_obj$mutate_obs(&quot;is_amplified&quot;,
+               unlist(leaves_apply(cleaned_obj,
+                                    function(x) length(x) &gt; 0 &amp;&amp; all(x %in% names(amp_seqs)),
+                                    value = &quot;original_names&quot;)))</code></pre>
+<pre><code>## Adding a new &quot;logical&quot; vector of length 420.</code></pre>
+<pre><code>## &lt;Taxmap&gt;
+##   420 taxa: ab. cellular organisms ... rh. graminicola
+##   420 edges: NA-&gt;ab, ab-&gt;ac, ab-&gt;ad ... re-&gt;rf, rf-&gt;rg, rg-&gt;rh
+##   3 data sets:
+##     tax_data:
+##       # A tibble: 217 x 2
+##         taxon_id input                                                
+##         &lt;chr&gt;    &lt;chr&gt;                                                
+##       1 ej       cellular organisms;Eukaryota;Sar;Stramenopiles;Oomyc…
+##       2 kk       cellular organisms;Eukaryota;Sar;Stramenopiles;Ochro…
+##       3 om       cellular organisms;Eukaryota;Sar;Alveolata;Ciliophor…
+##       # … with 214 more rows
+##     original_names: a named vector of &#39;character&#39; with 217 items
+##        ej. Achlya_hypogyna_F ... kj. Thraustotheca_clavata_F
+##     is_amplified: a named vector of &#39;logical&#39; with 420 items
+##        ab. FALSE, ac. FALSE, ad. FALSE ... rg. FALSE, rh. FALSE
+##   0 functions:</code></pre>
+<pre class="r"><code>amplified_leafs &lt;- cleaned_obj$data$original_names[cleaned_obj$data$original_names %in% names(amp_seqs)]
+cleaned_obj$data$is_amplified[names(amplified_leafs)] &lt;- TRUE</code></pre>
+<p>… and plot those taxa in green:</p>
+<pre class="r"><code>set.seed(5)
+cleaned_obj %&gt;% 
+  filter_taxa(!is_internode) %&gt;%
+  remove_redundant_names() %&gt;%
+  heat_tree(node_color = ifelse(is_amplified, &quot;green&quot;, &quot;grey&quot;),
+            node_color_axis_label = &quot;PID to closest other species&quot;,
+            node_size = n_obs, 
+            node_size_range = c(0.005, 0.025),
+            node_label_size_range = c(0.012, 0.018),
+            # node_label_size_trans = &quot;log10&quot;,
+            node_size_axis_label = &quot;Number of sequences&quot;,
+            node_label = Hmisc::capitalize(taxon_names),
+            layout = &quot;da&quot;, initial_layout = &quot;re&quot;,
+            background_color = &#39;#FFFFFF&#39;,
+            # overlap_avoidance = 2,
+            output_file = file.path(&quot;results&quot;, &quot;rps10_simulated_pcr.pdf&quot;))</code></pre>
+<p><img src="09--simulated_pcr_results_files/figure-html/unnamed-chunk-13-1.png" width="960" /></p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

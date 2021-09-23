@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Read processing and quality filtering</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-inverse  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Comparing ITS1 and RPS10 for Oomycete Metabacoding</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Analysis
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="01--prepare_reference_database.html">Reference database preparation</a>
+    </li>
+    <li>
+      <a href="02--preparation_and_quality_filtering.html">Read processing and quality filtering</a>
+    </li>
+    <li>
+      <a href="03--abundance_matrix_preparation.html">Abundance matrix and taxonomic assignment</a>
+    </li>
+    <li>
+      <a href="04--blast_classification.html">Alternative taxonomic assignment using BLAST</a>
+    </li>
+    <li>
+      <a href="05--otu_clustering_threshold.html">OTU clustering threshold estimation</a>
+    </li>
+    <li>
+      <a href="06--mock_community.html">Mock community evaluation</a>
+    </li>
+    <li>
+      <a href="07--nontarget_amplification.html">Non-target amplification</a>
+    </li>
+    <li>
+      <a href="08--amplicon_taxonomic_resolution.html">Taxonomic resolution</a>
+    </li>
+    <li>
+      <a href="09--simulated_pcr_results.html">Plotting of simulated PCR results</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/grunwaldlab/rps10_barcode">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Read processing and quality filtering</h1>
+
+</div>
+
+
+<p>This is an analysis of the data from the MiSeq run testing the rps10 barcode and associated primers. Multiple mock community samples and environmental samples were sequenced. This will roughly follow the <a href="https://benjjneb.github.io/dada2/ITS_workflow.html">DADA2 ITS Pipeline Workflow (1.8)</a> and the <a href="https://benjjneb.github.io/dada2/tutorial.html">DADA2 Pipeline Tutorial (1.12)</a>.</p>
+<div id="prepare" class="section level2">
+<h2>Prepare</h2>
+<div id="notes-on-how-to-use-this-analysis" class="section level3">
+<h3>Notes on how to use this analysis</h3>
+<p>Some of the long running operations that produce output files only run if their output does not exist. To rerun them, delete the corresponding file in the intermediate data folder.</p>
+</div>
+<div id="packages-used" class="section level3">
+<h3>Packages used</h3>
+<pre class="r"><code>library(dada2)
+library(ShortRead)
+library(Biostrings)
+library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(gridExtra)
+library(sessioninfo)</code></pre>
+</div>
+<div id="parameters" class="section level3">
+<h3>Parameters</h3>
+<pre class="r"><code>seed &lt;- 1
+expected_error_filter_limit &lt;- 5 # Default: no expected-error filtering (Inf)
+truncation_qual_limit &lt;- 5 # Default: 2
+set.seed(seed)</code></pre>
+</div>
+<div id="parallel-processing" class="section level3">
+<h3>Parallel processing</h3>
+<p>Commands that have “future” in them are run on multiple cores using the <code>furrr</code> and <code>future</code> packages.</p>
+<pre class="r"><code>plan(multiprocess)</code></pre>
+<pre><code>## Warning: [ONE-TIME WARNING] Forked processing (&#39;multicore&#39;) is disabled
+## in future (&gt;= 1.13.0) when running R from RStudio, because it is
+## considered unstable. Because of this, plan(&quot;multicore&quot;) will fall
+## back to plan(&quot;sequential&quot;), and plan(&quot;multiprocess&quot;) will fall back to
+## plan(&quot;multisession&quot;) - not plan(&quot;multicore&quot;) as in the past. For more details,
+## how to control forked processing or not, and how to silence this warning in
+## future R sessions, see ?future::supportsMulticore</code></pre>
+</div>
+</div>
+<div id="read-in-raw-data" class="section level2">
+<h2>Read in raw data</h2>
+<div id="fastq-data" class="section level3">
+<h3>FASTQ data</h3>
+<pre class="r"><code>fastq_dir_path &lt;- &quot;raw_data/sequences&quot;
+fastq_paths &lt;- list.files(fastq_dir_path, pattern = &quot;\\.fastq&quot;)
+fastq_data &lt;- tibble(file_id = sub(fastq_paths, pattern = &quot;\\.fastq\\.gz$&quot;, replacement = &quot;&quot;),
+                     sample_id = sub(fastq_paths, pattern = &quot;_.+$&quot;, replacement = &quot;&quot;),
+                     direction = c(&quot;Reverse&quot;, &quot;Forward&quot;)[grepl(fastq_paths, pattern = &quot;R1&quot;) + 1],
+                     raw_path = file.path(fastq_dir_path, fastq_paths))
+print(fastq_data)</code></pre>
+<pre><code>## # A tibble: 96 x 4
+##    file_id sample_id direction raw_path                         
+##    &lt;chr&gt;   &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;                            
+##  1 A1_R1   A1        Forward   raw_data/sequences/A1_R1.fastq.gz
+##  2 A1_R2   A1        Reverse   raw_data/sequences/A1_R2.fastq.gz
+##  3 A2_R1   A2        Forward   raw_data/sequences/A2_R1.fastq.gz
+##  4 A2_R2   A2        Reverse   raw_data/sequences/A2_R2.fastq.gz
+##  5 A3_R1   A3        Forward   raw_data/sequences/A3_R1.fastq.gz
+##  6 A3_R2   A3        Reverse   raw_data/sequences/A3_R2.fastq.gz
+##  7 A4_R1   A4        Forward   raw_data/sequences/A4_R1.fastq.gz
+##  8 A4_R2   A4        Reverse   raw_data/sequences/A4_R2.fastq.gz
+##  9 A5_R1   A5        Forward   raw_data/sequences/A5_R1.fastq.gz
+## 10 A5_R2   A5        Reverse   raw_data/sequences/A5_R2.fastq.gz
+## # … with 86 more rows</code></pre>
+</div>
+<div id="primer-data" class="section level3">
+<h3>Primer data</h3>
+<p>There were three different pairs of primers used. I renamed the primers manually from “cons”, “its”, and “f” in Felipe’s original sample metadata file. I will make two tables: one for the individual primers and one for the pairs of primers used.</p>
+<pre class="r"><code>primer_data_path &lt;- file.path(&quot;raw_data&quot;, &quot;primer_data.csv&quot;)
+primer_data &lt;- read_csv(primer_data_path)</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   primer_id = col_character(),
+##   locus = col_character(),
+##   direction = col_character(),
+##   sequence = col_character()
+## )</code></pre>
+<pre class="r"><code>print(primer_data)</code></pre>
+<pre><code>## # A tibble: 5 x 4
+##   primer_id locus direction sequence             
+##   &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;                
+## 1 rps10-F   rps10 Forward   GTTGGTTAGAGYARAAGACT 
+## 2 rps10-R   rps10 Reverse   ATRYYTAGAAAGAYTYGAACT
+## 3 rps10_f-F rps10 Forward   TCTTTGTGTCRRTGGTTCR  
+## 4 ITS6      ITS   Forward   GAAGGTGAAGTCGTAACAAGG
+## 5 ITS7      ITS   Reverse   AGCGTTCTTCATCGATGTGC</code></pre>
+<pre class="r"><code>primer_pair_data_path &lt;- file.path(&quot;raw_data&quot;, &quot;primer_pair_data.csv&quot;)
+primer_pair_data &lt;- read_csv(primer_pair_data_path)</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   primer_pair_id = col_character(),
+##   felipes_id = col_character(),
+##   locus = col_character(),
+##   forward = col_character(),
+##   reverse = col_character()
+## )</code></pre>
+<pre class="r"><code>print(primer_pair_data)</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##   primer_pair_id felipes_id locus forward   reverse
+##   &lt;chr&gt;          &lt;chr&gt;      &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;  
+## 1 rps10_Final    cons       rps10 rps10-F   rps10-R
+## 2 rps10_Felipe   f          rps10 rps10_f-F rps10-R
+## 3 ITS6/7         its        ITS   ITS6      ITS7</code></pre>
+</div>
+<div id="sample-metadata" class="section level3">
+<h3>Sample metadata</h3>
+<p>I will edit the sample metadata some to make it more how I like it.</p>
+<pre class="r"><code>if (! dir.exists(&quot;intermediate_data&quot;)) {
+  dir.create(&quot;intermediate_data&quot;)
+}
+metadata_path &lt;- file.path(&quot;raw_data&quot;, &quot;metadata.csv&quot;)
+modified_metadata_path &lt;- file.path(&quot;intermediate_data&quot;, &quot;metadata.csv&quot;)
+metadata &lt;- read_csv(metadata_path) %&gt;%
+  arrange(well) %&gt;%
+  rename(sample_id = well, primer_pair_id = primer, dna_type = origin, dna_sample_id = sample) %&gt;%
+  left_join(primer_pair_data, by = c(&quot;primer_pair_id&quot; = &quot;felipes_id&quot;)) %&gt;%
+  mutate(primer_pair_id = primer_pair_id.y) %&gt;%
+  select(-primer_pair_id.y)</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   well = col_character(),
+##   primer = col_character(),
+##   origin = col_character(),
+##   sample = col_character()
+## )</code></pre>
+<p>I will also add a column to identify the type of sample:</p>
+<pre class="r"><code>metadata$sample_type &lt;- &#39;Sample&#39;
+metadata$sample_type[grepl(metadata$dna_type, pattern = &#39;control&#39;)] &lt;- &#39;Negative control&#39;
+metadata$sample_type[grepl(metadata$dna_type, pattern = &#39;mock&#39;)] &lt;- &#39;Mock community&#39;</code></pre>
+<p>and I will save an edited version in the intermediate files to use in other analyses.</p>
+<pre class="r"><code>write_csv(metadata, modified_metadata_path)
+print(metadata)</code></pre>
+<pre><code>## # A tibble: 48 x 8
+##    sample_id primer_pair_id dna_type dna_sample_id locus forward reverse
+##    &lt;chr&gt;     &lt;chr&gt;          &lt;chr&gt;    &lt;chr&gt;         &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+##  1 A1        rps10_Final    mock1    mock1         rps10 rps10-F rps10-R
+##  2 A2        rps10_Final    leaf     L95           rps10 rps10-F rps10-R
+##  3 A3        rps10_Felipe   mock1    mock1         rps10 rps10_… rps10-R
+##  4 A4        rps10_Felipe   leaf     L95           rps10 rps10_… rps10-R
+##  5 A5        ITS6/7         mock1    mock1         ITS   ITS6    ITS7   
+##  6 A6        ITS6/7         leaf     L95           ITS   ITS6    ITS7   
+##  7 B1        rps10_Final    mock2    mock2         rps10 rps10-F rps10-R
+##  8 B2        rps10_Final    WR.soil  WS3           rps10 rps10-F rps10-R
+##  9 B3        rps10_Felipe   mock2    mock2         rps10 rps10_… rps10-R
+## 10 B4        rps10_Felipe   WR.soil  WS3           rps10 rps10_… rps10-R
+## # … with 38 more rows, and 1 more variable: sample_type &lt;chr&gt;</code></pre>
+</div>
+</div>
+<div id="check-that-forward-and-reverse-reads-are-in-matching-order" class="section level2">
+<h2>Check that forward and reverse reads are in matching order</h2>
+<p>One of the assumptions of this analysis is that forward and reverse reads are in matching order, so I will check that on one of the FASTQ files.</p>
+<pre class="r"><code>paired_file_paths &lt;- fastq_data %&gt;%
+  filter(sample_id == first(sample_id)) %&gt;%
+  pull(raw_path)
+get_read_names &lt;- function(path) {
+  seqs &lt;- readFastq(path)
+  sub(as.character(seqs@id), pattern = &quot; .+$&quot;, replacement = &quot;&quot;)
+}
+stopifnot(all(get_read_names(paired_file_paths[1]) == get_read_names(paired_file_paths[2])))</code></pre>
+</div>
+<div id="trim-primer-sequences" class="section level2">
+<h2>Trim primer sequences</h2>
+<p>Since it is possible for some small amplicons to read completely though, we have to check for both primer in both read, and just to be safe, in all possible orientations.</p>
+<div id="prefilter-ns" class="section level3">
+<h3>Prefilter Ns</h3>
+<p>Since Ns can make it difficult to map short sequences, I will remove any sequences that have Ns and make a new set of sequence files.</p>
+<pre class="r"><code>prefiltered_read_dir &lt;- file.path(&quot;intermediate_data&quot;, &quot;prefiltered_sequences&quot;)
+fastq_data$prefiltered_path &lt;- file.path(prefiltered_read_dir, base::basename(fastq_data$raw_path))</code></pre>
+<p>This will take a while:</p>
+<pre class="r"><code>if (! all(file.exists(fastq_data$prefiltered_path))) {
+  filterAndTrim(fwd = fastq_data[fastq_data$direction == &quot;Forward&quot;, ][[&quot;raw_path&quot;]], 
+                filt = fastq_data[fastq_data$direction == &quot;Forward&quot;, ][[&quot;prefiltered_path&quot;]], 
+                rev = fastq_data[fastq_data$direction == &quot;Reverse&quot;, ][[&quot;raw_path&quot;]], 
+                filt.rev = fastq_data[fastq_data$direction == &quot;Reverse&quot;, ][[&quot;prefiltered_path&quot;]], 
+                maxN = 0,
+                multithread = TRUE)
+}</code></pre>
+<pre><code>## Creating output directory: intermediate_data/prefiltered_sequences</code></pre>
+</div>
+<div id="check-for-primers-in-sequences" class="section level3">
+<h3>Check for primers in sequences</h3>
+<p>For each primer I will generate the reverse, complement, and reverse complement, so I can check for any unusual read orientation. First I will need to get the sequences for each of the possible orientations.</p>
+<pre class="r"><code>primer_data$complement &lt;- map_chr(primer_data$sequence, function(x) toString(complement(DNAString(x))))
+primer_data$reverse &lt;- map_chr(primer_data$sequence, function(x) toString(reverse(DNAString(x))))
+primer_data$rev_comp &lt;- map_chr(primer_data$sequence, function(x) toString(reverseComplement(DNAString(x))))
+primer_hit_data &lt;- gather(primer_data, key = &quot;orientation&quot;, value = &quot;sequence&quot;, sequence, complement, reverse, rev_comp)
+print(primer_hit_data)</code></pre>
+<pre><code>## # A tibble: 20 x 5
+##    primer_id locus direction orientation sequence             
+##    &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;                
+##  1 rps10-F   rps10 Forward   sequence    GTTGGTTAGAGYARAAGACT 
+##  2 rps10-R   rps10 Reverse   sequence    ATRYYTAGAAAGAYTYGAACT
+##  3 rps10_f-F rps10 Forward   sequence    TCTTTGTGTCRRTGGTTCR  
+##  4 ITS6      ITS   Forward   sequence    GAAGGTGAAGTCGTAACAAGG
+##  5 ITS7      ITS   Reverse   sequence    AGCGTTCTTCATCGATGTGC 
+##  6 rps10-F   rps10 Forward   complement  CAACCAATCTCRTYTTCTGA 
+##  7 rps10-R   rps10 Reverse   complement  TAYRRATCTTTCTRARCTTGA
+##  8 rps10_f-F rps10 Forward   complement  AGAAACACAGYYACCAAGY  
+##  9 ITS6      ITS   Forward   complement  CTTCCACTTCAGCATTGTTCC
+## 10 ITS7      ITS   Reverse   complement  TCGCAAGAAGTAGCTACACG 
+## 11 rps10-F   rps10 Forward   reverse     TCAGAARAYGAGATTGGTTG 
+## 12 rps10-R   rps10 Reverse   reverse     TCAAGYTYAGAAAGATYYRTA
+## 13 rps10_f-F rps10 Forward   reverse     RCTTGGTRRCTGTGTTTCT  
+## 14 ITS6      ITS   Forward   reverse     GGAACAATGCTGAAGTGGAAG
+## 15 ITS7      ITS   Reverse   reverse     CGTGTAGCTACTTCTTGCGA 
+## 16 rps10-F   rps10 Forward   rev_comp    AGTCTTYTRCTCTAACCAAC 
+## 17 rps10-R   rps10 Reverse   rev_comp    AGTTCRARTCTTTCTARRYAT
+## 18 rps10_f-F rps10 Forward   rev_comp    YGAACCAYYGACACAAAGA  
+## 19 ITS6      ITS   Forward   rev_comp    CCTTGTTACGACTTCACCTTC
+## 20 ITS7      ITS   Reverse   rev_comp    GCACATCGATGAAGAACGCT</code></pre>
+<p>This is a function copied from the <a href="https://benjjneb.github.io/dada2/ITS_workflow.html">DADA2 ITS Pipeline Workflow (1.8)</a> to count number of times a sequence appears in a fastq.</p>
+<pre class="r"><code>primer_hits &lt;- function(primer, path) {
+    # Counts number of reads in which the primer is found
+    nhits &lt;- vcountPattern(primer, sread(readFastq(path)), fixed = FALSE)
+    return(sum(nhits &gt; 0))
+}</code></pre>
+<p>This will take a while:</p>
+<pre class="r"><code>primer_hit_data_csv_path &lt;- file.path(&quot;intermediate_data&quot;, &quot;primer_hit_data.csv&quot;)
+if (file.exists(primer_hit_data_csv_path)) {
+  primer_hit_data &lt;- read_csv(primer_hit_data_csv_path)
+} else {
+  primer_hit_counts &lt;- future_map(fastq_data$prefiltered_path, 
+                                  function (a_path) map_dbl(primer_hit_data$sequence, primer_hits, path = a_path))
+  names(primer_hit_counts) &lt;- fastq_data$file_id
+  primer_hit_data &lt;- bind_cols(primer_hit_data, as_tibble(primer_hit_counts))
+  write_csv(primer_hit_data, primer_hit_data_csv_path)
+}
+print(primer_hit_data)</code></pre>
+<pre><code>## # A tibble: 20 x 101
+##    primer_id locus direction orientation sequence  A1_R1  A1_R2 A2_R1 A2_R2
+##    &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;     &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 rps10-F   rps10 Forward   sequence    GTTGGTT… 430898      2 66957     0
+##  2 rps10-R   rps10 Reverse   sequence    ATRYYTA…      3 426198     0 65841
+##  3 rps10_f-F rps10 Forward   sequence    TCTTTGT… 444430      4 64501     0
+##  4 ITS6      ITS   Forward   sequence    GAAGGTG…    262      0    43     0
+##  5 ITS7      ITS   Reverse   sequence    AGCGTTC…      0    147     0    21
+##  6 rps10-F   rps10 Forward   complement  CAACCAA…      0      0     0     0
+##  7 rps10-R   rps10 Reverse   complement  TAYRRAT…      0      0     0     0
+##  8 rps10_f-F rps10 Forward   complement  AGAAACA…      0      0     0     0
+##  9 ITS6      ITS   Forward   complement  CTTCCAC…      0      0     0     0
+## 10 ITS7      ITS   Reverse   complement  TCGCAAG…      0      0     0     0
+## 11 rps10-F   rps10 Forward   reverse     TCAGAAR…      0      0     0     0
+## 12 rps10-R   rps10 Reverse   reverse     TCAAGYT…      0      0     0     0
+## 13 rps10_f-F rps10 Forward   reverse     RCTTGGT…      0      0     0     0
+## 14 ITS6      ITS   Forward   reverse     GGAACAA…      0      0     0     0
+## 15 ITS7      ITS   Reverse   reverse     CGTGTAG…      0      0     0     0
+## 16 rps10-F   rps10 Forward   rev_comp    AGTCTTY…      0     63     0   855
+## 17 rps10-R   rps10 Reverse   rev_comp    AGTTCRA…    113      0   880     0
+## 18 rps10_f-F rps10 Forward   rev_comp    YGAACCA…      0     48     0     5
+## 19 ITS6      ITS   Forward   rev_comp    CCTTGTT…      0     34     0     5
+## 20 ITS7      ITS   Reverse   rev_comp    GCACATC…     78      0    16     0
+## # … with 92 more variables: A3_R1 &lt;dbl&gt;, A3_R2 &lt;dbl&gt;, A4_R1 &lt;dbl&gt;, A4_R2 &lt;dbl&gt;,
+## #   A5_R1 &lt;dbl&gt;, A5_R2 &lt;dbl&gt;, A6_R1 &lt;dbl&gt;, A6_R2 &lt;dbl&gt;, B1_R1 &lt;dbl&gt;,
+## #   B1_R2 &lt;dbl&gt;, B2_R1 &lt;dbl&gt;, B2_R2 &lt;dbl&gt;, B3_R1 &lt;dbl&gt;, B3_R2 &lt;dbl&gt;,
+## #   B4_R1 &lt;dbl&gt;, B4_R2 &lt;dbl&gt;, B5_R1 &lt;dbl&gt;, B5_R2 &lt;dbl&gt;, B6_R1 &lt;dbl&gt;,
+## #   B6_R2 &lt;dbl&gt;, C1_R1 &lt;dbl&gt;, C1_R2 &lt;dbl&gt;, C2_R1 &lt;dbl&gt;, C2_R2 &lt;dbl&gt;,
+## #   C3_R1 &lt;dbl&gt;, C3_R2 &lt;dbl&gt;, C4_R1 &lt;dbl&gt;, C4_R2 &lt;dbl&gt;, C5_R1 &lt;dbl&gt;,
+## #   C5_R2 &lt;dbl&gt;, C6_R1 &lt;dbl&gt;, C6_R2 &lt;dbl&gt;, D1_R1 &lt;dbl&gt;, D1_R2 &lt;dbl&gt;,
+## #   D2_R1 &lt;dbl&gt;, D2_R2 &lt;dbl&gt;, D3_R1 &lt;dbl&gt;, D3_R2 &lt;dbl&gt;, D4_R1 &lt;dbl&gt;,
+## #   D4_R2 &lt;dbl&gt;, D5_R1 &lt;dbl&gt;, D5_R2 &lt;dbl&gt;, D6_R1 &lt;dbl&gt;, D6_R2 &lt;dbl&gt;,
+## #   E1_R1 &lt;dbl&gt;, E1_R2 &lt;dbl&gt;, E2_R1 &lt;dbl&gt;, E2_R2 &lt;dbl&gt;, E3_R1 &lt;dbl&gt;,
+## #   E3_R2 &lt;dbl&gt;, E4_R1 &lt;dbl&gt;, E4_R2 &lt;dbl&gt;, E5_R1 &lt;dbl&gt;, E5_R2 &lt;dbl&gt;,
+## #   E6_R1 &lt;dbl&gt;, E6_R2 &lt;dbl&gt;, F1_R1 &lt;dbl&gt;, F1_R2 &lt;dbl&gt;, F2_R1 &lt;dbl&gt;,
+## #   F2_R2 &lt;dbl&gt;, F3_R1 &lt;dbl&gt;, F3_R2 &lt;dbl&gt;, F4_R1 &lt;dbl&gt;, F4_R2 &lt;dbl&gt;,
+## #   F5_R1 &lt;dbl&gt;, F5_R2 &lt;dbl&gt;, F6_R1 &lt;dbl&gt;, F6_R2 &lt;dbl&gt;, G1_R1 &lt;dbl&gt;,
+## #   G1_R2 &lt;dbl&gt;, G2_R1 &lt;dbl&gt;, G2_R2 &lt;dbl&gt;, G3_R1 &lt;dbl&gt;, G3_R2 &lt;dbl&gt;,
+## #   G4_R1 &lt;dbl&gt;, G4_R2 &lt;dbl&gt;, G5_R1 &lt;dbl&gt;, G5_R2 &lt;dbl&gt;, G6_R1 &lt;dbl&gt;,
+## #   G6_R2 &lt;dbl&gt;, H1_R1 &lt;dbl&gt;, H1_R2 &lt;dbl&gt;, H2_R1 &lt;dbl&gt;, H2_R2 &lt;dbl&gt;,
+## #   H3_R1 &lt;dbl&gt;, H3_R2 &lt;dbl&gt;, H4_R1 &lt;dbl&gt;, H4_R2 &lt;dbl&gt;, H5_R1 &lt;dbl&gt;,
+## #   H5_R2 &lt;dbl&gt;, H6_R1 &lt;dbl&gt;, H6_R2 &lt;dbl&gt;</code></pre>
+<p>The complement and reverse of any of the primers are never detected:</p>
+<pre class="r"><code>primer_hit_data %&gt;%
+  filter(orientation %in% c(&quot;complement&quot;, &quot;reverse&quot;)) %&gt;%
+  select(!!! fastq_data$file_id) %&gt;%
+  sum()</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>So I will remove those rows to make things easier to analyze.</p>
+<pre class="r"><code>primer_hit_data &lt;- filter(primer_hit_data, ! orientation %in% c(&quot;complement&quot;, &quot;reverse&quot;))</code></pre>
+<p>Now I can look at what primers were detected in which samples, grouping samples by the primer pair used.</p>
+<pre class="r"><code>primer_hit_data %&gt;%
+  gather(key = &quot;file_id&quot;, value = &quot;count&quot;, !!! fastq_data$file_id) %&gt;%
+  mutate(sample_id = sub(file_id, pattern = &quot;_R[12]$&quot;, replacement = &quot;&quot;)) %&gt;%
+  left_join(metadata, by = &quot;sample_id&quot;) %&gt;%
+  left_join(fastq_data, by = &quot;file_id&quot;) %&gt;%
+  select(primer_id, primer_direction = direction.x, orientation, count, sample_id = sample_id.x, primer_pair_id, forward, reverse, read_direction = direction.y) %&gt;%
+  ggplot(aes(x = primer_id, y = count, color = orientation)) +
+  geom_boxplot() +
+  facet_grid(read_direction ~ primer_pair_id)</code></pre>
+<p><img src="02--preparation_and_quality_filtering_files/figure-html/unnamed-chunk-18-1.png" width="960" /></p>
+<p>It looks like the expected primer was found most often and in ITS6/7 and rps10_felipe there was some reads that extended into the other primer since the reverse complement of the other primer was found at a lower rate. The rps10_f-F primer was also found in the samples with the standard rps10-F primers. This is to be expected, since the rps10_f-F primers sequences occurs in the rps10_Final amplicon sequences (i.e. rps10_Final is a bigger amplcion that contains rps10_Felipe).</p>
+<p>If we look at just how many primer sequences appeared in samples sequenced with different primer pairs, we see a similar pattern:</p>
+<pre class="r"><code>per_primer_pair_hits &lt;- primer_hit_data %&gt;%
+  gather(key = &quot;file_id&quot;, value = &quot;count&quot;, !!! fastq_data$file_id) %&gt;%
+  mutate(sample_id = sub(file_id, pattern = &quot;_R[12]$&quot;, replacement = &quot;&quot;)) %&gt;%
+  left_join(metadata, by = &quot;sample_id&quot;) %&gt;%
+  left_join(fastq_data, by = &quot;file_id&quot;) %&gt;%
+  select(primer_id, primer_direction = direction.x, orientation, count, sample_id = sample_id.x, primer_pair_id, forward, reverse, read_direction = direction.y) %&gt;%
+  group_by(primer_pair_id, primer_id) %&gt;%
+  summarise(count = sum(count)) %&gt;%
+  group_by(primer_pair_id) %&gt;%
+  mutate(percent = count / sum(count) * 100)</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;primer_pair_id&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>print(per_primer_pair_hits)</code></pre>
+<pre><code>## # A tibble: 15 x 4
+## # Groups:   primer_pair_id [3]
+##    primer_pair_id primer_id   count  percent
+##    &lt;chr&gt;          &lt;chr&gt;       &lt;dbl&gt;    &lt;dbl&gt;
+##  1 ITS6/7         ITS6      8785418 49.9    
+##  2 ITS6/7         ITS7      8819864 50.1    
+##  3 ITS6/7         rps10_f-F    4129  0.0234 
+##  4 ITS6/7         rps10-F      1660  0.00942
+##  5 ITS6/7         rps10-R      2729  0.0155 
+##  6 rps10_Felipe   ITS6         7821  0.0761 
+##  7 rps10_Felipe   ITS7         6144  0.0598 
+##  8 rps10_Felipe   rps10_f-F 3681743 35.8    
+##  9 rps10_Felipe   rps10-F      1731  0.0168 
+## 10 rps10_Felipe   rps10-R   6581319 64.0    
+## 11 rps10_Final    ITS6         3752  0.0443 
+## 12 rps10_Final    ITS7         2969  0.0350 
+## 13 rps10_Final    rps10_f-F 1988949 23.5    
+## 14 rps10_Final    rps10-F   3248909 38.3    
+## 15 rps10_Final    rps10-R   3229644 38.1</code></pre>
+<p>Plotting makes it apparent that the correct primers are found the vast majority of the time:</p>
+<pre class="r"><code>primer_plot &lt;-  per_primer_pair_hits %&gt;%
+  ggplot(aes(x = primer_id, y = percent)) +
+  geom_bar(stat = &quot;identity&quot;) +
+  facet_wrap(. ~ primer_pair_id)
+print(primer_plot)</code></pre>
+<p><img src="02--preparation_and_quality_filtering_files/figure-html/unnamed-chunk-20-1.png" width="960" /></p>
+<p>However, log scaling shows that there are some unexpected primers occurring in around 0.1% to 0.01% of reads.</p>
+<pre class="r"><code>primer_plot + 
+  scale_y_log10()</code></pre>
+<p><img src="02--preparation_and_quality_filtering_files/figure-html/unnamed-chunk-21-1.png" width="960" /></p>
+<p>We can quickly calculate the total percentage of unexpected primer hit using the fact that they are always less than 1% of reads:</p>
+<pre class="r"><code>sum(per_primer_pair_hits$count[per_primer_pair_hits$percent &lt; 1]) / sum(per_primer_pair_hits$count)</code></pre>
+<pre><code>## [1] 0.0008506389</code></pre>
+<p>This might represent the index switching known to occur in MiSeq sequencing.</p>
+</div>
+<div id="remove-primers-with-cutadapt" class="section level3">
+<h3>Remove primers with cutadapt</h3>
+<p>First lets check if <code>cutadapt</code> is installed.</p>
+<pre class="r"><code>tryCatch(system2(&quot;cutadapt&quot;, args = &quot;--version&quot;),
+         warning=function(w) {
+           stop(&quot;cutadapt cannot be found on PATH. Is it installed?&quot;)
+         })</code></pre>
+<p>We next need a place to put the results of both reads that were trimmed successfully and those that were not.</p>
+<pre class="r"><code>trimmed_read_dir &lt;- file.path(&quot;intermediate_data&quot;, &quot;trimmed_sequences&quot;)
+if (! dir.exists(trimmed_read_dir)) {
+  dir.create(trimmed_read_dir)
+}
+fastq_data$trimmed_path &lt;- file.path(trimmed_read_dir, paste0(fastq_data$file_id, &quot;.fastq.gz&quot;))
+
+untrimmed_read_dir &lt;- file.path(&quot;intermediate_data&quot;, &quot;untrimmed_sequences&quot;)
+if (! dir.exists(untrimmed_read_dir)) {
+  dir.create(untrimmed_read_dir)
+}
+fastq_data$untrimmed_path &lt;- file.path(untrimmed_read_dir, paste0(fastq_data$file_id, &quot;.fastq.gz&quot;))</code></pre>
+<p>Since there are three different sets of primers used, three different types of <code>cutadapt</code> commands must be applied. The code below makes a <code>cutadapt</code> command for each sample.</p>
+<pre class="r"><code>cutadapt_data &lt;- metadata %&gt;%
+  select(sample_id, forward_id = forward, reverse_id = reverse) %&gt;%
+  left_join(primer_data[, c(&quot;primer_id&quot;, &quot;sequence&quot;, &quot;rev_comp&quot;)], by = c(&quot;forward_id&quot; = &quot;primer_id&quot;)) %&gt;%
+  rename(forward_seq = sequence, forward_seq_rc = rev_comp) %&gt;%
+  left_join(primer_data[, c(&quot;primer_id&quot;, &quot;sequence&quot;, &quot;rev_comp&quot;)], by = c(&quot;reverse_id&quot; = &quot;primer_id&quot;)) %&gt;%
+  rename(reverse_seq = sequence, reverse_seq_rc = rev_comp) %&gt;%
+  select(-forward_id, -reverse_id)
+
+cutadapt_data &lt;- fastq_data %&gt;%
+  filter(direction == &quot;Forward&quot;) %&gt;%
+  select(sample_id, prefiltered_path, trimmed_path, untrimmed_path) %&gt;%
+  right_join(cutadapt_data, by = &quot;sample_id&quot;) %&gt;%
+  rename(forward_input_path = prefiltered_path,
+         forward_output_path = trimmed_path, 
+         forward_untrimmed_path = untrimmed_path)
+
+cutadapt_data &lt;- fastq_data %&gt;%
+  filter(direction == &quot;Reverse&quot;) %&gt;%
+  select(sample_id, prefiltered_path, trimmed_path, untrimmed_path) %&gt;%
+  right_join(cutadapt_data, by = &quot;sample_id&quot;) %&gt;%
+  rename(reverse_input_path = prefiltered_path,
+         reverse_output_path = trimmed_path,
+         reverse_untrimmed_path = untrimmed_path)
+
+cutadapt_info_dir &lt;- file.path(&quot;intermediate_data&quot;, &quot;cutadapt_info&quot;)
+if (! dir.exists(cutadapt_info_dir)) {
+  dir.create(cutadapt_info_dir)
+}
+cutadapt_data$info_path &lt;- file.path(cutadapt_info_dir, paste0(cutadapt_data$sample_id, &quot;.txt&quot;))
+
+cutadapt_data &lt;- cutadapt_data %&gt;%
+  mutate(command_args = paste(
+    &quot;-g&quot;, forward_seq,
+    &quot;-a&quot;, reverse_seq_rc,
+    &quot;-G&quot;, reverse_seq,
+    &quot;-A&quot;, forward_seq_rc,
+    &quot;-n&quot;, 2, # -n 2 required to remove FWD and REV from reads
+    &quot;-o&quot;, forward_output_path,
+    &quot;-p&quot;, reverse_output_path,
+    &quot;--minimum-length&quot;, 50,
+    &quot;--untrimmed-output&quot;, forward_untrimmed_path,
+    &quot;--untrimmed-paired-output&quot;, reverse_untrimmed_path,
+    &quot;--quiet&quot;,
+    # &quot;--info-file&quot;, info_path,
+    forward_input_path,
+    reverse_input_path
+  ))
+print(cutadapt_data)</code></pre>
+<pre><code>## # A tibble: 48 x 13
+##    sample_id reverse_input_p… reverse_output_… reverse_untrimm… forward_input_p…
+##    &lt;chr&gt;     &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;           
+##  1 A1        intermediate_da… intermediate_da… intermediate_da… intermediate_da…
+##  2 A2        intermediate_da… intermediate_da… intermediate_da… intermediate_da…
+##  3 A3        intermediate_da… intermediate_da… intermediate_da… intermediate_da…
+##  4 A4        intermediate_da… intermediate_da… intermediate_da… intermediate_da…
+##  5 A5        intermediate_da… intermediate_da… intermediate_da… intermediate_da…
+##  6 A6        intermediate_da… intermediate_da… intermediate_da… intermediate_da…
+##  7 B1        intermediate_da… intermediate_da… intermediate_da… intermediate_da…
+##  8 B2        intermediate_da… intermediate_da… intermediate_da… intermediate_da…
+##  9 B3        intermediate_da… intermediate_da… intermediate_da… intermediate_da…
+## 10 B4        intermediate_da… intermediate_da… intermediate_da… intermediate_da…
+## # … with 38 more rows, and 8 more variables: forward_output_path &lt;chr&gt;,
+## #   forward_untrimmed_path &lt;chr&gt;, forward_seq &lt;chr&gt;, forward_seq_rc &lt;chr&gt;,
+## #   reverse_seq &lt;chr&gt;, reverse_seq_rc &lt;chr&gt;, info_path &lt;chr&gt;,
+## #   command_args &lt;chr&gt;</code></pre>
+<p>And now we can run the commands. <strong>This will take a while</strong>.</p>
+<pre class="r"><code>if (! all(file.exists(c(fastq_data$trimmed_path, fastq_data$untrimmed_path)))) {
+  cutadapt_output &lt;- future_map(cutadapt_data$command_args, ~system2(&quot;cutadapt&quot;, args = .x))
+}</code></pre>
+</div>
+<div id="check-that-primers-were-removed" class="section level3">
+<h3>Check that primers were removed</h3>
+<p>This will take a while:</p>
+<pre class="r"><code>cutadapt_verify_path &lt;- file.path(&quot;intermediate_data&quot;, &quot;cutadapt_verify_data.csv&quot;)
+if (file.exists(cutadapt_verify_path)) {
+  cutadapt_verify_data &lt;- read_csv(cutadapt_verify_path)
+} else {
+  primer_hit_counts &lt;- future_map(fastq_data$trimmed_path, 
+                                  function (a_path) map_dbl(primer_hit_data$sequence, primer_hits, path = a_path))
+  names(primer_hit_counts) &lt;- fastq_data$file_id
+  cutadapt_verify_data &lt;- primer_hit_data
+  cutadapt_verify_data[names(primer_hit_counts)] &lt;- primer_hit_counts
+  write_csv(cutadapt_verify_data, cutadapt_verify_path)
+}
+print(cutadapt_verify_data)</code></pre>
+<pre><code>## # A tibble: 10 x 101
+##    primer_id locus direction orientation sequence  A1_R1 A1_R2 A2_R1 A2_R2 A3_R1
+##    &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 rps10-F   rps10 Forward   sequence    GTTGGTT…      0     0     0     0     0
+##  2 rps10-R   rps10 Reverse   sequence    ATRYYTA…      0     0     0     0     0
+##  3 rps10_f-F rps10 Forward   sequence    TCTTTGT… 436178     0 63394     0     0
+##  4 ITS6      ITS   Forward   sequence    GAAGGTG…      1     0     0     0     0
+##  5 ITS7      ITS   Reverse   sequence    AGCGTTC…      0     0     0     0     0
+##  6 rps10-F   rps10 Forward   rev_comp    AGTCTTY…      0     0     0     0     0
+##  7 rps10-R   rps10 Reverse   rev_comp    AGTTCRA…      0     0     0     0     0
+##  8 rps10_f-F rps10 Forward   rev_comp    YGAACCA…      0    36     0     1     0
+##  9 ITS6      ITS   Forward   rev_comp    CCTTGTT…      0     0     0     0     0
+## 10 ITS7      ITS   Reverse   rev_comp    GCACATC…      0     0     1     0     0
+## # … with 91 more variables: A3_R2 &lt;dbl&gt;, A4_R1 &lt;dbl&gt;, A4_R2 &lt;dbl&gt;, A5_R1 &lt;dbl&gt;,
+## #   A5_R2 &lt;dbl&gt;, A6_R1 &lt;dbl&gt;, A6_R2 &lt;dbl&gt;, B1_R1 &lt;dbl&gt;, B1_R2 &lt;dbl&gt;,
+## #   B2_R1 &lt;dbl&gt;, B2_R2 &lt;dbl&gt;, B3_R1 &lt;dbl&gt;, B3_R2 &lt;dbl&gt;, B4_R1 &lt;dbl&gt;,
+## #   B4_R2 &lt;dbl&gt;, B5_R1 &lt;dbl&gt;, B5_R2 &lt;dbl&gt;, B6_R1 &lt;dbl&gt;, B6_R2 &lt;dbl&gt;,
+## #   C1_R1 &lt;dbl&gt;, C1_R2 &lt;dbl&gt;, C2_R1 &lt;dbl&gt;, C2_R2 &lt;dbl&gt;, C3_R1 &lt;dbl&gt;,
+## #   C3_R2 &lt;dbl&gt;, C4_R1 &lt;dbl&gt;, C4_R2 &lt;dbl&gt;, C5_R1 &lt;dbl&gt;, C5_R2 &lt;dbl&gt;,
+## #   C6_R1 &lt;dbl&gt;, C6_R2 &lt;dbl&gt;, D1_R1 &lt;dbl&gt;, D1_R2 &lt;dbl&gt;, D2_R1 &lt;dbl&gt;,
+## #   D2_R2 &lt;dbl&gt;, D3_R1 &lt;dbl&gt;, D3_R2 &lt;dbl&gt;, D4_R1 &lt;dbl&gt;, D4_R2 &lt;dbl&gt;,
+## #   D5_R1 &lt;dbl&gt;, D5_R2 &lt;dbl&gt;, D6_R1 &lt;dbl&gt;, D6_R2 &lt;dbl&gt;, E1_R1 &lt;dbl&gt;,
+## #   E1_R2 &lt;dbl&gt;, E2_R1 &lt;dbl&gt;, E2_R2 &lt;dbl&gt;, E3_R1 &lt;dbl&gt;, E3_R2 &lt;dbl&gt;,
+## #   E4_R1 &lt;dbl&gt;, E4_R2 &lt;dbl&gt;, E5_R1 &lt;dbl&gt;, E5_R2 &lt;dbl&gt;, E6_R1 &lt;dbl&gt;,
+## #   E6_R2 &lt;dbl&gt;, F1_R1 &lt;dbl&gt;, F1_R2 &lt;dbl&gt;, F2_R1 &lt;dbl&gt;, F2_R2 &lt;dbl&gt;,
+## #   F3_R1 &lt;dbl&gt;, F3_R2 &lt;dbl&gt;, F4_R1 &lt;dbl&gt;, F4_R2 &lt;dbl&gt;, F5_R1 &lt;dbl&gt;,
+## #   F5_R2 &lt;dbl&gt;, F6_R1 &lt;dbl&gt;, F6_R2 &lt;dbl&gt;, G1_R1 &lt;dbl&gt;, G1_R2 &lt;dbl&gt;,
+## #   G2_R1 &lt;dbl&gt;, G2_R2 &lt;dbl&gt;, G3_R1 &lt;dbl&gt;, G3_R2 &lt;dbl&gt;, G4_R1 &lt;dbl&gt;,
+## #   G4_R2 &lt;dbl&gt;, G5_R1 &lt;dbl&gt;, G5_R2 &lt;dbl&gt;, G6_R1 &lt;dbl&gt;, G6_R2 &lt;dbl&gt;,
+## #   H1_R1 &lt;dbl&gt;, H1_R2 &lt;dbl&gt;, H2_R1 &lt;dbl&gt;, H2_R2 &lt;dbl&gt;, H3_R1 &lt;dbl&gt;,
+## #   H3_R2 &lt;dbl&gt;, H4_R1 &lt;dbl&gt;, H4_R2 &lt;dbl&gt;, H5_R1 &lt;dbl&gt;, H5_R2 &lt;dbl&gt;,
+## #   H6_R1 &lt;dbl&gt;, H6_R2 &lt;dbl&gt;</code></pre>
+<p>We can now do a similar graph to what was done before:</p>
+<pre class="r"><code> cutadapt_plot &lt;- cutadapt_verify_data %&gt;%
+  gather(key = &quot;file_id&quot;, value = &quot;count&quot;, !!! fastq_data$file_id) %&gt;%
+  mutate(sample_id = sub(file_id, pattern = &quot;_R[12]$&quot;, replacement = &quot;&quot;)) %&gt;%
+  left_join(metadata, by = &quot;sample_id&quot;) %&gt;%
+  left_join(fastq_data, by = &quot;file_id&quot;) %&gt;%
+  select(primer_id, primer_direction = direction.x, orientation, count, sample_id = sample_id.x, primer_pair_id, forward, reverse, read_direction = direction.y) %&gt;%
+  ggplot(aes(x = primer_id, y = count + 0.1, color = orientation)) +
+  geom_boxplot() +
+  facet_grid(read_direction ~ primer_pair_id)
+print(cutadapt_plot)</code></pre>
+<p><img src="02--preparation_and_quality_filtering_files/figure-html/unnamed-chunk-27-1.png" width="960" /></p>
+<p>The rps10_f is expected to be found in rps10_final, so that OK. If we log scale the y axis we can see there are some other primers left over, but not many in most samples.</p>
+<pre class="r"><code>cutadapt_plot +
+  scale_y_log10()</code></pre>
+<p><img src="02--preparation_and_quality_filtering_files/figure-html/unnamed-chunk-28-1.png" width="960" /></p>
+</div>
+</div>
+<div id="check-read-quality" class="section level2">
+<h2>Check read quality</h2>
+<p>First I will make plots for each sample:</p>
+<pre class="r"><code>sample_quality_plot_dir &lt;- file.path(&quot;results&quot;, &quot;sample_quality_plots&quot;)
+if (! dir.exists(sample_quality_plot_dir)) {
+  dir.create(sample_quality_plot_dir, recursive = TRUE)
+}
+sample_quality_plots &lt;- future_map(metadata$sample_id,
+                                   .options = furrr_options(seed = seed),
+                                   function(id) {
+                                     title &lt;- paste0(metadata[metadata$sample_id == id, 1:3], collapse = &quot;--&quot;) %&gt;%
+                                       gsub(pattern = &quot;/&quot;, replacement = &quot;_&quot;, fixed = TRUE)
+                                     plot &lt;- plotQualityProfile(fastq_data$trimmed_path[fastq_data$sample_id == id]) +
+                                       ggtitle(title)
+                                     ggsave(plot, 
+                                            filename = paste0(title, &quot;.pdf&quot;), 
+                                            width = 7, height = 7 / 1.618, 
+                                            path = sample_quality_plot_dir)
+                                     return(plot)
+})</code></pre>
+<p>And plots for each primer pair:</p>
+<pre class="r"><code>primer_quality_plots &lt;- future_map(unique(metadata$primer_pair_id),
+                                   .options = furrr_options(seed = seed),
+                                   function(id) {
+                                     sample_ids &lt;- metadata$sample_id[metadata$primer_pair_id == id]
+                                     forward_paths &lt;- fastq_data %&gt;%
+                                       filter(sample_id %in% sample_ids, direction == &quot;Forward&quot;) %&gt;%
+                                       pull(trimmed_path)
+                                     reverse_paths &lt;- fastq_data %&gt;%
+                                       filter(sample_id %in% sample_ids, direction == &quot;Reverse&quot;) %&gt;%
+                                       pull(trimmed_path)
+                                     forward_plot &lt;- plotQualityProfile(forward_paths) +
+                                       ggtitle(paste(id, &quot;Forward&quot;))
+                                     reverse_plot &lt;- plotQualityProfile(forward_paths) +
+                                       ggtitle(paste(id, &quot;Reverse&quot;))
+                                     combined_plot &lt;- gridExtra::grid.arrange(forward_plot, reverse_plot)
+                                     ggsave(combined_plot, 
+                                            filename = paste0(gsub(id, pattern = &quot;/&quot;, replacement = &quot;_&quot;, fixed = TRUE), &quot;.pdf&quot;), 
+                                            width = 10, height = 16.18, 
+                                            path = sample_quality_plot_dir)
+                                     plot(combined_plot)
+                                     return(combined_plot)
+                                   })</code></pre>
+<p>And plots for each sample type:</p>
+<pre class="r"><code>primer_quality_plots &lt;- future_map(unique(metadata$dna_type), 
+                                   .options = furrr_options(seed = seed),
+                                   function(type) {
+                                     sample_ids &lt;- metadata$sample_id[metadata$dna_type == type]
+                                     forward_paths &lt;- fastq_data %&gt;%
+                                       filter(sample_id %in% sample_ids, direction == &quot;Forward&quot;) %&gt;%
+                                       pull(trimmed_path)
+                                     reverse_paths &lt;- fastq_data %&gt;%
+                                       filter(sample_id %in% sample_ids, direction == &quot;Reverse&quot;) %&gt;%
+                                       pull(trimmed_path)
+                                     forward_plot &lt;- plotQualityProfile(forward_paths) +
+                                       ggtitle(paste(type, &quot;Forward&quot;))
+                                     reverse_plot &lt;- plotQualityProfile(forward_paths) +
+                                       ggtitle(paste(type, &quot;Reverse&quot;))
+                                     combined_plot &lt;- gridExtra::grid.arrange(forward_plot, reverse_plot)
+                                     ggsave(combined_plot, 
+                                            filename = paste0(type, &quot;.pdf&quot;), 
+                                            width = 10, height = 16.18, 
+                                            path = sample_quality_plot_dir)
+                                     plot(combined_plot)
+                                     return(combined_plot)
+                                   })</code></pre>
+</div>
+<div id="quality-filter-reads" class="section level2">
+<h2>Quality filter reads</h2>
+<p>Now we can do the main quality filtering for the reads. Here reads with Ns, below a length of 50, or that are expected to have more than 5 errors will be removed. First I will define a place to put the results:</p>
+<pre class="r"><code>filtered_reads_dir &lt;- file.path(&quot;intermediate_data&quot;, &quot;filtered_sequences&quot;)
+fastq_data$filtered_path &lt;- file.path(filtered_reads_dir, paste0(fastq_data$file_id, &quot;.fastq.gz&quot;))
+print(fastq_data)</code></pre>
+<pre><code>## # A tibble: 96 x 8
+##    file_id sample_id direction raw_path prefiltered_path trimmed_path
+##    &lt;chr&gt;   &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;    &lt;chr&gt;            &lt;chr&gt;       
+##  1 A1_R1   A1        Forward   raw_dat… intermediate_da… intermediat…
+##  2 A1_R2   A1        Reverse   raw_dat… intermediate_da… intermediat…
+##  3 A2_R1   A2        Forward   raw_dat… intermediate_da… intermediat…
+##  4 A2_R2   A2        Reverse   raw_dat… intermediate_da… intermediat…
+##  5 A3_R1   A3        Forward   raw_dat… intermediate_da… intermediat…
+##  6 A3_R2   A3        Reverse   raw_dat… intermediate_da… intermediat…
+##  7 A4_R1   A4        Forward   raw_dat… intermediate_da… intermediat…
+##  8 A4_R2   A4        Reverse   raw_dat… intermediate_da… intermediat…
+##  9 A5_R1   A5        Forward   raw_dat… intermediate_da… intermediat…
+## 10 A5_R2   A5        Reverse   raw_dat… intermediate_da… intermediat…
+## # … with 86 more rows, and 2 more variables: untrimmed_path &lt;chr&gt;,
+## #   filtered_path &lt;chr&gt;</code></pre>
+<p><strong>This might take a while.</strong></p>
+<pre class="r"><code>if (! dir.exists(filtered_reads_dir)) {
+  filter_results &lt;- filterAndTrim(fwd = fastq_data$trimmed_path[fastq_data$direction == &quot;Forward&quot;], 
+                                  filt = fastq_data$filtered_path[fastq_data$direction == &quot;Forward&quot;],
+                                  rev =  fastq_data$trimmed_path[fastq_data$direction == &quot;Reverse&quot;], 
+                                  filt.rev = fastq_data$filtered_path[fastq_data$direction == &quot;Reverse&quot;], 
+                                  maxN = 0, 
+                                  maxEE = c(expected_error_filter_limit, expected_error_filter_limit), 
+                                  truncQ = truncation_qual_limit, 
+                                  minLen = 50, 
+                                  rm.phix = TRUE, 
+                                  compress = TRUE,
+                                  multithread = TRUE)
+  filter_results &lt;- as_tibble(filter_results)
+  print(colMeans(filter_results))
+}</code></pre>
+<pre><code>## Creating output directory: intermediate_data/filtered_sequences</code></pre>
+<pre><code>## Some input samples had no reads pass the filter.</code></pre>
+<pre><code>##  reads.in reads.out 
+##  299182.2  253618.2</code></pre>
+</div>
+<div id="save-data-sets" class="section level2">
+<h2>Save data sets</h2>
+<p>Some of the tables used here are used in other Rmarkdown files and will be saved in CSV files.</p>
+<pre class="r"><code>write_csv(fastq_data, file.path(&quot;intermediate_data&quot;, &quot;fastq_data.csv&quot;))
+write_csv(primer_data, file.path(&quot;intermediate_data&quot;, &quot;primer_data.csv&quot;))
+write_csv(metadata, file.path(&quot;intermediate_data&quot;, &quot;metadata.csv&quot;))</code></pre>
+</div>
+<div id="software-information" class="section level2">
+<h2>Software information</h2>
+<pre class="r"><code>sessioninfo::session_info()</code></pre>
+<pre><code>## ─ Session info ───────────────────────────────────────────────────────────────
+##  setting  value                       
+##  version  R version 4.0.3 (2020-10-10)
+##  os       Pop!_OS 20.04 LTS           
+##  system   x86_64, linux-gnu           
+##  ui       X11                         
+##  language en_US:en                    
+##  collate  en_US.UTF-8                 
+##  ctype    en_US.UTF-8                 
+##  tz       America/Vancouver           
+##  date     2021-05-04                  
+## 
+## ─ Packages ───────────────────────────────────────────────────────────────────
+##  package              * version    date       lib source        
+##  assertthat             0.2.1      2019-03-21 [1] CRAN (R 4.0.2)
+##  Biobase              * 2.48.0     2020-04-27 [1] Bioconductor  
+##  BiocGenerics         * 0.34.0     2020-04-27 [1] Bioconductor  
+##  BiocParallel         * 1.22.0     2020-04-27 [1] Bioconductor  
+##  Biostrings           * 2.56.0     2020-04-27 [1] Bioconductor  
+##  bitops                 1.0-6      2013-08-17 [1] CRAN (R 4.0.2)
+##  cli                    2.1.0      2020-10-12 [1] CRAN (R 4.0.3)
+##  codetools              0.2-16     2018-12-24 [4] CRAN (R 4.0.0)
+##  colorspace             1.4-1      2019-03-18 [1] CRAN (R 4.0.2)
+##  crayon                 1.3.4      2017-09-16 [1] CRAN (R 4.0.2)
+##  dada2                * 1.16.0     2020-04-27 [1] Bioconductor  
+##  DelayedArray         * 0.14.1     2020-07-14 [1] Bioconductor  
+##  digest                 0.6.27     2020-10-24 [1] CRAN (R 4.0.3)
+##  dplyr                * 1.0.2      2020-08-18 [1] CRAN (R 4.0.2)
+##  ellipsis               0.3.1      2020-05-15 [1] CRAN (R 4.0.2)
+##  evaluate               0.14       2019-05-28 [1] CRAN (R 4.0.2)
+##  fansi                  0.4.1      2020-01-08 [1] CRAN (R 4.0.2)
+##  farver                 2.0.3      2020-01-16 [1] CRAN (R 4.0.2)
+##  furrr                * 0.2.1      2020-10-21 [1] CRAN (R 4.0.3)
+##  future               * 1.19.1     2020-09-22 [1] CRAN (R 4.0.3)
+##  generics               0.1.0      2020-10-31 [1] CRAN (R 4.0.3)
+##  GenomeInfoDb         * 1.24.2     2020-06-15 [1] Bioconductor  
+##  GenomeInfoDbData       1.2.3      2020-09-12 [1] Bioconductor  
+##  GenomicAlignments    * 1.24.0     2020-04-27 [1] Bioconductor  
+##  GenomicRanges        * 1.40.0     2020-04-27 [1] Bioconductor  
+##  ggplot2              * 3.3.2      2020-06-19 [1] CRAN (R 4.0.2)
+##  globals                0.13.1     2020-10-11 [1] CRAN (R 4.0.3)
+##  glue                   1.4.2      2020-08-27 [1] CRAN (R 4.0.2)
+##  gridExtra            * 2.3        2017-09-09 [1] CRAN (R 4.0.3)
+##  gtable                 0.3.0      2019-03-25 [1] CRAN (R 4.0.2)
+##  hms                    0.5.3      2020-01-08 [1] CRAN (R 4.0.2)
+##  htmltools              0.5.1.1    2021-01-22 [1] CRAN (R 4.0.3)
+##  hwriter                1.3.2      2014-09-10 [1] CRAN (R 4.0.3)
+##  IRanges              * 2.22.2     2020-05-21 [1] Bioconductor  
+##  jpeg                   0.1-8.1    2019-10-24 [1] CRAN (R 4.0.3)
+##  knitr                  1.30       2020-09-22 [1] CRAN (R 4.0.2)
+##  labeling               0.4.2      2020-10-20 [1] CRAN (R 4.0.3)
+##  lattice                0.20-41    2020-04-02 [4] CRAN (R 4.0.0)
+##  latticeExtra           0.6-29     2019-12-19 [1] CRAN (R 4.0.3)
+##  lifecycle              0.2.0      2020-03-06 [1] CRAN (R 4.0.2)
+##  listenv                0.8.0      2019-12-05 [1] CRAN (R 4.0.3)
+##  magrittr               1.5        2014-11-22 [1] CRAN (R 4.0.2)
+##  Matrix                 1.2-18     2019-11-27 [4] CRAN (R 4.0.0)
+##  matrixStats          * 0.57.0     2020-09-25 [1] CRAN (R 4.0.3)
+##  munsell                0.5.0      2018-06-12 [1] CRAN (R 4.0.2)
+##  pillar                 1.4.6      2020-07-10 [1] CRAN (R 4.0.2)
+##  pkgconfig              2.0.3      2019-09-22 [1] CRAN (R 4.0.2)
+##  plyr                   1.8.6      2020-03-03 [1] CRAN (R 4.0.2)
+##  png                    0.1-7      2013-12-03 [1] CRAN (R 4.0.3)
+##  purrr                * 0.3.4      2020-04-17 [1] CRAN (R 4.0.2)
+##  R6                     2.5.0      2020-10-28 [1] CRAN (R 4.0.3)
+##  RColorBrewer           1.1-2      2014-12-07 [1] CRAN (R 4.0.2)
+##  Rcpp                 * 1.0.5      2020-07-06 [1] CRAN (R 4.0.2)
+##  RcppParallel           5.0.2      2020-06-24 [1] CRAN (R 4.0.3)
+##  RCurl                  1.98-1.2   2020-04-18 [1] CRAN (R 4.0.2)
+##  readr                * 1.4.0      2020-10-05 [1] CRAN (R 4.0.3)
+##  reshape2               1.4.4      2020-04-09 [1] CRAN (R 4.0.2)
+##  rlang                  0.4.10     2020-12-30 [1] CRAN (R 4.0.3)
+##  rmarkdown              2.5        2020-10-21 [1] CRAN (R 4.0.3)
+##  Rsamtools            * 2.4.0      2020-04-27 [1] Bioconductor  
+##  rstudioapi             0.11       2020-02-07 [1] CRAN (R 4.0.2)
+##  S4Vectors            * 0.26.1     2020-05-16 [1] Bioconductor  
+##  scales                 1.1.1      2020-05-11 [1] CRAN (R 4.0.2)
+##  sessioninfo          * 1.1.1      2018-11-05 [1] CRAN (R 4.0.2)
+##  sharedbib              0.1.0.9003 2020-10-16 [1] local         
+##  ShortRead            * 1.46.0     2020-04-27 [1] Bioconductor  
+##  stringi                1.5.3      2020-09-09 [1] CRAN (R 4.0.2)
+##  stringr                1.4.0      2019-02-10 [1] CRAN (R 4.0.2)
+##  SummarizedExperiment * 1.18.2     2020-07-09 [1] Bioconductor  
+##  tibble                 3.0.4      2020-10-12 [1] CRAN (R 4.0.3)
+##  tidyr                * 1.1.2      2020-08-27 [1] CRAN (R 4.0.2)
+##  tidyselect             1.1.0      2020-05-11 [1] CRAN (R 4.0.2)
+##  utf8                   1.1.4      2018-05-24 [1] CRAN (R 4.0.2)
+##  vctrs                  0.3.4      2020-08-29 [1] CRAN (R 4.0.2)
+##  withr                  2.3.0      2020-09-22 [1] CRAN (R 4.0.3)
+##  xfun                   0.19       2020-10-30 [1] CRAN (R 4.0.3)
+##  XVector              * 0.28.0     2020-04-27 [1] Bioconductor  
+##  yaml                   2.2.1      2020-02-01 [1] CRAN (R 4.0.2)
+##  zlibbioc               1.34.0     2020-04-27 [1] Bioconductor  
+## 
+## [1] /home/fosterz/R/x86_64-pc-linux-gnu-library/4.0
+## [2] /usr/local/lib/R/site-library
+## [3] /usr/lib/R/site-library
+## [4] /usr/lib/R/library</code></pre>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

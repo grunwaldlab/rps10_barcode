@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Clustering ASVs into OTUs</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-inverse  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Comparing ITS1 and RPS10 for Oomycete Metabacoding</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Analysis
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="01--prepare_reference_database.html">Reference database preparation</a>
+    </li>
+    <li>
+      <a href="02--preparation_and_quality_filtering.html">Read processing and quality filtering</a>
+    </li>
+    <li>
+      <a href="03--abundance_matrix_preparation.html">Abundance matrix and taxonomic assignment</a>
+    </li>
+    <li>
+      <a href="04--blast_classification.html">Alternative taxonomic assignment using BLAST</a>
+    </li>
+    <li>
+      <a href="05--otu_clustering_threshold.html">OTU clustering threshold estimation</a>
+    </li>
+    <li>
+      <a href="06--mock_community.html">Mock community evaluation</a>
+    </li>
+    <li>
+      <a href="07--nontarget_amplification.html">Non-target amplification</a>
+    </li>
+    <li>
+      <a href="08--amplicon_taxonomic_resolution.html">Taxonomic resolution</a>
+    </li>
+    <li>
+      <a href="09--simulated_pcr_results.html">Plotting of simulated PCR results</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/grunwaldlab/rps10_barcode">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Clustering ASVs into OTUs</h1>
+
+</div>
+
+
+<div id="prepare" class="section level2">
+<h2>Prepare</h2>
+<div id="packages-used" class="section level3">
+<h3>Packages used</h3>
+<pre class="r"><code>library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(sessioninfo)
+library(metacoder)
+library(vegan)
+library(viridis)
+library(DT)
+library(stringr)
+library(qsubmitter)
+library(taxize)
+library(forcats)
+library(parallel)</code></pre>
+</div>
+<div id="parameters" class="section level3">
+<h3>Parameters</h3>
+<pre class="r"><code>opt_thresh_range = seq(0.9, 1, by = 0.001) # The specific thresholds checked during the optimization
+opt_min_read_count &lt;- 50 # used in id threshold optimization
+opt_cluster_method &lt;- &#39;size&#39; # &#39;fast&#39; for length-ordered, &#39;size&#39; for abundance-ordered
+seed &lt;- 1
+set.seed(seed)</code></pre>
+</div>
+</div>
+<div id="read-abundance-matrix-and-sample-data" class="section level2">
+<h2>Read abundance matrix and sample data</h2>
+<pre class="r"><code>metadata &lt;- read_csv(file.path(&#39;intermediate_data&#39;, &#39;metadata.csv&#39;))</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   sample_id = col_character(),
+##   primer_pair_id = col_character(),
+##   dna_type = col_character(),
+##   dna_sample_id = col_character(),
+##   locus = col_character(),
+##   forward = col_character(),
+##   reverse = col_character(),
+##   sample_type = col_character()
+## )</code></pre>
+<pre class="r"><code>abundance &lt;- read_csv(file.path(&#39;intermediate_data&#39;, &#39;abundance_asv.csv&#39;))</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   .default = col_double(),
+##   sequence = col_character(),
+##   blast_tax = col_character(),
+##   taxonomy = col_character()
+## )
+## ℹ Use `spec()` for the full column specifications.</code></pre>
+<pre class="r"><code>print(metadata)</code></pre>
+<pre><code>## # A tibble: 48 x 8
+##    sample_id primer_pair_id dna_type dna_sample_id locus forward reverse
+##    &lt;chr&gt;     &lt;chr&gt;          &lt;chr&gt;    &lt;chr&gt;         &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+##  1 A1        rps10_Final    mock1    mock1         rps10 rps10-F rps10-R
+##  2 A2        rps10_Final    leaf     L95           rps10 rps10-F rps10-R
+##  3 A3        rps10_Felipe   mock1    mock1         rps10 rps10_… rps10-R
+##  4 A4        rps10_Felipe   leaf     L95           rps10 rps10_… rps10-R
+##  5 A5        ITS6/7         mock1    mock1         ITS   ITS6    ITS7   
+##  6 A6        ITS6/7         leaf     L95           ITS   ITS6    ITS7   
+##  7 B1        rps10_Final    mock2    mock2         rps10 rps10-F rps10-R
+##  8 B2        rps10_Final    WR.soil  WS3           rps10 rps10-F rps10-R
+##  9 B3        rps10_Felipe   mock2    mock2         rps10 rps10_… rps10-R
+## 10 B4        rps10_Felipe   WR.soil  WS3           rps10 rps10_… rps10-R
+## # … with 38 more rows, and 1 more variable: sample_type &lt;chr&gt;</code></pre>
+<p>Some samples do not have sequences so I will remove those from the metadata table:</p>
+<pre class="r"><code>metadata &lt;- metadata[metadata$sample_id %in% colnames(abundance), ]</code></pre>
+</div>
+<div id="make-function-to-run-vsearch" class="section level2">
+<h2>Make function to run VSEARCH</h2>
+<p>I will want to check for an optimal clustering threshold for RPS10 since it is not currently known. To do this, I will need to cluster over many thresholds. It is important to note that the optimal threshold is relative to the reference sequence database and the clustering algorithm used, therefore this analysis is mostly to get a rough idea of an optimal threshold.</p>
+</div>
+<div id="find-optimal-clustering-threshold-for-mock-community" class="section level2">
+<h2>Find optimal clustering threshold for mock community</h2>
+<p>First I will filter sample metadata to just mock community and the primers used in the publication. We are using only the mock community samples since that is the closest thing to a natural community that we know the composition of. I did something similar with the reference sequences, but they all resulted in too few clusters even if sequences were clustered at 100% (i.e. unique sequences). On reflection, this is probably because reference databases have more diversity and fewer erroneous sequences than real data from a natural sample would. Our environmental samples could not be used because we do not know the “correct” number of species.</p>
+<pre class="r"><code>mock_meta &lt;- filter(metadata, dna_type == &#39;mock2&#39;, primer_pair_id %in% c(&#39;ITS6/7&#39;, &#39;rps10_Final&#39;))
+mock_meta</code></pre>
+<pre><code>## # A tibble: 2 x 8
+##   sample_id primer_pair_id dna_type dna_sample_id locus forward reverse
+##   &lt;chr&gt;     &lt;chr&gt;          &lt;chr&gt;    &lt;chr&gt;         &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+## 1 B1        rps10_Final    mock2    mock2         rps10 rps10-F rps10-R
+## 2 B5        ITS6/7         mock2    mock2         ITS   ITS6    ITS7   
+## # … with 1 more variable: sample_type &lt;chr&gt;</code></pre>
+<p>I will need the number of the mock community species added later, so I will import the data for the mock community composition:</p>
+<pre class="r"><code>mc_data &lt;- read_csv(file.path(&#39;intermediate_data&#39;, &#39;mock_community.csv&#39;))</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   species = col_character(),
+##   concentration = col_double(),
+##   isolate = col_character(),
+##   growth_medium = col_character(),
+##   extraction_kit = col_character(),
+##   in_its_db = col_logical(),
+##   in_rps10_db = col_logical(),
+##   in_its_db_no_ambig = col_logical(),
+##   in_rps10_db_no_ambig = col_logical()
+## )</code></pre>
+<p>I will also zero out low abundance ASVs, since that would be done in a normal metabarcoding analysis. Here we are using a rather high minimum abundance of 50 since this is a low-complexity sample, and thus higher read count per species, relative to most natural communities, so erroneous sequence abundance is probably similarly inflated.</p>
+<pre class="r"><code>opt_filtered_abund &lt;- select(abundance, sequence, !!! mock_meta$sample_id)
+opt_filtered_abund &lt;- opt_filtered_abund[rowSums(opt_filtered_abund[, mock_meta$sample_id]) &gt; opt_min_read_count, ]
+opt_filtered_abund</code></pre>
+<pre><code>## # A tibble: 71 x 3
+##    sequence                                                            B1     B5
+##    &lt;chr&gt;                                                            &lt;dbl&gt;  &lt;dbl&gt;
+##  1 TTTCCGTAGGTGAACCTGCGGAAGGATCATTACCACACCTAAAAAAACTTTCCACGTGAACCG…     0 147595
+##  2 GAAAATCTTTGTGTCGGTGGTTCAAGTCCACCTCCAGACAAAATATAATAAAATTATGTATAT… 45398      0
+##  3 TTTCCGTAGGTGAACCTGCGGAAGGATCATTACCACACCTAAAAAACTTTCCACGTGAACCGT…     0  60788
+##  4 GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTA… 28991      0
+##  5 TTTCCGTAGGTGAACCTGCGGAAGGATCATTACCACACCTAAAAACTTTCCACGTGAACTGTC…     0  47346
+##  6 TTTCCGTAGGTGAACCTGCGGAAGGATCATTACCACACCTAAAAAACTTTCCACGTGAACCGT…     0  25411
+##  7 GAAAATCTTTGTGTCGGTGGTTCAAATCCACCTCCAGACAATTTTTATTATTAAAAATATGTA… 12259      0
+##  8 GAAAATCTTTGTGTCGATGGTTCAAATCCATCTCCAGACAATTTTCATTATTAAAAATATGTA… 22213      0
+##  9 TTTCCGTAGGTGAACCTGCGGAAGGATCATTACCACACCTTAAAACTATCCACGTGAACCGTT…     0   3192
+## 10 GGTTTCCGTAGGTGAACCTGCGGAAGGATCATTACCACACCTAAAAAAACTTTCCACGTGAAC…     0  12611
+## # … with 61 more rows</code></pre>
+<p>Count the number of OTUs for each sample over a range of clustering thresholds.</p>
+<pre class="r"><code>vserach_cluster &lt;- function(seqs, seq_abund, id_threshold = 0.97, method = &quot;fast&quot;) {
+  # Check that VSEARCH is installed
+  tryCatch(system2(&quot;vsearch&quot;, args = &quot;--version&quot;, stdout = FALSE, stderr = FALSE),
+           warning=function(w) {
+             stop(&quot;vsearch cannot be found on PATH. Is it installed?&quot;)
+           })
+  
+  # Run VSEARCH
+  input_fasta_path &lt;- tempfile()
+  write_lines(paste0(&#39;&gt;&#39;, seq_along(seqs), &#39;;size=&#39;, seq_abund, &#39;\n&#39;, seqs), path = input_fasta_path)
+  otu_centroid_path &lt;- tempfile()
+  command_args &lt;- paste(paste0(&quot;--cluster_&quot;, method), 
+                        input_fasta_path,
+                        &quot;--threads&quot;, detectCores() - 1,
+                        &quot;--id&quot;, id_threshold,
+                        &quot;--sizein&quot;,
+                        &quot;--strand plus&quot;,
+                        &quot;--fasta_width 0&quot;, # 0 = no wrapping in fasta file
+                        &quot;--centroids&quot;, otu_centroid_path)
+  system2(&quot;vsearch&quot;, args = command_args, stdout = FALSE, stderr = FALSE)
+  
+  # Return OTU sequences
+  centroids &lt;- read_fasta(otu_centroid_path)
+  names(centroids) &lt;- str_match(names(centroids), pattern = &#39;size=(.+)$&#39;)[, 2]
+  return(centroids)
+}
+
+opt_thresh_data &lt;- tibble(thresh = opt_thresh_range)
+opt_thresh_data[mock_meta$locus] &lt;- map(mock_meta$sample_id, function(sample_id) {
+  map_dbl(opt_thresh_range, function(threshold) {
+    has_seq &lt;- opt_filtered_abund[[sample_id]] &gt; 0
+    length(vserach_cluster(seqs = opt_filtered_abund$sequence[has_seq],
+                           seq_abund = opt_filtered_abund[[sample_id]][has_seq],
+                           id_threshold = threshold, 
+                           method = opt_cluster_method))
+  })
+})</code></pre>
+<pre><code>## Warning: The `path` argument of `write_lines()` is deprecated as of readr 1.4.0.
+## Please use the `file` argument instead.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
+<pre class="r"><code>opt_thresh_data</code></pre>
+<pre><code>## # A tibble: 101 x 3
+##    thresh rps10   ITS
+##     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1  0.9      13    20
+##  2  0.901    13    20
+##  3  0.902    14    20
+##  4  0.903    14    20
+##  5  0.904    14    20
+##  6  0.905    14    20
+##  7  0.906    14    20
+##  8  0.907    14    20
+##  9  0.908    14    20
+## 10  0.909    14    20
+## # … with 91 more rows</code></pre>
+<p>find the range of thresholds that return the correct value</p>
+<pre class="r"><code>valid_thresh_range &lt;- do.call(rbind, map(mock_meta$locus, function(l) {
+  out &lt;- range(opt_thresh_data$thresh[abs(opt_thresh_data[[l]] - nrow(mc_data)) &lt;= 1])
+  names(out) &lt;- c(&#39;min_thresh&#39;, &#39;max_thresh&#39;)
+  return(out)
+})) %&gt;% as_tibble()
+valid_thresh_range &lt;- as_tibble(valid_thresh_range) %&gt;%
+  mutate(locus = mock_meta$locus) %&gt;%
+  select(locus, min_thresh, max_thresh)
+valid_thresh_range$min_count &lt;- min(opt_thresh_data[mock_meta$locus])
+valid_thresh_range$max_count &lt;- max(opt_thresh_data[mock_meta$locus])
+valid_thresh_range</code></pre>
+<pre><code>## # A tibble: 2 x 5
+##   locus min_thresh max_thresh min_count max_count
+##   &lt;chr&gt;      &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 rps10      0.942      0.991        13        41
+## 2 ITS        0.98       0.988        13        41</code></pre>
+<p>Now plot</p>
+<pre class="r"><code>opt_thresh_plot &lt;- opt_thresh_data %&gt;%
+  gather(key = &#39;locus&#39;, value = &#39;otu_count&#39;, !!! mock_meta$locus) %&gt;%
+  mutate(thresh = thresh * 100) %&gt;%
+  ggplot() +
+  geom_hline(yintercept = nrow(mc_data), linetype = &quot;dashed&quot;) +
+  geom_rect(aes(xmin = min_thresh * 100, xmax = max_thresh * 100, ymin = min_count, ymax = max_count), data = valid_thresh_range, alpha = 0.5) +
+  geom_line(aes(x = thresh, y = otu_count)) +
+  scale_x_continuous(breaks = seq(min(opt_thresh_data$thresh), max(opt_thresh_data$thresh), by = 0.01) * 100, 
+                     minor_breaks = NULL) +
+  scale_y_continuous(minor_breaks = 1:50) +
+  facet_wrap(. ~ locus) +
+  labs(x = &#39;PID Clustering Threshold&#39;, y = &#39;OTU Count&#39;, fill = &#39;&#39;) 
+ggsave(opt_thresh_plot, filename = &#39;optimal_clust_thresh_mock_comm.pdf&#39;, path = file.path(&#39;results&#39;), width = 10, height = 5)
+opt_thresh_plot</code></pre>
+<p><img src="05--otu_clustering_threshold_files/figure-html/unnamed-chunk-10-1.png" width="960" /></p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
