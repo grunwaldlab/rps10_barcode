@@ -1,0 +1,4 @@
+,,,Taxonomy,,,Sequence,,
+Locus,ASV count,OTU count,MC species,Correct ASVs,Correct reads,MC species,Correct ASVs,Correct reads
+rps10,40,46,23,0.95,1,21,0.625,0.993
+ITS1,45,30,17,0.756,0.545,21,0.733,0.992

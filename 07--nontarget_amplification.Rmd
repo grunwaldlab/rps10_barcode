@@ -1,0 +1,319 @@
+---
+title: "Non-target amplification"
+bibliography: '`r sharedbib::bib_path()`'
+output:
+  html_document:
+    css: style.css
+---
+
+```{r setup, include=FALSE}
+source('style.R')
+```
+
+
+## Prepare
+
+### Packages used
+
+```{r message=FALSE}
+library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(sessioninfo)
+library(metacoder)
+library(vegan)
+library(viridis)
+library(DT)
+library(stringr)
+library(qsubmitter)
+library(taxize)
+library(forcats)
+library(ips)
+library(insect)
+library(ape)
+library(phangorn)
+```
+
+### Parameters
+
+```{r}
+minimum_read_count <- 10
+seed <- 1
+set.seed(seed)
+```
+
+
+## Detecting non-target amplification
+
+Since the reference databases will not have all the non-targets, it will be hard to detect non-target amplification.
+I will use blast against Genbank nt.
+Genbank is not curated, but it should be good enough to reliably assign a phylum.
+
+```{r}
+abundance_asv <- read_csv(file.path('intermediate_data', 'abundance_asv.csv'))
+abundance_asv
+abundance_otu <- read_csv(file.path('intermediate_data', 'abundance_otu.csv'))
+abundance_otu
+metadata <- read_csv(file.path('intermediate_data', 'metadata.csv'))
+metadata
+```
+
+### Select only environmental samples
+
+Non-target DNA is likely to be found the in the environmental samples, so I will restrict this analysis to those.
+
+```{r}
+metadata <- filter(metadata,
+                   dna_type %in% c("leaf", "WR.soil", "ag.soil", "drip", "Pan.soil"),
+                   primer_pair_id %in% c('rps10_Final', 'ITS6/7'))
+metadata
+abundance_asv <- select(abundance_asv, sequence:taxonomy, !!! metadata$sample_id)
+abundance_asv
+abundance_otu <- select(abundance_otu, sequence:taxonomy, !!! metadata$sample_id)
+abundance_otu
+```
+
+
+### Filtering out low abundance_asv ASVs
+
+Most low-abundance_asv ASVs would normally be filtered out during most analyses, so I will do that to.
+
+```{r}
+abundance_asv <- abundance_asv[rowSums(abundance_asv[, metadata$sample_id]) >= minimum_read_count, ]
+abundance_asv
+abundance_otu <- abundance_otu[rowSums(abundance_otu[, metadata$sample_id]) >= minimum_read_count, ]
+abundance_otu
+```
+
+
+### Group ASVs into target and non-target
+
+```{r}
+group_key <- c(Oomycetes = 'Oomycetes|Oomycota', Fungi = 'Fungi', Bacteria = 'Bacteria', Plant = 'Viridiplantae', 
+               Archaea = 'Archaea', Animals = 'Metazoa', Virus = 'Viruses', Protist = 'Jakobida|Alveolata|Euglenozoa|Amoebozoa')
+
+groups_target_nontarget <- function(abundance) {
+  map_chr(abundance$blast_tax, function(x) {
+    if (is.na(x)) {
+      return('Unknown')
+    }
+    is_org <- map_lgl(group_key, grepl, x = x)
+    if (sum(is_org) > 1) {
+      stop('multiple matches')
+    } else if (sum(is_org) == 1) {
+      return(names(group_key)[is_org])
+    } else {
+      return('Other')
+    }
+  })
+}
+abundance_asv$group <- groups_target_nontarget(abundance_asv)
+abundance_otu$group <- groups_target_nontarget(abundance_otu)
+```
+
+
+
+### Tally number of reads/ASVs per sample in each group
+
+I will make a table with the numbers of ASVs, reads, and the proportion of reads for each group.
+First the ASV counts:
+
+```{r}
+groups <- unique(abundance_asv$group)
+
+count_seqs <- function(abundance, measure) {
+  counts <- map(metadata$sample_id, function(id) {
+    map_dbl(groups, function(group) {
+      is_group <- abundance$group == group & abundance[[id]] > 0
+      sum(is_group)
+    })
+  })
+  names(counts) <- metadata$sample_id
+  counts <- as_tibble(c(group = list(groups), 
+                        measure = list(rep(measure, length(group_key))),
+                        counts))
+  counts
+}
+asv_counts <- count_seqs(abundance_asv, 'ASVs')
+otu_counts <- count_seqs(abundance_otu, 'OTUs')
+```
+
+Then read counts
+
+```{r}
+count_reads <- function(abundance) {
+  read_counts <- map(metadata$sample_id, function(id) {
+    map_dbl(groups, function(group) {
+      is_group <- abundance$group == group & abundance[[id]] > 0
+      sum(abundance[[id]][is_group])
+    })
+  })
+  names(read_counts) <- metadata$sample_id
+  read_counts <- as_tibble(c(group = list(groups), 
+                             measure = list(rep('read count', length(group_key))),
+                             read_counts))
+  read_counts
+}
+read_counts_asv <- count_reads(abundance_asv)
+read_counts_otu <- count_reads(abundance_otu)
+```
+
+And then I can convert those count to proportions:
+
+```{r}
+convert_to_prop <- function(read_counts, abundance) {
+  read_props <- read_counts
+  read_props[metadata$sample_id] <- map(metadata$sample_id, function(id) {
+    read_props[[id]] / sum(abundance[[id]])
+  })
+  read_props$measure <- 'Reads'
+  read_props
+}
+read_props_asv <- convert_to_prop(read_counts_asv, abundance_asv)
+read_props_otu <- convert_to_prop(read_counts_otu, abundance_otu)
+```
+
+
+
+### Plot barchart of counts
+
+Finally I can combine these into a single table and add some metadata
+
+```{r}
+group_abund <- bind_rows(otu_counts, asv_counts, read_counts_asv, read_props_asv) %>%
+  gather(key = 'sample_id', value = 'abund', !!! metadata$sample_id) %>%
+  left_join(metadata, by = 'sample_id')
+group_abund
+```
+
+I will calculate the proportion of ASVs and OTUs assigned to each group for each locus
+
+```{r}
+group_props <- group_abund %>%
+  group_by(measure, locus) %>%
+  mutate(sum_abund = sum(abund)) %>%
+  group_by(group, .add = TRUE) %>%
+  summarise(prop = round(sum(abund) / sum_abund[1], digits = 4)) %>%
+  filter(measure %in% c("ASVs", "OTUs", "read count")) 
+datatable(group_props)
+```
+
+Check that proportions sum to 1 (there will be a bit of rounding error):
+
+```{r}
+group_props %>%
+  summarise(sum = sum(prop))
+```
+
+Lets take a look at what proportion of oomycetes was found for each metric: 
+
+```{r}
+filter(group_props, group == "Oomycetes")
+```
+
+Finally, lets plot this information:
+
+```{r fig.width=5, fig.height=5}
+nontarget_plot <- group_abund %>% 
+  filter(measure %in% c('Reads', 'ASVs', 'OTUs')) %>%
+  mutate(dna_type = fct_collapse(dna_type,
+                                 Water = c('drip'),
+                                 Plant = c('leaf'),
+                                 Soil = c('ag.soil', 'Pan.soil', 'WR.soil')),
+         measure = factor(measure, levels = c('Reads', 'ASVs', 'OTUs'), ordered = TRUE),
+         locus = ordered(c(rps10 = 'rps10', ITS = 'ITS1')[locus], levels = c('rps10', 'ITS1'))) %>%
+  group_by(measure, locus, dna_type) %>%
+  mutate(abund = abund / sum(abund)) %>%
+  mutate(group = fct_collapse(group,
+                              Oomycetes = c('Oomycetes'),
+                              Fungi = c('Fungi'),
+                              Unknown = c('Unknown'),
+                              Other = c('Protist', 'Other', 'Plant', 'Bacteria', 'Animals'))) %>%
+  mutate(group = factor(group, levels = c("Unknown", "Other", "Fungi", "Oomycetes"), ordered = TRUE)) %>%
+  # ggplot(aes(x = locus, y = abund, fill = group)) +
+  ggplot(aes(x = dna_type, y = abund, fill = group)) +
+  geom_bar(stat = 'identity') +
+  # facet_grid(measure ~ dna_type) +
+  facet_grid(measure ~ locus) +
+  scale_fill_viridis_d(begin = 0.8, end = 0.2) +
+  labs(x = NULL, y = 'Proportion', fill = NULL) +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = 'bottom') 
+ggsave(nontarget_plot, filename = 'non_target_amplification.pdf', path = 'results', width = 5, height = 5)
+nontarget_plot
+```
+
+Caption: 
+
+Figure #: Target vs non-target amplification using oomycete-specific primers for the ITS1 and RPS10 loci. Reads and ASVs are from a variety of environmental samples, grouped into soil, water, and plant tissue samples. ASV sequences were given a coarse taxonomic assignment based on BLAST searches against the NCBI nucleotide sequence database. Those assigned "Unknown" did not have a match with a E-value of at least 0.001. Sequences in "Other" include plant, animal, bacterial, and protist sequences.
+
+
+## Look at unknown rps10 sequences
+
+```{r}
+unknown_asv_data <- abundance_asv %>% 
+  gather(key = 'sample_id', value = 'count', !!! metadata$sample_id) %>%
+  left_join(metadata, by = 'sample_id') %>%
+  filter(locus == 'rps10', group == 'Unknown', count > 0) %>%
+  select(sequence, sample_id, count, dna_type, sample_type)
+datatable(unknown_asv_data)
+```
+
+It seems a lot these are short:
+
+```{r}
+hist(nchar(unknown_asv_data$sequence))
+```
+
+And somewhat low abundance:
+
+```{r}
+hist(unknown_asv_data$count)
+```
+
+The really short and low abundance ones are probably errors, so lets remove those: 
+
+```{r}
+unknown_asv_data <- filter(unknown_asv_data, nchar(sequence) >= 100, count >= 100)
+```
+
+I will get a random sample of oomycete reference sequences and see if they cluster together with any in particular or form separate clades
+
+```{r}
+rps10_seqs <- read_fasta(file.path('intermediate_data', 'reference_databases', 'rps10_reference_db.fa'))
+names(rps10_seqs) <- gsub(names(rps10_seqs), pattern = ';oodb_[0-9]+;$', replacement = '') %>%
+  gsub(pattern = '^.+;', replacement = '') %>%
+  gsub(pattern = '_', replacement = ' ')
+ref_subsample <- rps10_seqs[!duplicated(names(rps10_seqs))]
+ref_subsample <- ref_subsample[sample(length(ref_subsample), 10)]
+```
+
+And make a multiple sequence alignment with both the reference sequences and unknown sequences
+
+```{r}
+unknown_asv_seqs <- setNames(unknown_asv_data$sequence, paste0('ASV ', seq_along(unknown_asv_data$sequence), ' (', unknown_asv_data$count, ')'))
+aligned <- c(ref_subsample, unknown_asv_seqs) %>%
+  char2dna() %>%
+  mafft(method = 'localpair', exec = 'mafft')
+```
+
+It turns out that the unknown sequences are very different from eachother and the reference sequences; so much so that I could not calculate a distance matrix to make a tree.
+
+```{r}
+image(aligned)
+```
+
+I manually BLASTed a few of the sequences on NCBI's website to verify the BLAST on all of the ASVs worked properly and did not find any close matches.
+These seem to be some kind of errors or mispriming against unknown organisms.
+
+
+## Software used
+
+```{r}
+sessioninfo::session_info()
+```
+

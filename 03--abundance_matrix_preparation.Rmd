@@ -1,0 +1,686 @@
+---
+title: "Abundance matrix and taxonomic assignment"
+bibliography: '`r sharedbib::bib_path()`'
+output:
+  html_document:
+    css: style.css
+---
+
+```{r setup, include=FALSE}
+source('style.R')
+```
+
+This is an analysis of the data from the MiSeq run testing the rps10 barcode and associated primers.
+Multiple mock community samples and environmental samples were sequenced.
+This will roughly follow the [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html) and the [DADA2 Pipeline Tutorial (1.12)](https://benjjneb.github.io/dada2/tutorial.html).
+
+## Prepare
+
+### Notes on how to use this analysis
+
+Some of the long running operations that produce output files only run if their output does not exist.
+To rerun them, delete the corresponding file in the intermediate data folder.
+
+
+### Packages used
+
+```{r message=FALSE}
+library(dada2)
+library(ShortRead)
+library(Biostrings)
+library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(gridExtra)
+library(sessioninfo)
+library(Biostrings)
+library(stringr)
+library(metacoder)
+```
+
+### Parameters
+
+```{r}
+seed <- 9999
+set.seed(seed)
+min_read_merging_overlap <- 15 # Default is 12
+max_read_merging_mismatch <- 2 # Default is 0
+remove_chimeras <- TRUE # Default is TRUE
+min_asv_length <- 50
+its_clustering_threshold <- 0.99
+rps10_clustering_threshold <- 0.96
+```
+
+
+### Parallel processing
+
+Commands that have "future" in them are run on multiple cores using the `furrr` and `future` packages.
+
+```{r}
+plan(multiprocess)
+```
+
+## Learn the Error Rates
+
+Error rates of incorrect base calls during sequencing must be estimated to do ASV calling.
+This process will estimate those error rates from the data.
+First I will load the data for the fastq files for each sample that was generated previously.
+
+```{r}
+fastq_data <- read_csv(file.path("intermediate_data", "fastq_data.csv"))
+```
+
+and join this with the sample metadata so that I can distinguish rps10 from ITS1 samples.
+
+```{r}
+metadata <- read_csv(file.path('intermediate_data', 'metadata.csv'))
+fastq_data <- metadata %>%
+  select(sample_id, locus, primer_pair_id) %>%
+  right_join(fastq_data, by = "sample_id") %>%
+  mutate(file_name = paste0(file_id, '.fastq.gz'))
+print(fastq_data)
+```
+
+To simplify the following code, I will make a function to get the fastq file paths for a particular combination of primer pair and read direction.
+
+```{r}
+get_fastq_paths <- function(my_direction, my_primer_pair_id) {
+  fastq_data %>%
+    filter(direction == my_direction, primer_pair_id == my_primer_pair_id, file.exists(filtered_path)) %>%
+    pull(filtered_path)
+}
+```
+
+Next, I will make a function to infer the error profile (for each type of nucleotide mutation) for each a given read direction (forward/reverse) and primer pair, and use that information to infer ASVs using dada2.
+
+
+```{r}
+infer_asvs <- function(my_direction, my_primer_pair_id, plot_error_rates = TRUE) {
+  # Get relevant FASTQ files 
+  fastq_paths <- get_fastq_paths(my_direction, my_primer_pair_id)
+  
+  # Infer error rates for each type of nucleotide mutation
+  error_profile <- learnErrors(fastq_paths, multithread = TRUE)
+  
+  # Plot error rates
+  if (plot_error_rates) {
+    cat(paste0('Error rate plot for the ', my_direction, ' read of primer pair ', my_primer_pair_id, ' \n'))
+    print(plotErrors(error_profile, nominalQ = TRUE))
+  }
+  
+  # Infer ASVs
+  asv_data <- dada(fastq_paths, err = error_profile, multithread = TRUE)
+  return(asv_data)
+}
+```
+
+Now I can infer the ASVs for each sample, with different error profiles for each combination of read direction and primer pair.
+
+**This will take a while.**
+
+```{r asv_inference}
+denoised_data_path <- file.path("intermediate_data", "denoised_data.Rdata")
+if (file.exists(denoised_data_path)) {
+  load(denoised_data_path)
+} else {
+  run_dada <- function(direction) {
+    lapply(unique(fastq_data$primer_pair_id), function(primer_pair_id) infer_asvs(direction, primer_pair_id)) %>%
+      unlist(recursive = FALSE)
+  }
+  dada_forward <- run_dada("Forward")
+  dada_reverse <- run_dada("Reverse")
+  save(dada_forward, dada_reverse, file = denoised_data_path)
+}
+```
+
+
+## Merge paired reads
+
+This will combine the forward and reverse reads into a single read based on overlaps.
+
+```{r read_merging, message=FALSE}
+merged_read_data_path <- file.path('intermediate_data', 'merged_reads.rds')
+if (file.exists(merged_read_data_path)) {
+  merged_reads <- readRDS(merged_read_data_path)
+} else {
+  merged_reads <- mergePairs(dadaF = dada_forward,
+                             derepF = file.path('intermediate_data', 'filtered_sequences', names(dada_forward)),
+                             dadaR = dada_reverse,
+                             derepR = file.path('intermediate_data', 'filtered_sequences', names(dada_reverse)),
+                             minOverlap = min_read_merging_overlap,
+                             maxMismatch = max_read_merging_mismatch,
+                             returnRejects = TRUE, 
+                             verbose = TRUE)
+  saveRDS(merged_reads, file = merged_read_data_path)
+}
+```
+
+I will plot the amount of overlap and percent identity in the overlap region to get an idea of how each locus is getting merged.
+First I will combine all the read merging output into a single table with a new column for which sample it came from:
+
+```{r}
+non_empty_merged_reads <- merged_reads[map_dbl(merged_reads, nrow) > 0]
+merge_data <- non_empty_merged_reads %>%
+  bind_rows() %>%
+  mutate(file_name = rep(names(non_empty_merged_reads), map_int(non_empty_merged_reads, nrow)),
+         sample_id = gsub(file_name, pattern = '_.+$', replacement = '')) %>%
+  as_tibble()
+```
+
+Next I will add columns for the metadata so I can tell which samples are for each locus 
+
+```{r}
+metadata <- read_csv(file.path('intermediate_data', 'metadata.csv'))
+merge_data <- left_join(merge_data, metadata, by = 'sample_id')
+```
+
+and remove any unneeded columns
+
+```{r}
+merge_data <- select(merge_data, locus, nmatch, nmismatch, nindel, accept)
+merge_data
+```
+
+I will add new columns for overlap length and percent ID:
+
+```{r}
+merge_data <- mutate(merge_data,
+                     overlap = nmatch + nmismatch,
+                     mismatch = nmismatch + nindel,
+                     identity = (overlap - mismatch) / overlap)
+```
+
+and now I can reformat the data for plotting and plot
+
+```{r fig.width=8, fig.height=5}
+merge_plot <- merge_data %>%
+  select(locus, mismatch,  accept, overlap) %>%
+  rename('Locus' = locus, 'Mismatches and Indels' = mismatch, 'Merged' = accept, 'Overlap Length' = overlap) %>%
+  gather(key = 'stat', value = 'value', -Locus, -Merged) %>%
+  ggplot(aes(x = value, fill = Merged)) +
+  facet_grid(Locus ~ stat, scales = 'free') +
+  geom_histogram(bins = 30) +
+  scale_fill_viridis_d(begin = 0.8, end = 0.2) +
+  labs(x = '', y = 'ASV count', fill = 'Merged') +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position="bottom") 
+ggsave(merge_plot, filename = 'read_merging.png', path = 'results', width = 8, height = 8)
+merge_plot
+```
+
+
+## Create ASV abundance matrix
+
+This will create the long-sought-after abundance matrix (ASV table).
+
+```{r message=FALSE}
+raw_abundance_data <- map(merged_reads, function(x) filter(x, accept == TRUE)) %>%
+  makeSequenceTable()
+hist(nchar(getSequences(raw_abundance_data)))
+```
+
+## Create OTU abundance matrix
+
+I will also create an OTU abundance matrix so I can evaluate the two methods with an OTU-based approch.
+Clustering is a greedy algorithm with sequences presorted by abundance and automatically masked for low-complexity regions.
+
+```{r}
+vserach_cluster <- function(seqs, seq_abund, id_threshold = 0.97, method = "fast") {
+  # Check that VSEARCH is installed
+  tryCatch(system2("vsearch", args = "--version", stdout = FALSE, stderr = FALSE),
+           warning=function(w) {
+             stop("vsearch cannot be found on PATH. Is it installed?")
+           })
+  
+  # Run VSEARCH
+  # seqs <- seqs[order(seq_abund, decreasing = TRUE)]
+  input_fasta_path <- tempfile()
+  write_lines(paste0('>', seq_along(seqs), ';size=', seq_abund, '\n', seqs), path = input_fasta_path)
+  otu_centroid_path <- tempfile()
+  command_args <- paste(paste0("--cluster_", method), 
+                        input_fasta_path,
+                        "--threads", detectCores() - 1,
+                        "--id", id_threshold,
+                        "--sizein",
+                        "--strand plus",
+                        "--fasta_width 0", # 0 = no wrapping in fasta file
+                        "--centroids", otu_centroid_path)
+  system2("vsearch", args = command_args, stdout = FALSE, stderr = FALSE)
+  
+  # Return OTU sequences
+  centroids <- read_fasta(otu_centroid_path)
+  names(centroids) <- str_match(names(centroids), pattern = 'size=(.+)$')[, 2]
+  return(centroids)
+}
+
+merged_read_seqs <- unlist(map(merged_reads, function(x) {
+  x$sequence[x$accept]
+}))
+unique_merged_read_seqs <- unique(merged_read_seqs)
+length(unique_merged_read_seqs)
+unique_read_counts <- map_dbl(unique_merged_read_seqs, function(s) {
+  sum(map_dbl(merged_reads, function(sample_data) {
+    sum(sample_data$abundance[sample_data$sequence == s & sample_data$accept])
+  }))
+})
+otu_its_seqs <- vserach_cluster(seqs = unique_merged_read_seqs,
+                               seq_abund = unique_read_counts,
+                               id_threshold = its_clustering_threshold,
+                               method = 'size') %>%
+  toupper()
+otu_rps10_seqs <- vserach_cluster(seqs = unique_merged_read_seqs,
+                               seq_abund = unique_read_counts,
+                               id_threshold = rps10_clustering_threshold,
+                               method = 'size') %>%
+  toupper()
+```
+
+Now I will create the OTU abundance matrix in the same format as dada2 outputs.
+
+```{r}
+metadata <- read_csv(file.path('intermediate_data', 'metadata.csv'))
+otus_per_sample <- map(rownames(raw_abundance_data), function(sample) {
+  sample_id <- str_match(sample, pattern = '^(.+)_.+$')[, 2]
+  if (metadata$locus[metadata$sample_id == sample_id] == "rps10") {
+    otu_seqs <- otu_rps10_seqs
+  } else {
+    otu_seqs <- otu_its_seqs
+  }
+  merged_read_data <- merged_reads[[sample]]
+  sample_otu_counts <- map_int(otu_seqs, function(s) {
+    sum(merged_read_data$abundance[merged_read_data$sequence == s & merged_read_data$accept])
+  })
+  names(sample_otu_counts) <- otu_seqs
+  all_unique_otus <- unique(c(otu_rps10_seqs, otu_its_seqs))
+  out <- as.integer(rep(0, length(all_unique_otus)))
+  names(out) <- all_unique_otus
+  out[names(sample_otu_counts)] <- sample_otu_counts
+  out
+  return(out)
+})
+
+raw_otu_abundance_data <- do.call(rbind, otus_per_sample)
+rownames(raw_otu_abundance_data) <- rownames(raw_abundance_data)
+```
+
+and remove and OTUs with no data (these might be OTUs for rps10 clustered at the 99% level for example)
+
+```{r}
+raw_otu_abundance_data <- raw_otu_abundance_data[, colSums(raw_otu_abundance_data) > 0]
+```
+
+
+
+## Chimera removal
+
+**This might take a while**
+
+```{r remove_chimeras}
+if (remove_chimeras) {
+  # ASVs
+  asv_abundance_data <- removeBimeraDenovo(raw_abundance_data,
+                                           method = "consensus", 
+                                           multithread = TRUE, 
+                                           verbose = TRUE)
+  dim(asv_abundance_data)
+  print(sum(asv_abundance_data)/sum(raw_abundance_data))
+  
+  # OTUs
+  otu_abundance_data <- removeBimeraDenovo(raw_otu_abundance_data,
+                                           method = "consensus", 
+                                           multithread = TRUE, 
+                                           verbose = TRUE)
+  dim(otu_abundance_data)
+  print(sum(otu_abundance_data)/sum(raw_otu_abundance_data))
+} else {
+  asv_abundance_data <- raw_abundance_data
+  otu_abundance_data <- raw_otu_abundance_data
+}
+```
+
+## Remove short sequences
+
+Sequences that are less than 50 cannot be assigned a taxonomy.
+
+```{r}
+asv_abundance_data <- asv_abundance_data[, nchar(colnames(asv_abundance_data)) >= min_asv_length]
+otu_abundance_data <- otu_abundance_data[, nchar(colnames(otu_abundance_data)) >= min_asv_length]
+```
+
+
+## Assign taxonomy
+
+Since there are two loci used, I will need to use two different reference databases.
+First I will split abundance matrix in to RPS10 and ITS samples:
+
+```{r}
+fastq_data
+rps10_abund_asv <- asv_abundance_data[rownames(asv_abundance_data) %in% fastq_data$file_name[fastq_data$locus == "rps10"], ]
+its_abund_asv <- asv_abundance_data[rownames(asv_abundance_data) %in% fastq_data$file_name[fastq_data$locus == "ITS"], ]
+rps10_abund_otu <- otu_abundance_data[rownames(otu_abundance_data) %in% fastq_data$file_name[fastq_data$locus == "rps10"], ]
+its_abund_otu <- otu_abundance_data[rownames(otu_abundance_data) %in% fastq_data$file_name[fastq_data$locus == "ITS"], ]
+```
+
+Since there are two different loci, ASVs should either be in one locus or another but not both, so we can remove any ASVs that are not present in the two groups. If there is an ASV that is in both, I will assign it to the one with more reads.
+
+```{r}
+# ASVs
+in_both <- colSums(rps10_abund_asv) != 0 & colSums(its_abund_asv) != 0
+assign_to_its <- in_both & colSums(its_abund_asv) > colSums(rps10_abund_asv)
+assign_to_rps <- in_both & colSums(its_abund_asv) < colSums(rps10_abund_asv)
+is_rps <- (colSums(rps10_abund_asv) != 0 & colSums(its_abund_asv) == 0) | assign_to_rps
+is_its <- (colSums(its_abund_asv) != 0 & colSums(rps10_abund_asv) == 0) | assign_to_its
+rps10_abund_asv <- rps10_abund_asv[ , is_rps]
+its_abund_asv <- its_abund_asv[ , is_its]
+
+# OTUs
+in_both <- colSums(rps10_abund_otu) != 0 & colSums(its_abund_otu) != 0
+assign_to_its <- in_both & colSums(its_abund_otu) > colSums(rps10_abund_otu)
+assign_to_rps <- in_both & colSums(its_abund_otu) < colSums(rps10_abund_otu)
+is_rps <- (colSums(rps10_abund_otu) != 0 & colSums(its_abund_otu) == 0) | assign_to_rps
+is_its <- (colSums(its_abund_otu) != 0 & colSums(rps10_abund_otu) == 0) | assign_to_its
+rps10_abund_otu <- rps10_abund_otu[ , is_rps]
+its_abund_otu <- its_abund_otu[ , is_its]
+```
+
+The number of ASVs left in the two groups should sum to the total number of ASVs, since there should be no overlap.
+
+```{r}
+stopifnot(ncol(rps10_abund_asv) + ncol(its_abund_asv) == ncol(asv_abundance_data))
+stopifnot(ncol(rps10_abund_otu) + ncol(its_abund_otu) == ncol(otu_abundance_data))
+```
+
+Then I can assign the taxonomy on each database separately:
+
+```{r}
+# ASVs
+tax_results_rps10_asv <- assignTaxonomy(rps10_abund_asv, 
+                                        refFasta = file.path("intermediate_data", "reference_databases", "rps10_reference_db.fa"), 
+                                        taxLevels = c("Domaine", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "Reference"),
+                                        minBoot = 0,
+                                        tryRC = TRUE,
+                                        outputBootstraps = TRUE,
+                                        multithread = TRUE)
+tax_results_its_asv <- assignTaxonomy(its_abund_asv, 
+                                      refFasta = file.path("intermediate_data", "reference_databases", "its1_reference_db.fa"), 
+                                      taxLevels = c("Domaine", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "Reference"),
+                                      minBoot = 0,
+                                      tryRC = TRUE,
+                                      outputBootstraps = TRUE,
+                                      multithread = TRUE)
+
+# OTUs
+tax_results_rps10_otu <- assignTaxonomy(rps10_abund_otu, 
+                                        refFasta = file.path("intermediate_data", "reference_databases", "rps10_reference_db.fa"), 
+                                        taxLevels = c("Domaine", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "Reference"),
+                                        minBoot = 0,
+                                        tryRC = TRUE,
+                                        outputBootstraps = TRUE,
+                                        multithread = TRUE)
+tax_results_its_otu <- assignTaxonomy(its_abund_otu, 
+                                      refFasta = file.path("intermediate_data", "reference_databases", "its1_reference_db.fa"), 
+                                      taxLevels = c("Domaine", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "Reference"),
+                                      minBoot = 0,
+                                      tryRC = TRUE,
+                                      outputBootstraps = TRUE,
+                                      multithread = TRUE)
+```
+
+
+## Align to reference sequence for percent ID
+
+A high bootstrap value does not necessarily mean a good match to the reference sequence.
+As long as the match is much better than any other match, the bootstrap will be high, even if the best match is not that great.
+Therefore I will also align the ASV sequences to the reference sequence they were assigned to get a percent identity.
+
+```{r}
+its_seqs <- read_fasta(file.path('intermediate_data', 'reference_databases', 'its1_reference_db.fa'))
+rps10_seqs <- read_fasta(file.path('intermediate_data', 'reference_databases', 'rps10_reference_db.fa'))
+
+get_ref_seq <- function(tax_result, db) {
+  ref_i <- as.integer(str_match(tax_result$tax[, 'Reference'], '^.+_([0-9]+)$')[ ,2])
+  db[ref_i]
+}
+
+get_align_pid <- function(ref, asv) {
+  mat <- nucleotideSubstitutionMatrix(match = 1, mismatch = -3, baseOnly = TRUE)
+  align <-  pairwiseAlignment(pattern = asv, subject = ref, type = 'global-local')
+  is_match <- strsplit(as.character(align@pattern), '')[[1]] == strsplit(as.character(align@subject), '')[[1]]
+  sum(is_match) / length(is_match)
+}
+
+get_pids <- function(tax_result, db) {
+  ref_seq <- get_ref_seq(tax_result, db)
+  asv_seq <- rownames(tax_result$tax)
+  future_map2_dbl(ref_seq, asv_seq, get_align_pid) * 100
+}
+
+rps10_pids_asv <- get_pids(tax_results_rps10_asv, rps10_seqs)
+its_pids_asv <- get_pids(tax_results_its_asv, its_seqs)
+rps10_pids_otu <- get_pids(tax_results_rps10_otu, rps10_seqs)
+its_pids_otu <- get_pids(tax_results_its_otu, its_seqs)
+```
+
+Now I can add these PIDs into the taxonomy assignment results as another rank, with its percent identity to its assigned reference sequence as a level in the taxonomy.
+
+```{r}
+add_pid_to_tax <- function(tax_result, pid) {
+  tax_result$tax <- cbind(tax_result$tax, ASV = rownames(tax_result$tax))   
+  tax_result$boot <- cbind(tax_result$boot, ASV = pid)
+  tax_result
+}
+
+tax_results_rps10_asv <- add_pid_to_tax(tax_results_rps10_asv, rps10_pids_asv)
+tax_results_its_asv <- add_pid_to_tax(tax_results_its_asv, its_pids_asv)
+tax_results_rps10_otu <- add_pid_to_tax(tax_results_rps10_otu, rps10_pids_otu)
+tax_results_its_otu <- add_pid_to_tax(tax_results_its_otu, its_pids_otu)
+```
+
+
+## Make classification/bootstrap vector  
+
+I will combine the taxonomic assignments and bootstrap values for each locus into a single classification vector.
+This will store all the taxonomic and bootstrap information in a single vector. 
+
+```{r}
+assignTax_as_char <- function(res) {
+  out <- vapply(1:nrow(res$tax), FUN.VALUE = character(1), function(i) {
+    paste(res$tax[i, ],
+          res$boot[i, ],
+          colnames(res$tax), 
+          sep = '--', collapse = ';')
+  })
+  names(out) <- rownames(res$tax)
+  return(out)
+}
+
+seq_tax_asv <- c(assignTax_as_char(tax_results_rps10_asv), assignTax_as_char(tax_results_its_asv))
+seq_tax_otu <- c(assignTax_as_char(tax_results_rps10_otu), assignTax_as_char(tax_results_its_otu))
+```
+
+Again, let make sure that there is a single taxonomic assignment for each ASV.
+
+```{r}
+stopifnot(all(names(seq_tax_asv) %in% colnames(asv_abundance_data)))
+stopifnot(all(! duplicated(names(seq_tax_asv))))
+stopifnot(all(names(seq_tax_otu) %in% colnames(otu_abundance_data)))
+stopifnot(all(! duplicated(names(seq_tax_otu))))
+```
+
+
+## Reformat ASV table
+
+I will reformat the abundance matrix to something I like more and is compatible with the `taxa` package.
+
+```{r}
+# ASVs
+formatted_abund_asv <- t(asv_abundance_data)
+colnames(formatted_abund_asv) <- sub(colnames(formatted_abund_asv), pattern = "_.+$", replacement = "")
+formatted_abund_asv <- cbind(sequence = rownames(formatted_abund_asv), 
+                             taxonomy = seq_tax_asv[rownames(formatted_abund_asv)], 
+                             formatted_abund_asv)
+formatted_abund_asv <- as_tibble(formatted_abund_asv)
+write_csv(formatted_abund_asv, path = file.path('intermediate_data', 'abundance_asv.csv'))
+print(formatted_abund_asv)
+
+# OTUs
+formatted_abund_otu <- t(otu_abundance_data)
+colnames(formatted_abund_otu) <- sub(colnames(formatted_abund_otu), pattern = "_.+$", replacement = "")
+formatted_abund_otu <- cbind(sequence = rownames(formatted_abund_otu), 
+                             taxonomy = seq_tax_otu[rownames(formatted_abund_otu)], 
+                             formatted_abund_otu)
+formatted_abund_otu <- as_tibble(formatted_abund_otu)
+write_csv(formatted_abund_otu, path = file.path('intermediate_data', 'abundance_otu.csv'))
+print(formatted_abund_otu)
+```
+
+
+## Read/ASV counts throughout pipeline
+
+I will track how many reads/ASVs were preserved at each step of the process in order to help identify any problems.
+
+Get raw read counts for steps before read merging:
+
+* raw reads
+* prefilterd for Ns
+* primers removed
+* quality filtered
+
+First I will make a table with the metadata and file names for each step combined:
+
+```{r}
+# Get file paths for just forward reads (counts are the same for both directions)
+forward_fastq_data <- fastq_data %>%
+  filter(direction == "Forward") %>%
+  select(sample_id, raw_path, prefiltered_path, trimmed_path, untrimmed_path, filtered_path, file_name)
+
+# Combine with metadata
+count_data <- metadata %>%
+  filter(primer_pair_id %in% c('rps10_Final', 'ITS6/7'), dna_type != 'mock1') %>%
+  select(sample_id, locus, dna_type, sample_type) %>%
+  left_join(forward_fastq_data, by = "sample_id")
+```
+
+Then count the reads in each file: 
+
+```{r}
+count_reads_in_fastqgz <- function(path) {
+  count <- system(paste('zcat', path, '|', 'wc', '-l'), intern = TRUE)
+  as.numeric(count) / 4
+}
+
+count_data$raw_reads <- map_dbl(count_data$raw_path, count_reads_in_fastqgz)
+count_data$n_filtered_reads <- map_dbl(count_data$prefiltered_path, count_reads_in_fastqgz)
+count_data$trimmed_reads <- map_dbl(count_data$trimmed_path, count_reads_in_fastqgz)
+count_data$qual_filtered_reads <- map_dbl(count_data$filtered_path, count_reads_in_fastqgz)
+
+# remove columns no longer needed
+count_data <- select(count_data, -prefiltered_path, -trimmed_path, -untrimmed_path, -filtered_path, -raw_path)
+```
+
+Get read counts after read merging:
+
+```{r}
+count_merged_reads <- function(read_data, merged) {
+  if (is.null(read_data)) {
+    return(0)
+  }
+  filter(read_data, accept == merged) %>%
+    pull(abundance) %>%
+    sum()
+}
+
+count_data$merged_reads <- map_dbl(merged_reads[count_data$file_name], count_merged_reads, merged = FALSE) + map_dbl(merged_reads[count_data$file_name], count_merged_reads, merged = TRUE)
+count_data$merged_seqs <- map_dbl(merged_reads, nrow)[count_data$file_name]
+count_data$filtered_merged_reads <- map_dbl(merged_reads[count_data$file_name], count_merged_reads, merged = TRUE)
+count_data$filtered_merged_seqs <- map_dbl(merged_reads, function(x) sum(x$accept))[count_data$file_name]
+```
+
+Get read/ASV counts after asv inference:
+
+```{r}
+count_data$raw_asvs <- apply(raw_abundance_data, MARGIN = 1, function(x) sum(!is.na(x) & x > 0))[count_data$file_name]
+count_data$raw_asv_reads <- apply(raw_abundance_data, MARGIN = 1, sum, na.rm = TRUE)[count_data$file_name]
+```
+
+Get read/ASV counts after chimera removal and short sequence filtering:
+
+```{r}
+count_data$chimera_filtered_asvs <- apply(asv_abundance_data, MARGIN = 1, function(x) sum(!is.na(x) & x > 0, na.rm = TRUE))[count_data$file_name]
+count_data$chimera_filtered_reads <- apply(asv_abundance_data, MARGIN = 1, sum, na.rm = TRUE)[count_data$file_name]
+```
+
+Get read/ASV counts after low-abundance sequence filtering
+
+```{r}
+count_data$abund_filtered_asvs <- apply(asv_abundance_data, MARGIN = 1, function(x) sum(!is.na(x) & x >= 30, na.rm = TRUE))[count_data$file_name]
+count_data$abund_filtered_reads <- apply(asv_abundance_data, MARGIN = 1, function(x) sum(x[x >= 30], na.rm = TRUE))[count_data$file_name]
+```
+
+Save data:
+
+```{r}
+write_csv(count_data, file = file.path('results', 'read_asv_counts.csv'))
+```
+
+
+Prepare data for plotting:
+
+```{r}
+plot_data <- pivot_longer(count_data, colnames(count_data)[-(1:5)], names_to = 'stat', values_to = 'count')
+plot_data$type <- str_extract(plot_data$stat, pattern = '([a-z]+)$')
+plot_data$type[plot_data$type == "seqs"] <- "asvs"
+stage_key <- c(raw_reads = "Raw reads", 
+               n_filtered_reads = "N prefiltered", 
+               trimmed_reads = "Primers trimmed", 
+               qual_filtered_reads = "Quality filtered",
+               merged_reads = "Merged reads", 
+               merged_seqs = "Merged reads", 
+               filtered_merged_reads = "Filtered merged reads", 
+               filtered_merged_seqs = "Filtered merged reads",
+               raw_asvs = "Raw ASVs", 
+               raw_asv_reads = "Raw ASVs",
+               chimera_filtered_asvs = "Chimera/short filtered", 
+               chimera_filtered_reads = "Chimera/short filtered",
+               abund_filtered_asvs = "Abundance filtered", 
+               abund_filtered_reads = "Abundance filtered")
+plot_data$stage <- factor(stage_key[plot_data$stat], levels = unique(stage_key), ordered = TRUE)
+```
+
+Plot all samples: 
+
+```{r}
+ggplot(plot_data, aes(x = stage, y = count, group = sample_id, color = locus)) + 
+  facet_grid(type ~ ., scales = "free_y") +
+  # theme_minimal() +
+  expand_limits(y = 0) +
+  # scale_y_continuous(trans='log10') +
+  theme(axis.text.x=element_text(angle=45,hjust=1)) +
+  geom_line(aes(linetype = sample_type))
+```
+
+Plot just mock community samples:
+
+```{r}
+plot_data %>%
+  filter(sample_type == "Mock community") %>%
+  ggplot(aes(x = stage, y = count, group = sample_id, color = locus)) + 
+  facet_grid(type ~ ., scales = "free_y") +
+  # theme_minimal() +
+  expand_limits(y = 0) +
+  scale_y_continuous(trans='log10') +
+  theme(axis.text.x = element_text(angle=45,hjust=1)) +
+  geom_line()
+```
+
+
+## Software used
+
+```{r}
+sessioninfo::session_info()
+```
+

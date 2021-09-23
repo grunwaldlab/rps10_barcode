@@ -1,0 +1,803 @@
+---
+title: "Mock community evaluation"
+bibliography: '`r sharedbib::bib_path()`'
+output:
+  html_document:
+    css: style.css
+---
+
+```{r setup, include=FALSE}
+source('style.R')
+```
+
+
+## Prepare
+
+### Packages used
+
+```{r message=FALSE}
+library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(sessioninfo)
+library(metacoder)
+library(vegan)
+library(viridis)
+library(taxize)
+library(purrr)
+library(ape)
+library(ips)
+library(insect)
+library(phangorn)
+library(DT)
+library(gridExtra)
+library(stringr)
+library(Biostrings)
+```
+
+
+## Mock community reconstruction
+
+The primary goal of any barcode is to accurately reconstruct community of organisms it is used on.
+We sequenced known mock communities to evaluate how well rps10 and ITS1 can infer these communities.
+
+### Parameters
+
+```{r}
+minimum_read_count <- 10
+seed <- 1
+set.seed(seed)
+```
+
+The minimum read count is higher than would be usual for a metabarcoding analysis.
+We chose a relatively high read count because this analysis will only use the mock community and since the mock community is less diverse than most natural communities that metabarcoding is used on, we expected erroneous sequences to be more common than usual. 
+
+### Parallel processing
+
+Commands that have "future" in them are run on multiple cores using the `furrr` and `future` packages.
+
+```{r}
+plan(multiprocess)
+```
+
+### Read abundance matrix and sample data
+
+Read the sample metadata table:
+
+```{r}
+metadata <- read_csv(file.path('intermediate_data', 'metadata.csv'))
+datatable(metadata)
+```
+
+Read the ASV abundance matrix:
+
+```{r}
+read_abund_mat <- function(path) {
+  # Read CSV
+  abundance <- read_csv(path)
+  
+  # Clean up species names
+  abundance$taxonomy <- abundance$taxonomy %>%
+    sub(pattern = ' aff. ', replacement = '', fixed = TRUE)
+  
+  asv_data <- parse_tax_data(abundance, class_cols = 'taxonomy', class_sep = ';',
+                             class_regex = '^(.+)--(.+)--(.+)$',
+                             class_key = c(taxon = 'taxon_name', boot = 'info', rank = 'taxon_rank'))
+  names(asv_data$data) <- c('abund', 'score')
+  transmute_obs(asv_data, 'score', sequence = sequence[input_index], boot = boot, rank = rank)
+}
+
+asv_data <- read_abund_mat(file.path('intermediate_data', 'abundance_asv.csv'))
+otu_data <- read_abund_mat(file.path('intermediate_data', 'abundance_otu.csv'))
+```
+
+
+### Subset data to just mock community 
+
+Only `mock2` will be used in the paper. `mock1` was another, older mock community.
+I will also zero out low abundance ASVs, since that would be done in a normal metabarcoding analysis.
+And convert to proportions in case that is needed later.
+
+
+```{r}
+its_mock_sample <- metadata$sample_id[metadata$dna_type == 'mock2' & metadata$primer_pair_id == 'ITS6/7']
+rps_mock_sample <- metadata$sample_id[metadata$dna_type == 'mock2' & metadata$primer_pair_id == 'rps10_Final']
+mock_samples <- c(rps_mock_sample, its_mock_sample)
+
+prep_mock_samples <- function(obj) {
+  # just mock samples
+  obj <- select_obs(obj, data = 'abund', sequence, taxonomy, !!! mock_samples)
+  obj <- filter_obs(obj, data = 'abund', rowSums(obj$data$abund[mock_samples]) > 0, drop_taxa = TRUE)
+  obj <- filter_obs(obj, data = 'score', obj$data$score$sequence %in% obj$data$abund$sequence, drop_taxa = TRUE)
+  # zero out low abundance
+  obj$data$abund <- zero_low_counts(obj, 'abund', min_count = minimum_read_count, other_cols = TRUE)
+  obj <- filter_obs(obj, 'abund', rowSums(obj$data$abund[, mock_samples]) > 0, drop_taxa = TRUE)
+  obj <- filter_obs(obj, 'score', obj$data$score$sequence %in% obj$data$abund$sequence, drop_taxa = TRUE)
+  # convert to proportions
+  obj$data$prop <- calc_obs_props(obj, 'abund')
+  obj
+}
+
+asv_data <- prep_mock_samples(asv_data)
+otu_data <- prep_mock_samples(otu_data)
+print(asv_data)
+print(otu_data)
+```
+
+Since there is only two samples and each ASV is only found in one:
+
+```{r}
+stopifnot(all(rowSums(asv_data$data$abund[4:5] == 0) == 1))
+stopifnot(all(rowSums(otu_data$data$abund[4:5] == 0) == 1))
+```
+
+I can reformat the abundance matrix like so:
+
+```{r}
+reformat_abund_mat <- function(obj) {
+  obj$data$abund <- transmute(obj$data$abund, taxon_id, sequence, taxonomy,
+                              asv_count = rowSums(obj$data$abund[mock_samples]),
+                              locus = ifelse(obj$data$abund[[its_mock_sample]] > 0, 'ITS', 'rps10'))
+  obj$data$prop <- transmute(obj$data$prop, taxon_id, 
+                             asv_count = rowSums(obj$data$prop[mock_samples]),
+                             locus = ifelse(obj$data$prop[[its_mock_sample]] > 0, 'ITS', 'rps10'))
+  obj
+}
+
+asv_data <- reformat_abund_mat(asv_data)
+otu_data <- reformat_abund_mat(otu_data)
+```
+
+and I can add which reference sequence each asv was assigned to and its PID as seperate columns for easy use afterwards.
+
+```{r}
+add_assigned_ref_seq <- function(obj) {
+  
+  # Add name of reference sequence
+  obj$data$abund$reference <- str_match(obj$data$abund$taxonomy, '.+;(.+)--[0-9]+--Reference;.+$')[,2]
+  obj$data$abund$reference <- gsub(obj$data$abund$reference, pattern = '_', replacement = ' ')
+  
+  # Add PID match to reference sequence as a column
+  obj$data$abund$ref_pid <- str_match(obj$data$abund$taxonomy, '.+;.+--[0-9]+--Reference;.+--([0-9.]+)--ASV$')[,2]
+  
+  obj
+}
+
+asv_data <- add_assigned_ref_seq(asv_data)
+otu_data <- add_assigned_ref_seq(otu_data)
+```
+
+
+### Evaluating mock community reconstruction: taxonomic assignments
+
+I will consider how the well the mock community was characterized by each method in the context of the taxonomic assignments of the ASVs by dada2.
+The following metrics will be calculated: 
+
+* The number of expected mock community identified 
+* The proportion of ASVs assigned to an expected member of the mock community
+* The proportion of reads assigned to an expected member of the mock community
+
+Note that all the mock community members have sequences in the reference databases:
+
+```{r}
+mc_data <- read_csv(file.path('intermediate_data', 'mock_community.csv'))
+mc_syn_data <- read_csv(file.path('raw_data', 'mock_comm_synonyms.csv'))
+mc_data$in_both_db <- mc_data$in_rps10_db & mc_data$in_its_db
+stopifnot(all(mc_data$in_both_db))
+```
+
+To make the data easier to use, I will add the list of synonyms and the name used in the mock community to a column in the mock community data.
+Note that this column is a list of character vectors.
+
+```{r}
+mc_data$all_names <- lapply(mc_data$species, function(sp_name) {
+  sp_name <- gsub(sp_name, pattern = '_', replacement = ' ', fixed = TRUE)
+  unique(c(sp_name, mc_syn_data$syn_name[tolower(mc_syn_data$mc_name) == tolower(sp_name)]))
+})
+```
+
+I will also figure out which reference sequences might represent members of the mock community and the names of species in the mock community they correspond to.
+
+```{r}
+make_ref_data <- function(ref_path, ranks) {
+  
+  # make table from fasta info
+  ref_seqs <- read_fasta(file.path('intermediate_data', 'reference_databases', ref_path))
+  ref_data <- tibble(header = sub(names(ref_seqs), pattern = ';$', replacement = ''), 
+                     sequence = ref_seqs)
+  ref_data$header <- gsub(ref_data$header, pattern = '_', replacement = ' ')
+  ref_data <- separate(ref_data, header, into = ranks, sep = ';')
+  
+  # Identify sequences that should be in the mock community
+  ref_data <- mutate(
+    ref_data,
+    expected_in_mc = tolower(species) %in% tolower(unlist(mc_data$all_names)),
+  )
+  ref_data$names_in_mc <- map(ref_data$species, function(ref_sp) {
+    matches_mc <- map_lgl(mc_data$all_names, function(mc_sp_names) {
+      ref_sp %in% mc_sp_names
+    })
+    mc_data$species[matches_mc]
+  })
+  
+  # Clean up species names
+  ref_data$species <- ref_data$species %>%
+    sub(pattern = ' subsp\\..*', replacement = '') %>%
+    sub(pattern = ' var\\..*', replacement = '') %>%
+    sub(pattern = ' cf\\.', replacement = '') %>%
+    sub(pattern = ' aff\\.', replacement = '')
+  
+  ref_data
+}
+
+its_ref_data <- make_ref_data('its1_reference_db.fa',
+                              c("domaine", "kingdom", "phylum", "class", "order", "family", "genus", "species", "reference"))
+rps10_ref_data <- make_ref_data('rps10_reference_db.fa',
+                                c("domaine", "kingdom", "phylum", "class", "order", "family", "genus", "species", "reference"))
+```
+
+Lets see which species in the reference database that were considered to be members of the mock community based on the synonym to make sure the synonyms are reasonable:
+
+```{r}
+print_ambiguous_mc_matches <- function(data) {
+  to_look_at <- map_lgl(1:nrow(data), function(i) data$expected_in_mc[i] && (length(data$names_in_mc[[i]]) > 1 | data$species[i] != data$names_in_mc[[i]][1]))
+  info <- map(which(to_look_at), function(i) paste0('Ref species name: ', data$species[i], '\nMatching mock comm names: ', paste(data$names_in_mc[[i]], collapse = ', '), '\n\n'))
+  for (x in unique(info)) {
+    cat(x)
+  }
+}
+print_ambiguous_mc_matches(its_ref_data)
+print_ambiguous_mc_matches(rps10_ref_data)
+```
+
+Lets get the number of OTUs and ASVs in the mock community for each locus.
+I will put the results in a table of info for each locus that I will populate with additional columns throughout the analysis.
+
+```{r}
+locus_result_table <- tibble(locus = c('rps10', 'ITS'),
+                             n_asv = table(asv_data$data$abund$locus)[locus],
+                             n_otu = table(otu_data$data$abund$locus)[locus])
+locus_result_table
+```
+
+
+#### The number of expected mock community species identified  
+
+I will first find which mock community members where found in the taxonomic classifications of the ASVs
+
+```{r}
+find_mock_in_tax <- function(obj, my_locus, ref_data) {
+  # Get data for the locus and combine with reference data 
+  names(ref_data)[colnames(ref_data) == 'sequence'] <- 'ref_sequence'
+  locus_data <- filter(obj$data$abund, locus == my_locus) %>%
+    left_join(ref_data, by = "reference")
+  
+  # Check which mock community members were found
+  mc_tax_found <- map_lgl(mc_data$all_names, function(mc_synonyms) {
+    any(mc_synonyms %in% locus_data$species)
+  })
+  
+  names(mc_tax_found) <- mc_data$species
+  mc_tax_found
+}
+```
+
+For **rps10**:
+
+```{r}
+find_mock_in_tax(asv_data, 'rps10', rps10_ref_data)
+```
+
+For **ITS1**:
+
+```{r}
+find_mock_in_tax(asv_data, 'ITS', its_ref_data)
+```
+
+I will add that the number of mock community species found to the  table:
+
+```{r}
+locus_result_table$n_mc_in_tax <- c(sum(find_mock_in_tax(asv_data, 'rps10', rps10_ref_data)),
+                                    sum(find_mock_in_tax(asv_data, 'ITS', its_ref_data)))
+```
+
+
+#### The proportion of the ASVs and reads assigned to members of the mock community
+
+It would also be useful to know what proportion of the ASVs were assigned to members of the mock community:
+
+```{r}
+tax_in_mock <- function(obj, my_locus, ref_data) {
+  # Get data for the locus and combine with reference data 
+  names(ref_data)[colnames(ref_data) == 'sequence'] <- 'ref_sequence'
+  locus_data <- filter(obj$data$abund, locus == my_locus) %>%
+    left_join(ref_data, by = "reference")
+  
+  # Check which mock community members were found
+  locus_data$is_mock <- locus_data$species %in% unique(unlist(mc_data$all_names))
+  
+  # Format result
+  locus_data %>%
+    select(species, reference, asv_count, is_mock) %>%
+    arrange(desc(asv_count))
+}
+```
+
+For **rps10**:
+
+```{r}
+rps10_tax_in_mock <- tax_in_mock(asv_data, 'rps10', rps10_ref_data)
+as.data.frame(rps10_tax_in_mock)
+```
+
+For **ITS1**:
+
+```{r}
+its_tax_in_mock <- tax_in_mock(asv_data, 'ITS', its_ref_data)
+as.data.frame(its_tax_in_mock)
+```
+
+I will add that the proportion of species found that are in the mock community to the  table:
+
+```{r}
+locus_result_table$prop_asv_in_mc_tax <- c(sum(rps10_tax_in_mock$is_mock) / nrow(rps10_tax_in_mock), 
+                                           sum(its_tax_in_mock$is_mock) / nrow(its_tax_in_mock))
+```
+
+and the proportion of reads represented by those sequences
+
+```{r}
+prop_reads_in_mc <- function(aligned_data) {
+  sum(aligned_data$asv_count[aligned_data$is_mock]) / sum(aligned_data$asv_count)
+}
+
+locus_result_table$prop_reads_in_mc_tax <- c(prop_reads_in_mc(rps10_tax_in_mock), 
+                                             prop_reads_in_mc(its_tax_in_mock))
+```
+
+
+
+### Evaluating mock community reconstruction: sequences
+
+Similar to the statistics generated above, I will summarize how well the mock community was reconstructed in the context of sequences found, ignoring taxonomic classifications.
+Specifically, I will calculate: 
+
+* The number of expected mock community sequences present in the ASVs  
+* The number of expected mock community sequences present in the ASVs, allowing for 1bp mismatch
+* The proportion of ASVs matching the sequences of an expected member of the mock community
+* The proportion of reads matching the sequences of an expected member of the mock community
+
+
+#### The number of expected mock community sequences present in the ASVs
+
+First, I will also count how many of the mock community species have sequences represented by at least one ASV
+
+```{r}
+# Check if bases match, allowing for IUPAC codes in reference
+iupac_match <- function(asv_chars, ref_chars) {
+  map2_lgl(asv_chars, ref_chars, function(asv, ref) grepl(asv, pattern = paste0('[', IUPAC_CODE_MAP[ref], ']+')))
+}
+
+# Count number of mismatches in an alignment, allowing for IUPAC codes in reference
+align_mismatch <- function(alignment) {
+  asv_chars <- strsplit(as.character(alignment@pattern), '')[[1]]
+  ref_chars <- strsplit(as.character(alignment@subject), '')[[1]]
+  sum(! iupac_match(asv_chars, ref_chars))
+}
+
+align_mock_comm_seqs <- function(obj, my_locus, ref_data) {
+  # Get data for the locus and combine with reference data 
+  names(ref_data)[colnames(ref_data) == 'sequence'] <- 'ref_sequence'
+  locus_data <- filter(obj$data$abund, locus == my_locus) %>%
+    left_join(ref_data, by = "reference")
+  
+  # Get sequences that should be in the mock community and make formatting consistent
+  if (my_locus == "rps10") {
+    mock_seqs <- read_fasta(file.path('raw_data', 'reference_databases', 'mock_comm_rps10_sanger.fasta'))
+    names(mock_seqs) <- trimws(names(mock_seqs))
+    names(mock_seqs) <- gsub(names(mock_seqs), pattern = '_', replacement = ' ')
+    names(mock_seqs) <- str_match(names(mock_seqs), pattern = '^.+;(.+)$')[, 2]
+    # The Pythium undulatum sequence is not complete, so I will replace it with one from a reference database
+    undulatum_ref_seqs <- ref_data$ref_sequence[ref_data$species == 'Pythium undulatum']
+    mock_seqs['Pythium undulatum'] <- undulatum_ref_seqs[which.max(nchar(undulatum_ref_seqs))]
+  } else if (my_locus == "ITS") {
+    mock_seqs <- read_fasta(file.path('raw_data', 'reference_databases', 'mock_comm_its1_sanger.fasta'))
+    names(mock_seqs) <- str_match(names(mock_seqs), pattern = '^(.+) .+$')[, 2]
+    names(mock_seqs) <- str_match(names(mock_seqs), pattern = '^([a-zA-Z]+ [a-zA-Z]+).*$')[, 2]
+    # Plasmopara halstedii was not sequenced successfully, so I will use a reference sequence
+    mock_seqs <- c(mock_seqs, setNames(its_ref_data$sequence[its_ref_data$species == "Plasmopara halstedii"], "Plasmopara halstedii"))
+  } else {
+    stop('Wrong locus type')
+  }
+  mock_seqs <- trimws(mock_seqs)
+
+  # Align each mock community sequence and applicable reference sequences to all ASVs and return best hit
+  aligned_data <-  lapply(seq_along(mock_seqs), function(i) {
+    aligned <- lapply(locus_data$sequence, function(asv) pairwiseAlignment(pattern = asv, subject = mock_seqs[i], type = 'global-local'))
+    tibble(
+      species = names(mock_seqs)[i],
+      align_len = map_dbl(aligned, nchar),
+      mismatch = map_dbl(aligned, align_mismatch),
+      pid = (align_len - mismatch) / align_len,
+      abund = locus_data$asv_count,
+      asv_seq = locus_data$sequence, 
+      ref_seq = mock_seqs[i],
+      alignment = aligned
+    )
+  })
+  aligned_data <- bind_rows(aligned_data)
+
+  aligned_data
+}
+
+filter_to_top_mc_ref_hits <- function(aligned_data) {
+  aligned_data %>%
+    group_by(species) %>%
+    slice_max(pid, n = 1) %>%
+    slice_max(abund, n = 1) %>%
+    arrange(desc(abund)) %>%
+    select(species, pid, mismatch, abund)
+}
+```
+
+For **rps10**:
+
+```{r}
+rps10_align_data <- align_mock_comm_seqs(asv_data, 'rps10', rps10_ref_data)
+as.data.frame(filter_to_top_mc_ref_hits(rps10_align_data))
+```
+
+For **ITS1**:
+
+```{r}
+its_align_data <- align_mock_comm_seqs(asv_data, 'ITS', its_ref_data)
+as.data.frame(filter_to_top_mc_ref_hits(its_align_data))
+```
+
+I will also save the alignments for all of the best matches:
+
+```{r}
+print_align <- function(align) {
+  ref <- as.character(align@subject)
+  asv <- as.character(align@pattern)
+  match_str <- paste0(ifelse(iupac_match(strsplit(asv, split = '')[[1]], strsplit(ref, split = '')[[1]]), '|', ' '), collapse = '')
+  paste(
+    sep = '\n',
+    paste('REF:', ref), 
+    paste('    ', match_str), 
+    paste('ASV:', asv)
+  )
+}
+
+save_best_mc_ref_alignments <- function(aligned_data, path) {
+  aligned_data <- aligned_data %>%
+      group_by(species) %>%
+      slice_max(pid, n = 1) %>%
+      slice_max(abund, n = 1)
+  align_str <- map_chr(aligned_data$alignment, print_align)
+  title <- paste0(aligned_data$species, ' (PID:', aligned_data$pid, ' mismatch: ', aligned_data$mismatch, '  reads: ', aligned_data$abund, ')')
+  write_lines(paste0(title, '\n', align_str, '\n', sep = '\n', collapse = '\n'), file = path)
+}
+
+save_best_mc_ref_alignments(rps10_align_data, file.path('results', 'best_mc_ref_alignments_rps10.txt'))
+save_best_mc_ref_alignments(its_align_data, file.path('results', 'best_mc_ref_alignments_its1.txt'))
+```
+
+and add the number of expected mock community sequences we found for each locus:
+
+```{r}
+locus_result_table$n_mc_in_seq <- c(sum(filter_to_top_mc_ref_hits(rps10_align_data)$mismatch == 0), 
+                                    sum(filter_to_top_mc_ref_hits(its_align_data)$mismatch == 0))
+locus_result_table$n_mc_in_seq_approx <- c(sum(filter_to_top_mc_ref_hits(rps10_align_data)$mismatch <= 1), 
+                                           sum(filter_to_top_mc_ref_hits(its_align_data)$mismatch <= 1))
+```
+
+
+#### The proportion of ASVs matching the sequences of an expected member of the mock community
+
+I will summarize the alignment data in the context of each ASV that best matched a reference sequence in the same way as above for the reference sequences
+First, I will print out the alignment statistics:
+
+```{r}
+filter_to_top_asv_hits <- function(aligned_data) {
+  aligned_data %>%
+    group_by(asv_seq) %>%
+    slice_max(pid, n = 1, with_ties = FALSE) %>%
+    arrange(desc(abund)) %>%
+    ungroup() %>%
+    select(species, pid, mismatch, abund)
+}
+```
+
+For **rps10**:
+
+```{r}
+as.data.frame(filter_to_top_asv_hits(rps10_align_data))
+```
+
+For **ITS1**:
+
+```{r}
+as.data.frame(filter_to_top_asv_hits(its_align_data))
+```
+
+I will also save the best alignments for each ASV: 
+
+```{r}
+save_best_asv_alignments <- function(aligned_data, path) {
+  aligned_data <- aligned_data %>%
+      group_by(asv_seq) %>%
+      slice_max(pid, n = 1, with_ties = FALSE) 
+  align_str <- map_chr(aligned_data$alignment, print_align)
+  title <- paste0(aligned_data$species, ' (PID:', aligned_data$pid, ' mismatch: ', aligned_data$mismatch, '  reads: ', aligned_data$abund, ')')
+  write_lines(paste0(title, '\n', align_str, '\n', sep = '\n', collapse = '\n'), path = path)
+}
+
+save_best_asv_alignments(rps10_align_data, file.path('results', 'best_asv_alignments_rps10.txt'))
+save_best_asv_alignments(its_align_data, file.path('results', 'best_asv_alignments_its1.txt'))
+```
+
+I will add the proportion of ASVs that matched an expected reference sequence, allowing for a 1bp difference in the alignmnet: 
+
+```{r}
+prop_seq_in_mc <- function(aligned_data) {
+  aligned_data <- filter_to_top_asv_hits(aligned_data)
+  sum(aligned_data$mismatch <= 1) / nrow(aligned_data)
+}
+
+locus_result_table$prop_asv_in_mc_seq <- c(prop_seq_in_mc(rps10_align_data), prop_seq_in_mc(its_align_data))
+```
+
+and the proportion of reads represented by those sequences
+
+```{r}
+prop_reads_in_mc <- function(aligned_data) {
+  aligned_data <- filter_to_top_asv_hits(aligned_data)
+  sum(aligned_data$abund[aligned_data$mismatch <= 1]) / sum(aligned_data$abund)
+}
+
+locus_result_table$prop_reads_in_mc_seq <- c(prop_reads_in_mc(rps10_align_data), prop_reads_in_mc(its_align_data))
+```
+
+Finally, I will save the table of summary statistics generated in the last few sections:
+
+```{r}
+num_col <- map_lgl(locus_result_table, is.numeric)
+locus_result_table[num_col] <- lapply(locus_result_table[num_col], round, digits = 3)
+write_csv(locus_result_table, file = file.path('results', 'mock_community_summary_statistics.csv'))
+print(locus_result_table)
+```
+
+
+
+### Plot composition of the mock community
+
+I will make heat trees for  each of the mock community samples with the taxa that are should not be there highlighted. 
+Here is a function to calculated the data plotted for each sample:
+
+```{r message=FALSE}
+plot_comp <- function(locus, title, path) {
+  x <- asv_data$clone(deep = TRUE)
+  
+  # Get right reference data for locus
+  if (locus == 'rps10') {
+    ref_data <- rps10_ref_data
+  } else if (locus == 'ITS') {
+    ref_data <- its_ref_data
+  } else {
+    stop('Invalid locus')
+  }
+  
+  # Subset to only samples used in this plot
+  x$data$prop <- x$data$prop[x$data$prop$locus == locus, ]
+  x$data$abund <- x$data$abund[x$data$abund$locus == locus, ]
+  x$data$score <- x$data$score[x$data$score$sequence %in% x$data$abund$sequence, ]
+  
+  # Get per-taxon mean proportions and read counts
+  x$data$tax_prop <- calc_taxon_abund(x, 'prop', cols = 'asv_count', out_names = 'tax_prop')
+  x$data$tax_abund <- calc_taxon_abund(x, 'abund', cols = 'asv_count', out_names = 'tax_count')
+  
+  # Remove taxa and bootstrap scores for taxa/ASVs not in plot
+  x <- filter_taxa(x, tax_count > minimum_read_count, reassign_obs = FALSE)
+  
+  # Get mean bootstrap score per taxon
+  x$data$score$boot[x$data$score$rank == 'ASV'] <- NA
+  x$data$tax_prop$mean_boot <- obs_apply(x, 'score', value = 'boot', recursive = FALSE, func = function(boots) {
+    mean(as.numeric(boots), na.rm = TRUE)
+  }) %>% unlist
+  
+  # Replace the bootstrap value for the ASVs with their PID to the reference
+  x$data$abund$assigned_pid <- as.numeric(str_match(x$data$abund$taxonomy, pattern = '^.+--([0-9.]+)--ASV$')[,2]) / 100
+  x$data$tax_prop$mean_boot[match(x$data$abund$taxon_id, x$data$tax_prop$taxon_id)] <- x$data$abund$assigned_pid * 100
+  
+  # Find which taxa are part of mock community
+  species_ids <- map_chr(supertaxa(x, value = 'taxon_ids', recursive = 2), `[`, 2)[x$data$abund$taxon_id]
+  species_found <- gsub(taxon_names(x)[species_ids], pattern = '_', replacement = ' ')
+  species_in_mc <- tolower(species_found) %in% tolower(unlist(mc_data$all_names))
+  x$data$taxa_in_mc <- map_lgl(subtaxa(x, value = 'taxon_ids', include_input = TRUE), function(i) any(i %in% species_ids[species_in_mc]))
+  
+  # Plot
+  x %>% 
+    filter_taxa(! is_stem) %>%
+    # filter_taxa(taxon_ranks != 'Reference') %>%
+    # remove_redundant_names() %>%
+    heat_tree(node_label = ifelse(taxon_ranks == 'ASV', 
+                                  paste0('PID: ', format(mean_boot, digits = 3, trim = TRUE), '\nN: ', tax_count),
+                                  gsub(taxon_names, pattern = '_', replacement = ' ')),
+              node_label_color = ifelse(taxa_in_mc | taxon_ranks %in% c('ASV', 'Reference'), 'black', 'darkred'),
+              node_size = tax_prop, 
+              node_size_range = c(0.005, 0.035),
+              node_size_interval = c(0, 1),
+              node_label_size_range = c(0.012, 0.025),
+              node_size_axis_label = 'Mean read proportion',
+              node_color = ifelse(taxon_ranks == 'ASV', 'grey', mean_boot),
+              node_color_axis_label = 'Mean bootstrap',
+              node_color_trans = 'linear',
+              node_color_range = c('red', 'red', 'red', 'red', 'orange', 'yellow', 'yellow', 'green', 'lightblue'),
+              node_color_interval = c(0, 100),
+              title = title,
+              output_file = path)
+}
+
+sample_plots <- lapply(c("rps10", "ITS"), function(locus) {
+  mdat <- metadata[metadata$locus == locus & metadata$sample_id %in% mock_samples, ]
+  mdat$primer_pair_id <-  gsub(mdat$primer_pair_id, pattern = '/', replacement = '-', fixed = TRUE)
+  my_plot <- plot_comp(locus = locus, 
+                       title = locus,
+                       path = file.path('results', paste0('mock_comm_heat_tree_', mdat$primer_pair_id, '.pdf')))
+  print(my_plot)
+  my_plot
+})
+```
+
+
+## Phylogenetic tree
+
+```{r}
+make_full_tree <- function(locus, ref_data, path, title = locus, only_best_matches = FALSE, legend = TRUE) {
+  
+  # Subset data to just locus plotted
+  asv_match_data <- filter(asv_data$data$abund, locus == !! locus) 
+  
+  # Only consider the ASVs in each species with the best match to the reference
+  if (only_best_matches) {
+    asv_match_data <- map(split(asv_match_data, asv_match_data$species), 
+                          function(x) arrange(x, desc(assigned_pid), desc(asv_count))[1, ]) %>%
+      bind_rows()
+  }
+  
+  # Get sequences of mock community members
+  if (locus == "rps10") {
+    mock_seqs <- read_fasta(file.path('raw_data', 'reference_databases', 'mock_comm_rps10_sanger.fasta'))
+    names(mock_seqs) <- trimws(names(mock_seqs))
+    names(mock_seqs) <- gsub(names(mock_seqs), pattern = '_', replacement = ' ')
+    names(mock_seqs) <- str_match(names(mock_seqs), pattern = '^.+;(.+)$')[, 2]
+  } else if (locus == "ITS") {
+    mock_seqs <- read_fasta(file.path('raw_data', 'reference_databases', 'mock_comm_its1_sanger.fasta'))
+    names(mock_seqs) <- str_match(names(mock_seqs), pattern = '^(.+) .+$')[, 2]
+  } else {
+    stop('Wrong locus type')
+  }
+  
+ 
+  # Combine sequences
+  seq_data <- tibble(
+    name = c(paste0('ASV (', asv_match_data$asv_count, ')'), names(mock_seqs)),
+    type = rep(c('ASV', 'Reference'), c(nrow(asv_match_data), length(mock_seqs))),
+    sequence = c(asv_match_data$sequence, mock_seqs)
+    )
+  seq_data$sequence <- trimws(toupper(seq_data$sequence))
+  
+  # Align sequences:
+  aligned <- seq_data$sequence %>%
+    setNames(1:nrow(seq_data)) %>%
+    char2dna() %>%
+    mafft(method = 'localpair', exec = 'mafft')
+  
+  # Make tree
+  make_tree <- function(aligned) {
+    dist <- dist.dna(aligned, model = 'N')
+    tree <- nj(dist)
+    tree <- ladderize(tree)
+    tree <- midpoint(tree)
+    tree
+  }
+  tree <- make_tree(aligned)
+  boot <- boot.phylo(tree, aligned, make_tree, quiet = TRUE)
+  # boot[boot == 100] <- NA
+  
+  # Plot tree
+  # pdf(file = path, width = 7, height = 8)
+  tree$tip.label <- seq_data$name
+  tree$node.label <- boot
+  plot.phylo(tree)
+  title(main = title, adj = 0)
+  nodelabels(ifelse(boot == 100, NA, boot), frame = 'none', cex = 0.61, adj = c(1.5, -.2))
+  axis(side = 1)
+  title(xlab = 'Number of differing sites')
+  # dev.off()
+  
+  return(boot)
+}
+
+
+make_phylo_plot <- function() {
+  par(mfrow = c(1, 2))
+  its1_phylo_boot <- make_full_tree(locus = 'ITS',
+                                    ref_data = its_ref_data,
+                                    path = file.path('results', 'mock_comm_phylo_full_its1.pdf'),
+                                    title = 'A. ITS1',
+                                    legend = TRUE)
+  rps10_phylo_boot <- make_full_tree(locus = 'rps10', 
+                                     ref_data = rps10_ref_data, 
+                                     path = file.path('results', 'mock_comm_phylo_full_rps10.pdf'),
+                                     title = 'B. RPS10',
+                                     legend = FALSE)
+  tibble(locus = rep(c('rps10', 'ITS'), c(length(rps10_phylo_boot), length(its1_phylo_boot))),
+         boot = c(rps10_phylo_boot, its1_phylo_boot),
+         rank = 'Branch',
+         type = 'Neighbor Joining')
+  
+}
+```
+
+Plot and save the plot:
+
+```{r fig.width=16, fig.height=16}
+pdf(file = file.path('results', 'mock_comm_phylo_full.pdf'), width = 16, height = 16)
+phylo_boot_data <- make_phylo_plot()
+dev.off()
+phylo_boot_data <- make_phylo_plot() 
+```
+
+
+### Bootstrap analysis
+
+In order to see how well the two barcodes can be used to assign taxonomy and resolve phylogenetic trees, I will compare the bootstrap values from dada2 and the neighbor-joining trees produced with ape.
+
+```{r}
+tax_boot_data <- asv_data$data$score[asv_data$data$score$rank %in% c('Genus', 'Species', 'Reference'), ]
+# tax_boot_data <- asv_data$data$score
+tax_boot_data$locus <- asv_data$data$abund$locus[match(tax_boot_data$sequence, asv_data$data$abund$sequence)]
+tax_boot_data$type <- 'Naive Bayesian Classifier'
+tax_boot_data$boot <- as.integer(tax_boot_data$boot)
+boot_data <- bind_rows(phylo_boot_data, tax_boot_data[, colnames(phylo_boot_data)])
+boot_data
+```
+
+Now I can graph it with histograms
+
+```{r fig.width=5, fig.height=5}
+boot_plot <- boot_data %>%
+  # filter(type == 'Taxonomic') %>%
+  mutate(rank = factor(rank, levels = rev(c('Branch', 'Genus', 'Species', 'Reference')), ordered = TRUE),
+         locus = ordered(c(rps10 = 'rps10', ITS = 'ITS1')[locus], levels = c('rps10', 'ITS1'))) %>%
+  ggplot(aes(x = rank, y = boot, fill = locus)) +
+  facet_grid(. ~ type, scales = 'free', space = 'free_x') +
+  geom_boxplot() +
+  scale_fill_viridis_d(begin = 0.8, end = 0.2) +
+  labs(x = '', y = 'Bootstrap Score', fill = 'Locus') +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position="bottom") 
+boot_plot
+ggsave(boot_plot, filename = 'mock_comm_bootstrap.pdf', path = 'results', width = 7, height = 5)
+```
+
+**Caption:**
+
+Figure #: The distribution of bootstrap scores for the taxonomic assignment of ASVs in the mock community for the ITS1 and Rps10 loci. The RDP Naive Bayesian Classifier "Reference", "Species", and "Genus" scores refer the ability to consistently assign ASVs to a particular reference sequence, species, or genus respectively when the data is resampled. The neighbor joining tree scores quantify how consistent the branching pattern of the resulting tree is when the data is resampled.
+
+
+
+
+
+
+## Software used
+
+```{r}
+sessioninfo::session_info()
+```

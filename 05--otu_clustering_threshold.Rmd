@@ -1,0 +1,175 @@
+---
+title: "Clustering ASVs into OTUs"
+bibliography: '`r sharedbib::bib_path()`'
+output:
+  html_document:
+    css: style.css
+---
+
+```{r setup, include=FALSE}
+source('style.R')
+```
+
+
+## Prepare
+
+### Packages used
+
+```{r message=FALSE}
+library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(sessioninfo)
+library(metacoder)
+library(vegan)
+library(viridis)
+library(DT)
+library(stringr)
+library(qsubmitter)
+library(taxize)
+library(forcats)
+library(parallel)
+```
+
+### Parameters
+
+```{r}
+opt_thresh_range = seq(0.9, 1, by = 0.001) # The specific thresholds checked during the optimization
+opt_min_read_count <- 50 # used in id threshold optimization
+opt_cluster_method <- 'size' # 'fast' for length-ordered, 'size' for abundance-ordered
+seed <- 1
+set.seed(seed)
+```
+
+## Read abundance matrix and sample data
+
+```{r}
+metadata <- read_csv(file.path('intermediate_data', 'metadata.csv'))
+abundance <- read_csv(file.path('intermediate_data', 'abundance_asv.csv'))
+print(metadata)
+```
+
+Some samples do not have sequences so I will remove those from the metadata table:
+
+```{r}
+metadata <- metadata[metadata$sample_id %in% colnames(abundance), ]
+```
+
+
+
+## Make function to run VSEARCH
+
+I will want to check for an optimal clustering threshold for RPS10 since it is not currently known. 
+To do this, I will need to cluster over many thresholds. 
+It is important to note that the optimal threshold is relative to the reference sequence database and the clustering algorithm used, therefore this analysis is mostly to get a rough idea of an optimal threshold.
+
+
+## Find optimal clustering threshold for mock community
+
+First I will filter sample metadata to just mock community and the primers used in the publication.
+We are using only the mock community samples since that is the closest thing to a natural community that we know the composition of.
+I did something similar with the reference sequences, but they all resulted in too few clusters even if sequences were clustered at 100% (i.e. unique sequences).
+On reflection, this is probably because reference databases have more diversity and fewer erroneous sequences than real data from a natural sample would.
+Our environmental samples could not be used because we do not know the "correct" number of species.
+
+```{r}
+mock_meta <- filter(metadata, dna_type == 'mock2', primer_pair_id %in% c('ITS6/7', 'rps10_Final'))
+mock_meta
+```
+
+I will need the number of the mock community species added later, so I will import the data for the mock community composition:
+
+```{r}
+mc_data <- read_csv(file.path('intermediate_data', 'mock_community.csv'))
+```
+
+I will also zero out low abundance ASVs, since that would be done in a normal metabarcoding analysis.
+Here we are using a rather high minimum abundance of `r opt_min_read_count` since this is a low-complexity sample, and thus higher read count per species, relative to most natural communities, so erroneous sequence abundance is probably similarly inflated. 
+
+```{r}
+opt_filtered_abund <- select(abundance, sequence, !!! mock_meta$sample_id)
+opt_filtered_abund <- opt_filtered_abund[rowSums(opt_filtered_abund[, mock_meta$sample_id]) > opt_min_read_count, ]
+opt_filtered_abund
+```
+
+Count the number of OTUs for each sample over a range of clustering thresholds.
+
+```{r}
+vserach_cluster <- function(seqs, seq_abund, id_threshold = 0.97, method = "fast") {
+  # Check that VSEARCH is installed
+  tryCatch(system2("vsearch", args = "--version", stdout = FALSE, stderr = FALSE),
+           warning=function(w) {
+             stop("vsearch cannot be found on PATH. Is it installed?")
+           })
+  
+  # Run VSEARCH
+  input_fasta_path <- tempfile()
+  write_lines(paste0('>', seq_along(seqs), ';size=', seq_abund, '\n', seqs), path = input_fasta_path)
+  otu_centroid_path <- tempfile()
+  command_args <- paste(paste0("--cluster_", method), 
+                        input_fasta_path,
+                        "--threads", detectCores() - 1,
+                        "--id", id_threshold,
+                        "--sizein",
+                        "--strand plus",
+                        "--fasta_width 0", # 0 = no wrapping in fasta file
+                        "--centroids", otu_centroid_path)
+  system2("vsearch", args = command_args, stdout = FALSE, stderr = FALSE)
+  
+  # Return OTU sequences
+  centroids <- read_fasta(otu_centroid_path)
+  names(centroids) <- str_match(names(centroids), pattern = 'size=(.+)$')[, 2]
+  return(centroids)
+}
+
+opt_thresh_data <- tibble(thresh = opt_thresh_range)
+opt_thresh_data[mock_meta$locus] <- map(mock_meta$sample_id, function(sample_id) {
+  map_dbl(opt_thresh_range, function(threshold) {
+    has_seq <- opt_filtered_abund[[sample_id]] > 0
+    length(vserach_cluster(seqs = opt_filtered_abund$sequence[has_seq],
+                           seq_abund = opt_filtered_abund[[sample_id]][has_seq],
+                           id_threshold = threshold, 
+                           method = opt_cluster_method))
+  })
+})
+opt_thresh_data
+```
+
+find the range of thresholds that return the correct value
+
+```{r}
+valid_thresh_range <- do.call(rbind, map(mock_meta$locus, function(l) {
+  out <- range(opt_thresh_data$thresh[abs(opt_thresh_data[[l]] - nrow(mc_data)) <= 1])
+  names(out) <- c('min_thresh', 'max_thresh')
+  return(out)
+})) %>% as_tibble()
+valid_thresh_range <- as_tibble(valid_thresh_range) %>%
+  mutate(locus = mock_meta$locus) %>%
+  select(locus, min_thresh, max_thresh)
+valid_thresh_range$min_count <- min(opt_thresh_data[mock_meta$locus])
+valid_thresh_range$max_count <- max(opt_thresh_data[mock_meta$locus])
+valid_thresh_range
+```
+
+Now plot
+
+```{r}
+opt_thresh_plot <- opt_thresh_data %>%
+  gather(key = 'locus', value = 'otu_count', !!! mock_meta$locus) %>%
+  mutate(thresh = thresh * 100) %>%
+  ggplot() +
+  geom_hline(yintercept = nrow(mc_data), linetype = "dashed") +
+  geom_rect(aes(xmin = min_thresh * 100, xmax = max_thresh * 100, ymin = min_count, ymax = max_count), data = valid_thresh_range, alpha = 0.5) +
+  geom_line(aes(x = thresh, y = otu_count)) +
+  scale_x_continuous(breaks = seq(min(opt_thresh_data$thresh), max(opt_thresh_data$thresh), by = 0.01) * 100, 
+                     minor_breaks = NULL) +
+  scale_y_continuous(minor_breaks = 1:50) +
+  facet_wrap(. ~ locus) +
+  labs(x = 'PID Clustering Threshold', y = 'OTU Count', fill = '') 
+ggsave(opt_thresh_plot, filename = 'optimal_clust_thresh_mock_comm.pdf', path = file.path('results'), width = 10, height = 5)
+opt_thresh_plot
+```
+

@@ -1,0 +1,28 @@
+name: "Comparing ITS1 and RPS10 for Oomycete Metabacoding"
+navbar:
+  title: "Comparing ITS1 and RPS10 for Oomycete Metabacoding"
+  type: inverse
+  left:
+    - text: "Analysis"
+      menu:
+        - text: "Reference database preparation"
+          href: 01--prepare_reference_database.html
+        - text: "Read processing and quality filtering"
+          href: 02--preparation_and_quality_filtering.html
+        - text: "Abundance matrix and taxonomic assignment"
+          href: 03--abundance_matrix_preparation.html
+        - text: "Alternative taxonomic assignment using BLAST"
+          href: 04--blast_classification.html
+        - text: "OTU clustering threshold estimation"
+          href: 05--otu_clustering_threshold.html
+        - text: "Mock community evaluation"
+          href: 06--mock_community.html
+        - text: "Non-target amplification"
+          href: 07--nontarget_amplification.html
+        - text: "Taxonomic resolution"
+          href: 08--amplicon_taxonomic_resolution.html
+        - text: "Plotting of simulated PCR results"
+          href: 09--simulated_pcr_results.html
+  right:
+    - icon: fa-github fa-lg
+      href: https://github.com/grunwaldlab/rps10_barcode

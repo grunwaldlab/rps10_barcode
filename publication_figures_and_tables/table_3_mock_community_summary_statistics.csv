@@ -1,0 +1,3 @@
+locus,n_asv,n_otu,n_mc_in_tax,prop_asv_in_mc_tax,prop_reads_in_mc_tax,n_mc_in_seq,n_mc_in_seq_approx,prop_asv_in_mc_seq,prop_reads_in_mc_seq
+rps10,40,46,23,0.95,1,21,24,0.625,0.993
+ITS,45,30,17,0.756,0.545,21,24,0.733,0.992

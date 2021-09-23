@@ -1,0 +1,214 @@
+---
+title: "Alternative taxonomic assignment using BLAST"
+bibliography: '`r sharedbib::bib_path()`'
+output:
+  html_document:
+    css: style.css
+---
+
+```{r setup, include=FALSE}
+source('style.R')
+```
+
+## Prepare
+
+### Packages used
+
+```{r message=FALSE}
+library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(sessioninfo)
+library(metacoder)
+library(vegan)
+library(viridis)
+library(DT)
+library(stringr)
+library(qsubmitter)
+library(taxize)
+```
+
+### Parameters
+
+```{r}
+cgrb <- remote_server$new(server = "shell.cgrb.oregonstate.edu", user = "fosterz", port  = 732)
+files <- remote_server$new(server = "files.cgrb.oregonstate.edu", user = "fosterz", port  = 732)
+remote_repository_path <- "/dfs/Grunwald_Lab/home/fosterz/repositories/rps10_barcode"
+```
+
+### Parameters
+
+```{r}
+seed <- 1
+min_evalue <- '1e-3'
+set.seed(seed)
+```
+
+
+## BLAST
+
+A blast-based classification will be useful for the the non-target sequences detection.
+It will also be useful for verifying the `dada2`-based classification.
+
+### Make query file
+
+I will make FASTA files of ASV and OTU sequences with header containing their row indexes in the abundance matrix.
+
+```{r}
+# ASVs
+abundance_asv <- read_csv(file.path('intermediate_data', 'abundance_asv.csv'))
+query_seq_path_asv <- file.path('intermediate_data', 'blast_query_asv.fa')
+paste0('>asv_', 1:nrow(abundance_asv), '\n', abundance_asv$sequence) %>%
+  write_lines(file = query_seq_path_asv)
+
+# OTUs
+abundance_otu <- read_csv(file.path('intermediate_data', 'abundance_otu.csv'))
+query_seq_path_otu <- file.path('intermediate_data', 'blast_query_otu.fa')
+paste0('>otu_', 1:nrow(abundance_otu), '\n', abundance_otu$sequence) %>%
+  write_lines(file = query_seq_path_otu)
+```
+
+
+### Run BLAST
+
+First I will need to transfer the file from this computer to the CGRB cluster.
+
+```{r blast_upload_query}
+# ASVs
+remote_query_path_asv <- file.path(remote_repository_path, 'blast_query_asv.fa')
+rsync_push(local_path = query_seq_path_asv, remote_path = remote_query_path_asv, remote = files)
+
+# OTUs
+remote_query_path_otu <- file.path(remote_repository_path, 'blast_query_otu.fa')
+rsync_push(local_path = query_seq_path_otu, remote_path = remote_query_path_otu, remote = files)
+```
+
+Then I can run blast remotely.
+
+```{r blast_run}
+out_cols <- 'qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids sskingdoms score sscinames'
+run_blast_remotely <- function(query_path, out_path, ...) {
+  blast_command <- paste('blastn',
+                         "-query", query_path,
+                         "-db nt",
+                         "-dust no",
+                         paste("-evalue", min_evalue),
+                         # "-perc_identity 70",
+                         paste0("-outfmt '10 ", out_cols, "'"),
+                         "-max_hsps 1",
+                         "-max_target_seqs 100",
+                         '-num_threads 8',
+                         '-out', out_path)
+  qsub(command = blast_command,
+       remote = cgrb,
+       remote_cwd = remote_repository_path,
+       cores = 8,
+       queue = 'bpp@!(uncia)', # For some reason, I was getting errors on uncia, so this avoids that node
+       ...)
+}
+
+# ASVs
+remote_blast_out_asv <- file.path(remote_repository_path, 'blast_result_asv.csv')
+run_blast_remotely(query_path = remote_query_path_asv, out_path = remote_blast_out_asv)
+
+# OTUs
+remote_blast_out_otu <- file.path(remote_repository_path, 'blast_result_otu.csv')
+run_blast_remotely(query_path = remote_query_path_otu, out_path = remote_blast_out_otu)
+```
+
+and download the results:
+
+```{r blast_download}
+# ASVs
+blast_result_path_asv <- file.path('intermediate_data', 'blast_results_asv.csv')
+rsync_pull(local_path = blast_result_path_asv, remote_path = remote_blast_out_asv, remote = files)
+
+# OTUs
+blast_result_path_otu <- file.path('intermediate_data', 'blast_results_otu.csv')
+rsync_pull(local_path = blast_result_path_otu, remote_path = remote_blast_out_otu, remote = files)
+```
+
+and read them into R:
+
+```{r}
+blast_results_asv <- read_csv(blast_result_path_asv, col_names = strsplit(out_cols, split = ' ')[[1]], col_types = 'ccddddddddddcccc')
+blast_results_otu <- read_csv(blast_result_path_otu, col_names = strsplit(out_cols, split = ' ')[[1]], col_types = 'ccddddddddddcccc')
+```
+
+There might be some warnings about parsing errors caused by `,` in the `sscinames` column, but these should not affect the analysis since that information is not used and there are no columns after it to mess up.
+I will select the best hit for each ASV based on e-value and percent identity:
+
+```{r}
+select_best_blast_hit <- function(blast_results) {
+  blast_results %>%
+    group_by(qseqid) %>%
+    filter(evalue == min(evalue)) %>%
+    filter(pident == max(pident)) %>%
+    filter(row_number() == 1) # break ties by picking first value
+}
+
+blast_results_asv <- select_best_blast_hit(blast_results_asv)
+blast_results_otu <- select_best_blast_hit(blast_results_otu)
+```
+
+Then I can look up the taxonomic info from the NCBI taxonomy database using the taxon ID that blast returns:
+
+```{r}
+lookup_tax <- function(blast_results) {
+  blast_results$staxids <- sub(blast_results$staxids, pattern = ';.+$', replacement = '')
+  classification(as.uid(unique(blast_results$staxids), check = FALSE), db = 'ncbi')
+}
+
+blast_class_asv <- lookup_tax(blast_results_asv)
+blast_class_otu <- lookup_tax(blast_results_otu)
+```
+
+and add that to the results table
+
+```{r}
+get_classification <- function(x) {
+  if (is.logical(x)) {
+    return(NA)
+  } else {
+    return(paste(x$name, collapse = ';'))
+  }
+}
+
+blast_results_asv$blast_tax <- map_chr(blast_class_asv, get_classification)[blast_results_asv$staxids]
+blast_results_otu$blast_tax <- map_chr(blast_class_otu, get_classification)[blast_results_otu$staxids]
+```
+
+and combine that with the abundance matrix
+
+```{r}
+add_to_abund <- function(abundance, blast_results) {
+  blast_results %>%
+    ungroup() %>%
+    transmute(sequence = abundance$sequence[as.numeric(sub(qseqid, pattern = '^asv_|otu_', replacement = ''))],
+              blast_pid = pident,
+              blast_cov = c(qend - qstart) / nchar(sequence) * 100,
+              blast_tax = blast_tax) %>%
+    right_join(abundance, by = 'sequence')
+}
+
+abundance_asv <- add_to_abund(abundance_asv, blast_results_asv)
+abundance_otu <- add_to_abund(abundance_otu, blast_results_otu)
+```
+
+Finally, lets save that modified matrix for further analyses.
+Note that this overwrites the abundance matrix.
+
+```{r}
+write_csv(abundance_asv, file.path('intermediate_data', 'abundance_asv.csv'))
+write_csv(abundance_otu, file.path('intermediate_data', 'abundance_otu.csv'))
+```
+
+## Software used
+
+```{r}
+sessioninfo::session_info()
+```
+

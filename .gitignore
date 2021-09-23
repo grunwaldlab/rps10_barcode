@@ -1,0 +1,15 @@
+*.html
+intermediate_data*
+raw_data/reference_databases
+raw_data/sequences
+raw_data/otu_analysis_data
+results
+results*
+*_files/*
+06_1--missing_mock_seqs_debugging
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+docs/intermediate_data
+docs/raw_data

@@ -1,0 +1,603 @@
+---
+title: "Taxonomic resolution"
+bibliography: '`r sharedbib::bib_path()`'
+output:
+  html_document:
+    css: style.css
+---
+
+```{r setup, include=FALSE}
+source('style.R')
+```
+
+
+## Prepare
+
+### Packages used
+
+```{r message=FALSE}
+library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(sessioninfo)
+library(metacoder)
+library(vegan)
+library(viridis)
+library(DT)
+library(stringr)
+library(qsubmitter)
+library(taxize)
+library(forcats)
+library(Biostrings)
+library(ips)
+library(insect)
+library(ggpubr)
+library(knitr)
+```
+
+### Parameters
+
+```{r}
+seed <- 1
+only_shared_species <- TRUE # If TRUE, only use species that are present in both databases
+subsample_to_same_num <- TRUE # If TRUE, subsample the amplicons used to the same number for each database
+set.seed(seed)
+```
+
+### Parallel processing
+
+Commands that have "future" in them are run on multiple cores using the `furrr` and `future` packages.
+
+```{r}
+plan(multiprocess)
+```
+
+### Introduction
+
+This analysis will attempt to estimate how good each locus is at distinguishing species, what I am calling "taxonomic resolution".
+I will use the primer sequences and reference databases for each method to extract the portion of the sequence that would be amplified.
+I then align each sequence to all other sequences and record how many base pairs different each sequence is from the most similar sequence from a different species.
+The method with the highest numbers should be the one with the highest taxonomic resolution.
+This is similar to a barcode gap analysis, except that only the most similar comparisons are considered.
+
+### Extract all oomycete from reference databases
+
+
+```{r}
+rps_ref <- read_fasta(file.path('intermediate_data', 'reference_databases', 'rps10_reference_db.fa'))
+its_ref <- read_fasta(file.path('intermediate_data', 'reference_databases', 'its1_reference_db.fa'))
+rps_ref <- rps_ref[grepl(names(rps_ref), pattern = 'Oomycetes')]
+its_ref <- its_ref[grepl(names(its_ref), pattern = 'Oomycetes')]
+```
+
+Remove spaces from sequences (not sure why there would be spaces).
+
+```{r}
+rps_ref <- trimws(gsub(rps_ref, pattern = ' ', replacement = ''))
+its_ref <- trimws(gsub(its_ref, pattern = ' ', replacement = ''))
+```
+
+Replace names with just species names
+
+```{r}
+names(rps_ref) <- str_match(names(rps_ref), ';([a-zA-Z0-9_\\-\'". ]+);oodb_.+;$')[,2]
+names(its_ref) <- str_match(names(its_ref), ';([a-zA-Z0-9_\\-\'". ]+);(unite|rob2011|phytodb|mock)_.+;$')[,2]
+```
+
+Replace underscores with spaces
+
+```{r}
+names(rps_ref) <- gsub(names(rps_ref), pattern = '_', replacement = ' ')
+names(its_ref) <- gsub(names(its_ref), pattern = '_', replacement = ' ')
+```
+
+Remove species with ambiguous names or numbers
+
+```{r}
+is_ambiguous <- function(n) {
+  grepl(n, pattern = ' sp$') |
+    grepl(n, pattern = ' spp$') | 
+    grepl(n, pattern = ' spp.') |
+    grepl(n, pattern = ' sp.') |
+    grepl(n, pattern = ' aff. ')  | 
+    grepl(n, pattern = ' cf.') |
+    grepl(n, pattern = '[0-9]+') 
+}
+rps_ref <- rps_ref[! is_ambiguous(names(rps_ref))]
+its_ref <- its_ref[! is_ambiguous(names(its_ref))]
+```
+
+Remove information below species
+
+```{r}
+names(rps_ref) <- sub(names(rps_ref), pattern = ' var\\.?.+$', replacement = '')
+names(rps_ref) <- sub(names(rps_ref), pattern = ' subsp\\.?.+$', replacement = '')
+names(its_ref) <- sub(names(its_ref), pattern = ' var\\.?.+$', replacement = '')
+names(its_ref) <- sub(names(its_ref), pattern = ' subsp\\.?.+$', replacement = '')
+```
+
+Now the names should be cleaned up enough that they can be compared to eachother:
+
+```{r}
+unique(names(rps_ref))
+unique(names(its_ref))
+```
+
+Although there are a similar number of species, each database has a distinct set of species:
+
+```{r}
+table(unique(names(rps_ref)) %in% unique(names(its_ref)))
+table(unique(names(its_ref)) %in% unique(names(rps_ref)))
+```
+ 
+This could influence the comparison, so we can use only species present in both to avoid that:
+
+```{r}
+if (only_shared_species) {
+  common_species <- intersect(unique(names(rps_ref)), unique(names(its_ref)))
+  rps_ref <- rps_ref[names(rps_ref) %in% common_species]
+  its_ref <- its_ref[names(its_ref) %in% common_species]
+}
+```
+
+
+
+### Extract predicted amplicons
+
+Only the amplified sequence contribute to the taxonomic resolution of the locus, so I will have to find that region in reference database sequences.
+Not all reference sequences will have the entire region however.
+Some will have the region but not the primer sites, making things more complicated.
+
+```{r}
+primer_data <- read_csv(file.path("raw_data", "primer_data.csv"))
+primer_data <- filter(primer_data, primer_id != 'rps10_f-F')
+primer_data
+```
+
+The `matchProbePair` function from the `Biostrings` package can extract a region predicted to be amplified by primers, but for some reason it does not allow for ambiguity codes, even though it is a trivial change to make it do so.
+Below is a modified version of the function that does allow ambiguity codes by providing the `fixed` parameter and passing it to the `matchPattern` calls.
+
+```{r}
+matchProbePair <- function(Fprobe, Rprobe, subject, algorithm="auto",
+             logfile=NULL, verbose=FALSE, fixed = FALSE)
+    {
+        ## This won't copy the data if Fprobe and Rprobe are already DNAString objects
+        F <- DNAString(Fprobe)
+        R <- DNAString(Rprobe)
+
+        ## F and R hits on the + strand
+        Fp_hits <- start(matchPattern(F, subject, algorithm=algorithm, fixed = fixed))
+        Rp_hits <- start(matchPattern(R, subject, algorithm=algorithm, fixed = fixed))
+
+        ## F and R hits on the - strand
+        Fm_hits <- end(matchPattern(reverseComplement(F), subject, algorithm=algorithm, fixed = fixed))
+        Rm_hits <- end(matchPattern(reverseComplement(R), subject, algorithm=algorithm, fixed = fixed))
+
+        if (verbose) {
+            cat("Fp_hits:", Fp_hits, "  Rp_hits:", Rp_hits,
+                "  Fm_hits:", Fm_hits, "  Rm_hits:", Rm_hits, "\n")
+        }
+
+        matches0 <- Biostrings:::reduceProbePairMatches(c(Fp_hits, Rp_hits), c(Fm_hits, Rm_hits))
+        ans <- Views(subject, start=matches0$start, end=matches0$end)
+
+        if (!is.null(logfile)) {
+            nFp <- length(Fp_hits)
+            nRp <- length(Rp_hits)
+            nFm <- length(Fm_hits)
+            nRm <- length(Rm_hits)
+            nmatches0 <- length(ans)
+            ## cat("", ..., sep="\t") is a trick to get an extra tab
+            cat("", nFp, nRp, nFm, nRm, nmatches0, file=logfile, sep="\t")
+        }
+        ans
+}
+```
+
+The code below extracts predicted amplicons using primer matches, removes the primers, and aligns the trimmed amplicons to the sequences that did not have primer matches to try to find other sequences in the reference databases that do not have primer sequences but are full length matches to those that do.
+
+```{r}
+get_amplicon_chr <- function(seq) {
+  map2_chr(seq@ranges@start, seq@ranges@width, function(s, w) {
+    as.character(seq@subject[seq(from = s, length.out = w)])
+  })
+}
+
+calc_amplicons <- function(seqs, forward, reverse, min_coverage = 0.9, ...) {
+  # Get simulated amplicons using primers
+  full_amps <- future_map(seqs, function(s) {
+    get_amplicon_chr(matchProbePair(DNAString(s), Fprobe = forward, Rprobe = reverse))
+  })
+  
+  # Check for multiple possible amplicons per input
+  if (any(map_int(full_amps, length) > 1)) {
+    stop('Some inputs have more than one amplicons.')
+  }
+  full_amps <- unlist(full_amps[map_int(full_amps, length) == 1])
+  
+  # Remove primers from amplicons
+  full_amps <- substr(full_amps, start = nchar(forward) + 1, stop = nchar(full_amps) - nchar(reverse))
+  
+  # Align unamplified sequences with best matching amplicons
+  unamped <- seqs[! names(seqs) %in% names(full_amps)]
+  unamped_aligned <- future_map_chr(unamped, function(s) {
+    aligned <- pairwiseAlignment(pattern = full_amps, subject = s, 
+                                 type = 'global-local',
+                                 # type = 'overlap',
+                                 gapOpening = 10, gapExtension = 4)
+    best_score_i <- which.max(aligned@score)
+    best_align <- aligned[best_score_i]
+    aligned_subject_char <- gsub(as.character(best_align@subject), pattern = '-', replacement = '')
+    aligned_amp_char <- gsub(as.character(best_align@pattern), pattern = '-', replacement = '')
+    if (best_align@pattern@range@width < best_align@pattern@unaligned@ranges@width * min_coverage || nchar(aligned_subject_char) == 0) {
+      aligned_subject_char <- NA
+    }
+    aligned_subject_char
+  })
+  
+  # Add full amplicons to inferred amplicons from alignment
+  all_amps <- c(full_amps, unamped_aligned[! is.na(unamped_aligned)])
+  all_amps <- all_amps[is.na(all_amps) | nchar(all_amps) > 0]
+  setNames(all_amps[names(seqs)], names(seqs))
+}
+
+rps_amps <- calc_amplicons(rps_ref, 
+                           forward = primer_data$sequence[primer_data$direction == 'Forward' & primer_data$locus == 'rps10'],
+                           reverse = primer_data$sequence[primer_data$direction == 'Reverse' & primer_data$locus == 'rps10'])
+its_amps <- calc_amplicons(its_ref, 
+                           forward = primer_data$sequence[primer_data$direction == 'Forward' & primer_data$locus == 'ITS'],
+                           reverse = primer_data$sequence[primer_data$direction == 'Reverse' & primer_data$locus == 'ITS'])
+```
+
+The amplicon could not be extracted from many sequences, probably because it was incomplete, but enough can be to compare the two methods.
+Here is the proportion of reference sequences with full length amplicons extracted:
+
+```{r}
+table(is.na(rps_amps))
+table(is.na(its_amps))
+```
+
+Lets remove those from the databases:
+
+```{r}
+rps_amps <- rps_amps[! is.na(rps_amps)]
+its_amps <- its_amps[! is.na(its_amps)]
+```
+
+Lets also remove any sequences that are duplicates (same sequence and same species name):
+
+```{r}
+rps_amps <- rps_amps[! duplicated(paste0(names(rps_amps), rps_amps))]
+its_amps <- its_amps[! duplicated(paste0(names(its_amps), its_amps))]
+```
+
+And sort them by name:
+
+```{r}
+rps_amps <- rps_amps[order(names(rps_amps))]
+its_amps <- its_amps[order(names(its_amps))]
+```
+
+And here is the distribution of amplicon lengths with and without primers:
+
+```{r fig.width=10, fig.height=5}
+amp_data <- tibble(locus = rep(c('rps10', 'ITS'), c(length(rps_amps), length(its_amps))),
+                   seq = c(rps_amps, its_amps),
+                   name = names(c(rps_amps, its_amps)),
+                   without_primers = nchar(seq))
+amp_data$locus <- ordered(amp_data$locus, levels = c('rps10', 'ITS')) # order
+its_primer_length <- sum(nchar(primer_data$sequence[primer_data$locus == 'ITS']))
+rps_primer_length <- sum(nchar(primer_data$sequence[primer_data$locus == 'rps10']))
+amp_data <- mutate(amp_data, with_primers = without_primers + ifelse(locus == 'ITS', its_primer_length, rps_primer_length))
+
+amp_len_plot <- amp_data %>%
+  gather(key = 'type', value = 'length', without_primers, with_primers) %>%
+  mutate(type = c(without_primers = 'Without primers', with_primers = 'With primers')[type]) %>%
+  ggplot(aes(x = length)) +
+  geom_histogram(binwidth = 1) +
+  facet_grid(type ~ locus, scales = 'free_x') +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank()) 
+amp_len_plot
+ggsave(amp_len_plot, filename = 'predicted_amplicon_length.pdf', path = file.path('results'), width = 10, height = 5)
+```
+
+Lets look at which species have the largest amplicons:
+
+```{r}
+amp_data %>%
+  filter(locus == 'rps10', with_primers > 480) %>%
+  arrange(desc(with_primers)) %>%
+  select(name, without_primers, with_primers, seq) %>%
+  group_by(name) %>%
+  filter(with_primers == max(with_primers)) %>%
+  filter(! duplicated(name)) %>%
+  datatable()
+```
+
+and which have the shortest:
+
+```{r}
+amp_data %>%
+  filter(locus == 'rps10', with_primers < 460) %>%
+  arrange(with_primers) %>%
+  select(name, without_primers, with_primers, seq) %>%
+  group_by(name) %>%
+  filter(with_primers == max(with_primers)) %>%
+  filter(! duplicated(name)) %>%
+  datatable()
+```
+
+I will save FASTA files of the amplicons for use in other analyses
+
+```{r}
+paste0(">", names(rps_amps), "\n", rps_amps) %>%
+  write_lines(file = file.path('intermediate_data', 'reference_databases', 'predicted_amplicons_rps10.fa'))
+paste0(">", names(its_amps), "\n", its_amps) %>%
+  write_lines(file = file.path('intermediate_data', 'reference_databases', 'predicted_amplicons_its1.fa'))
+```
+
+I will also save a CSV version of this:
+
+```{r}
+amp_data %>%
+  filter(locus == 'rps10') %>%
+  arrange(desc(with_primers)) %>%
+  select(name, without_primers, with_primers, amplicon = seq) %>%
+  group_by(name) %>%
+  filter(with_primers == max(with_primers)) %>%
+  filter(! duplicated(name)) %>%
+  write_csv(file = file.path('results', 'rps10_predicted_amplicon_length.csv'))
+```
+
+Again, lets only use species present in both
+
+```{r}
+if (only_shared_species) {
+  common_species <- intersect(unique(names(rps_amps)), unique(names(its_amps)))
+  rps_amps <- rps_amps[names(rps_amps) %in% common_species]
+  its_amps <- its_amps[names(its_amps) %in% common_species]
+}
+unique(names(rps_amps))
+```
+
+
+### Align predicted amplicons
+
+To make a distance matrix, I will align the amplicons:
+
+```{r fig.height=15}
+nj_tree <- function(seqs, ...) {
+  # Align sequences:
+  aligned <- seqs %>%
+    insect::char2dna() %>%
+    ips::mafft(method = 'localpair', exec = '/usr/bin/mafft')
+  
+  # Make distance matrix
+  dist <- ape::dist.dna(aligned, ...)
+  
+  # Make tree
+  tree <- ape::nj(dist)
+  tree <- ape::ladderize(tree)
+  tree <- phangorn::midpoint(tree)
+  
+  tree
+}
+
+calc_align <- function(amps) {
+  amps %>%
+    gsub(pattern = '[^AGCTN-]', replacement = 'N') %>%
+    char2dna() %>%
+    mafft(method = "globalpair", exec = 'mafft')
+}
+
+plot_align <- function(amps, aligned, title, spot = "top", start = 1, end = ncol(aligned)) {
+  # aligned <- rps_amp_aligned; amps <- rps_amps; title <- "Rps10"; spot = "top"; start = 50; end = ncol(aligned)
+  
+  # Subset alignment to region to plot       horiz = TRUE, xpd = TRUE)
+  aligned <- aligned[, start:end]
+  
+  # Make tree and order alignments to match tree
+  tree <- nj_tree(amps)
+  tree <- ladderize(tree)
+  aligned <- aligned[rev(tree$tip.label[tree$edge[tree$edge[,2] <= length(tree$tip.label), 2]]), ]
+  
+  # Get sequence conservation at each position 
+  major_allele_prop <- unlist(lapply(1:ncol(aligned), function(index) {
+    chars <- as.character(aligned[, index, drop = TRUE])
+    most_common_base <- sort(table(chars), decreasing = TRUE)[1]
+    return(most_common_base / nrow(aligned))
+  }))
+  barplot_data <- data.frame(prop = major_allele_prop,
+                             fill = 1 - major_allele_prop)
+  
+  # Get consensus sequence
+  consensus <- as.DNAbin(matrix(names(major_allele_prop), nrow = 1))
+  rownames(consensus) <- "Consensus  "
+  
+  make_one_plot <- function(y_offset) {
+    # The barplot at the top
+    par(fig=c(0.206, 1, 0.95 - y_offset, 1 - y_offset), new = TRUE, mar = c(0.5, 4, 1, 0.37))
+    barplot(t(as.matrix(barplot_data)), cex.axis = 1, ylab = "PID", col = c('grey', 'red'), border = NA, space = 0, at = c(0, 1))
+    # The consensus
+    par(fig=c(0.3, 1, 0.94 - y_offset, 0.95 - y_offset), new = TRUE, mar = c(0.1, 0, 0, 2))
+    image(consensus, cex.lab = 0.7, show.label = TRUE, yaxt = "n", xaxt = "n", legend = FALSE)
+    # The alignment 
+    par(fig=c(0.3, 1, 0.5 - y_offset, 0.95 - y_offset), new = TRUE, mar = c(5, 0, 1, 2))
+    image(aligned, cex.lab = 0.5, show.label = FALSE, yaxt = "n", xlab = "Alignment position", legend = FALSE)
+    # The tree and labels 
+    par(fig=c(0, 0.35, 0.5 - y_offset, 0.951 - y_offset), new = TRUE, mar = c(3.9, 4, 0, 0))
+    plot(tree, use.edge.length = FALSE, adj = 1, cex = 0.6)
+    # The subfigure label
+    mtext(title, cex = 2, adj = 0, padj = -1.5)
+  }
+  
+  # Make plots
+  if (spot == "top") {
+    make_one_plot(0)
+  } else {
+    make_one_plot(.5)
+  }
+}
+
+rps_amp_aligned <- calc_align(rps_amps)
+its_amp_aligned <- calc_align(its_amps)
+
+pdf(file = file.path('results', 'alignment_plot.pdf'), width = 8, height = 11)
+# png(file = file.path('results', 'alignment_plot.png'), width = 2000, height = 3000, pointsize = 28)
+plot_align(rps_amps, rps_amp_aligned, title = expression(italic("rps10")), start = 34)
+plot_align(its_amps, its_amp_aligned, title = "ITS1", start = 39, spot = "bottom")
+# Add legend
+par(fig=c(0.15, 0.5, 0.51, 0.61), new = TRUE, mar = c(0, 0, 0, 0))
+legend(0, 0, legend = c('A', 'G', 'C', 'T', '-'), pch = 22, pt.bg = c("red", "yellow", "green", "blue", "black"), 
+       pt.cex = 2, bty = "n", xjust = 0.5, yjust = 0.5, 
+       horiz = TRUE, xpd = TRUE)
+dev.off()
+```
+
+```{r}
+include_graphics(file.path('results', 'alignment_plot.pdf'))
+```
+
+Caption: Multiple sequence alignments of the region predicted to be amplified by each method, not including the primer binding sites. The sequences used represent the subset of species present in both reference databases. The sequences are ordered vertically based on a neighbour-joining tree. Along the top of each alignment there is a barchart representing the proportion of sequences matching the consensus sequence at each alignment position, with gray representing matches and red representing mismatches. 
+
+
+### Calculate distance to nearest non-target
+
+Being able to differentiate different species is key to metabarcoding. 
+Therefore, the number of differences between a sequence and the nearest sequence assigned to a different species is useful information.
+First I will find which species share identical sequences;
+
+```{r}
+calc_identical_sp <- function(aligned, threshold = 1) {
+  my_dist <- dist.dna(aligned, model = 'N', as.matrix = TRUE)
+  identical_sp <- map(1:nrow(my_dist), function(i) {
+    sp_dists <- my_dist[i, -i]
+    identical_sp <- unique(names(sp_dists[sp_dists < threshold]))
+    identical_sp[identical_sp != rownames(my_dist)[i]]
+  })
+  names(identical_sp) <- rownames(my_dist)
+  unique_identical_sp <- map(unique(names(identical_sp)), function(x) {
+    unique(unlist(identical_sp[names(identical_sp) == x]))
+  })
+  names(unique_identical_sp) <- unique(names(identical_sp))
+  out <- lapply(seq_along(unique_identical_sp), function(index) {
+  sort(c(names(unique_identical_sp)[index], unique_identical_sp[[index]]))
+  })
+  out[map_dbl(out, length) > 1 & ! duplicated(out)]
+}
+
+rps_ident_sp <- calc_identical_sp(rps_amp_aligned)
+its_ident_sp <- calc_identical_sp(its_amp_aligned)
+```
+
+and save the results in a table:
+
+```{r}
+tibble(locus = rep(c('RPS10', 'ITS1'), c(length(rps_ident_sp), length(its_ident_sp))), 
+       identical_seqs = c(map_chr(rps_ident_sp, paste0, collapse = ' ; '), 
+                          map_chr(its_ident_sp, paste0, collapse = ' ; '))) %>%
+  write_csv(file = file.path('results', 'species_resolution_table.csv'))
+```
+
+I will also make a plot of the number of differences between each sequence and their nearest sequence from another species.
+
+```{r fig.width=5, fig.height=5}
+calc_nearest_seq_diff <- function(aligned) {
+  my_dist <- dist.dna(aligned, model = 'N', as.matrix = TRUE)
+  out <- map_dbl(1:nrow(my_dist), function(i) {
+    sp_dists <- my_dist[i, -i]
+    min(sp_dists[names(sp_dists) != rownames(my_dist)[i]], na.rm = TRUE)
+  })
+  names(out) <- rownames(my_dist)
+  out
+}
+
+calc_nearest_seq_diff_dist <- function(aligned, max = 5) {
+  diffs <- calc_nearest_seq_diff(aligned)
+  uniq_sp_names <- unique(names(diffs))
+  diffs <- map_dbl(uniq_sp_names, function(n) {
+    max(diffs[names(diffs) == n], na.rm = TRUE)
+  })
+  names(diffs) <- uniq_sp_names
+  out <- map_int(1:max - 1, function(n) {
+    sum(diffs == n)
+  })
+  out[max + 1] <- sum(diffs >= max) 
+  names(out) <- c(1:max - 1, paste0(max, '+'))
+  out / length(diffs)
+}
+```
+
+and make a table of that as well:
+
+```{r}
+diff_props <- c(calc_nearest_seq_diff_dist(its_amp_aligned), calc_nearest_seq_diff_dist(rps_amp_aligned))
+diff_props_data <- tibble(prop = diff_props,
+       n = names(diff_props),
+       locus = ordered(rep(c('ITS1', 'rps10'), each = 6), levels =  c('rps10', 'ITS1')))
+print(diff_props_data)
+```
+
+We can plot this in a few ways:
+
+```{r fig.width=5, fig.height=5}
+sp_diff_plot <- diff_props_data %>%
+  ggplot(aes(x = n, y = prop, fill = locus)) +
+  geom_bar(stat = 'identity', position = "dodge2") +
+  geom_hline(aes(yintercept = 1), linetype = "dashed") +
+  scale_fill_viridis_d(begin = 0.8, end = 0.2) +
+  labs(x = 'Base pairs different from most similar species', y = 'Proportion of species', fill = 'Locus') +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = c(0.1, 0.8),
+        legend.background = element_rect(fill=NA))
+sp_diff_plot
+ggsave(sp_diff_plot, filename = 'sp_resolution_barchart.pdf', path = file.path('results'), width = 5, height = 5)
+```
+
+Figure #: The distribution of the number of base pairs different each species is to the most similar species base on pairwise alignments of predicted amplicons in the Rps10 and ITS1 databases.
+Only sequences with unambiguous, species-level taxonomic classifications that contain the entire amplicon are included. Zero differences for a species mean that there is at least one other species that is predicted to have an identical amplicon sequence.
+
+
+```{r fig.width=2, fig.height=4}
+rps_diffs <- calc_nearest_seq_diff(rps_amp_aligned)
+its_diffs <- calc_nearest_seq_diff(its_amp_aligned)
+diff_boxplot <- tibble(locus = ordered(rep(c('ITS1', 'rps10'), c(length(its_diffs), length(rps_diffs))), levels =  c('rps10', 'ITS1')),
+       species = c(names(its_diffs), names(rps_diffs)),
+       diff = c(its_diffs, rps_diffs)) %>%
+  ggplot(aes(x = locus, y = diff, fill = locus)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(begin = 0.8, end = 0.2) +
+  guides(fill = FALSE) +
+  labs(x = 'Locus', y = 'Base pairs different from most similar species', fill = NULL) +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "bottom")
+diff_boxplot
+ggsave(diff_boxplot, filename = 'sp_resolution_boxplot.pdf', path = file.path('results'), width = 2, height = 4)
+```
+
+We can combine the two plots like so:
+
+```{r fig.width=7, fig.height=5}
+diff_plot_combined <- ggarrange(diff_boxplot, sp_diff_plot,
+          labels = c("A", "B"),
+          widths = c(0.3, 1),
+          ncol = 2, nrow = 1)
+diff_plot_combined
+ggsave(diff_plot_combined, filename = 'sp_resolution_combined.pdf', path = file.path('results'), width = 7, height = 5)
+```
+
+Figure #: The distribution of the number of base pairs different each species is to the most similar species based on pairwise alignments of predicted amplicons in the Rps10 and ITS1 databases.
+Only sequences for species present in both databases are included. A) The distribution of differences for each locus. B) Proportion of species with each difference count. Zero differences for a species mean that there is at least one other species that is predicted to have an identical amplicon sequence.
+
+
+## Software used
+
+```{r}
+sessioninfo::session_info()
+```

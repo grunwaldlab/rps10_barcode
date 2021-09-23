@@ -1,0 +1,544 @@
+---
+title: "Read processing and quality filtering"
+bibliography: '`r sharedbib::bib_path()`'
+output:
+  html_document:
+    css: style.css
+---
+
+```{r setup, include=FALSE}
+source('style.R')
+```
+
+This is an analysis of the data from the MiSeq run testing the rps10 barcode and associated primers.
+Multiple mock community samples and environmental samples were sequenced.
+This will roughly follow the [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html) and the [DADA2 Pipeline Tutorial (1.12)](https://benjjneb.github.io/dada2/tutorial.html).
+
+## Prepare
+
+### Notes on how to use this analysis
+
+Some of the long running operations that produce output files only run if their output does not exist.
+To rerun them, delete the corresponding file in the intermediate data folder.
+
+
+### Packages used
+
+```{r message=FALSE}
+library(dada2)
+library(ShortRead)
+library(Biostrings)
+library(dplyr)
+library(purrr)
+library(furrr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(gridExtra)
+library(sessioninfo)
+```
+
+### Parameters
+
+```{r}
+seed <- 1
+expected_error_filter_limit <- 5 # Default: no expected-error filtering (Inf)
+truncation_qual_limit <- 5 # Default: 2
+set.seed(seed)
+```
+
+### Parallel processing
+
+Commands that have "future" in them are run on multiple cores using the `furrr` and `future` packages.
+
+```{r}
+plan(multiprocess)
+```
+
+
+## Read in raw data
+
+### FASTQ data
+
+```{r}
+fastq_dir_path <- "raw_data/sequences"
+fastq_paths <- list.files(fastq_dir_path, pattern = "\\.fastq")
+fastq_data <- tibble(file_id = sub(fastq_paths, pattern = "\\.fastq\\.gz$", replacement = ""),
+                     sample_id = sub(fastq_paths, pattern = "_.+$", replacement = ""),
+                     direction = c("Reverse", "Forward")[grepl(fastq_paths, pattern = "R1") + 1],
+                     raw_path = file.path(fastq_dir_path, fastq_paths))
+print(fastq_data)
+```
+
+### Primer data
+
+There were three different pairs of primers used.
+I renamed the primers manually from "cons", "its", and "f" in Felipe's original sample metadata file.
+I will make two tables: one for the individual primers and one for the pairs of primers used.
+
+```{r}
+primer_data_path <- file.path("raw_data", "primer_data.csv")
+primer_data <- read_csv(primer_data_path)
+print(primer_data)
+```
+
+```{r}
+primer_pair_data_path <- file.path("raw_data", "primer_pair_data.csv")
+primer_pair_data <- read_csv(primer_pair_data_path)
+print(primer_pair_data)
+```
+
+
+### Sample metadata
+
+I will edit the sample metadata some to make it more how I like it.
+
+```{r}
+if (! dir.exists("intermediate_data")) {
+  dir.create("intermediate_data")
+}
+metadata_path <- file.path("raw_data", "metadata.csv")
+modified_metadata_path <- file.path("intermediate_data", "metadata.csv")
+metadata <- read_csv(metadata_path) %>%
+  arrange(well) %>%
+  rename(sample_id = well, primer_pair_id = primer, dna_type = origin, dna_sample_id = sample) %>%
+  left_join(primer_pair_data, by = c("primer_pair_id" = "felipes_id")) %>%
+  mutate(primer_pair_id = primer_pair_id.y) %>%
+  select(-primer_pair_id.y)
+```
+
+I will also add a column to identify the type of sample:
+
+```{r}
+metadata$sample_type <- 'Sample'
+metadata$sample_type[grepl(metadata$dna_type, pattern = 'control')] <- 'Negative control'
+metadata$sample_type[grepl(metadata$dna_type, pattern = 'mock')] <- 'Mock community'
+```
+
+and I will save an edited version in the intermediate files to use in other analyses.
+
+```{r}
+write_csv(metadata, modified_metadata_path)
+print(metadata)
+```
+
+
+## Check that forward and reverse reads are in matching order
+
+One of the assumptions of this analysis is that forward and reverse reads are in matching order, so I will check that on one of the FASTQ files.
+
+```{r}
+paired_file_paths <- fastq_data %>%
+  filter(sample_id == first(sample_id)) %>%
+  pull(raw_path)
+get_read_names <- function(path) {
+  seqs <- readFastq(path)
+  sub(as.character(seqs@id), pattern = " .+$", replacement = "")
+}
+stopifnot(all(get_read_names(paired_file_paths[1]) == get_read_names(paired_file_paths[2])))
+```
+
+
+## Trim primer sequences
+
+Since it is possible for some small amplicons to read completely though, we have to check for both primer in both read, and just to be safe, in all possible orientations.
+
+
+### Prefilter Ns
+
+Since Ns can make it difficult to map short sequences, I will remove any sequences that have Ns and make a new set of sequence files.
+
+```{r}
+prefiltered_read_dir <- file.path("intermediate_data", "prefiltered_sequences")
+fastq_data$prefiltered_path <- file.path(prefiltered_read_dir, base::basename(fastq_data$raw_path))
+```
+
+This will take a while: 
+
+```{r}
+if (! all(file.exists(fastq_data$prefiltered_path))) {
+  filterAndTrim(fwd = fastq_data[fastq_data$direction == "Forward", ][["raw_path"]], 
+                filt = fastq_data[fastq_data$direction == "Forward", ][["prefiltered_path"]], 
+                rev = fastq_data[fastq_data$direction == "Reverse", ][["raw_path"]], 
+                filt.rev = fastq_data[fastq_data$direction == "Reverse", ][["prefiltered_path"]], 
+                maxN = 0,
+                multithread = TRUE)
+}
+```
+
+
+### Check for primers in sequences
+
+For each primer I will generate the reverse, complement, and reverse complement, so I can check for any unusual read orientation.
+First I will need to get the sequences for each of the possible orientations.
+
+```{r}
+primer_data$complement <- map_chr(primer_data$sequence, function(x) toString(complement(DNAString(x))))
+primer_data$reverse <- map_chr(primer_data$sequence, function(x) toString(reverse(DNAString(x))))
+primer_data$rev_comp <- map_chr(primer_data$sequence, function(x) toString(reverseComplement(DNAString(x))))
+primer_hit_data <- gather(primer_data, key = "orientation", value = "sequence", sequence, complement, reverse, rev_comp)
+print(primer_hit_data)
+```
+
+This is a function copied from the [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html) to count number of times a sequence appears in a fastq.
+
+```{r}
+primer_hits <- function(primer, path) {
+    # Counts number of reads in which the primer is found
+    nhits <- vcountPattern(primer, sread(readFastq(path)), fixed = FALSE)
+    return(sum(nhits > 0))
+}
+```
+
+This will take a while:
+
+```{r}
+primer_hit_data_csv_path <- file.path("intermediate_data", "primer_hit_data.csv")
+if (file.exists(primer_hit_data_csv_path)) {
+  primer_hit_data <- read_csv(primer_hit_data_csv_path)
+} else {
+  primer_hit_counts <- future_map(fastq_data$prefiltered_path, 
+                                  function (a_path) map_dbl(primer_hit_data$sequence, primer_hits, path = a_path))
+  names(primer_hit_counts) <- fastq_data$file_id
+  primer_hit_data <- bind_cols(primer_hit_data, as_tibble(primer_hit_counts))
+  write_csv(primer_hit_data, primer_hit_data_csv_path)
+}
+print(primer_hit_data)
+```
+
+The complement and reverse of any of the primers are never detected:
+
+```{r}
+primer_hit_data %>%
+  filter(orientation %in% c("complement", "reverse")) %>%
+  select(!!! fastq_data$file_id) %>%
+  sum()
+```
+
+So I will remove those rows to make things easier to analyze.
+
+```{r}
+primer_hit_data <- filter(primer_hit_data, ! orientation %in% c("complement", "reverse"))
+```
+
+Now I can look at what primers were detected in which samples, grouping samples by the primer pair used.
+
+```{r}
+primer_hit_data %>%
+  gather(key = "file_id", value = "count", !!! fastq_data$file_id) %>%
+  mutate(sample_id = sub(file_id, pattern = "_R[12]$", replacement = "")) %>%
+  left_join(metadata, by = "sample_id") %>%
+  left_join(fastq_data, by = "file_id") %>%
+  select(primer_id, primer_direction = direction.x, orientation, count, sample_id = sample_id.x, primer_pair_id, forward, reverse, read_direction = direction.y) %>%
+  ggplot(aes(x = primer_id, y = count, color = orientation)) +
+  geom_boxplot() +
+  facet_grid(read_direction ~ primer_pair_id)
+```
+
+It looks like the expected primer was found most often and in ITS6/7 and rps10_felipe there was some reads that extended into the other primer since the reverse complement of the other primer was found at a lower rate.
+The rps10_f-F primer was also found in the samples with the standard rps10-F primers.
+This is to be expected, since the rps10_f-F primers sequences occurs in the rps10_Final amplicon sequences (i.e.  rps10_Final is a bigger amplcion that contains rps10_Felipe).
+
+If we look at just how many primer sequences appeared in samples sequenced with different primer pairs, we see a similar pattern:
+
+```{r}
+per_primer_pair_hits <- primer_hit_data %>%
+  gather(key = "file_id", value = "count", !!! fastq_data$file_id) %>%
+  mutate(sample_id = sub(file_id, pattern = "_R[12]$", replacement = "")) %>%
+  left_join(metadata, by = "sample_id") %>%
+  left_join(fastq_data, by = "file_id") %>%
+  select(primer_id, primer_direction = direction.x, orientation, count, sample_id = sample_id.x, primer_pair_id, forward, reverse, read_direction = direction.y) %>%
+  group_by(primer_pair_id, primer_id) %>%
+  summarise(count = sum(count)) %>%
+  group_by(primer_pair_id) %>%
+  mutate(percent = count / sum(count) * 100)
+print(per_primer_pair_hits)
+```
+
+Plotting makes it apparent that the correct primers are found the vast majority of the time:
+
+```{r}
+primer_plot <-  per_primer_pair_hits %>%
+  ggplot(aes(x = primer_id, y = percent)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(. ~ primer_pair_id)
+print(primer_plot)
+```
+
+
+However, log scaling shows that there are some unexpected primers occurring in around 0.1% to 0.01% of reads.
+
+```{r}
+primer_plot + 
+  scale_y_log10()
+```
+
+We can quickly calculate the total percentage of unexpected primer hit using the fact that they are always less than 1% of reads:
+
+```{r}
+sum(per_primer_pair_hits$count[per_primer_pair_hits$percent < 1]) / sum(per_primer_pair_hits$count)
+```
+
+This might represent the index switching known to occur in MiSeq sequencing.
+
+### Remove primers with cutadapt
+
+First lets check if `cutadapt` is installed.
+
+```{r}
+tryCatch(system2("cutadapt", args = "--version"),
+         warning=function(w) {
+           stop("cutadapt cannot be found on PATH. Is it installed?")
+         })
+```
+
+We next need a place to put the results of both reads that were trimmed successfully and those that were not.
+
+```{r}
+trimmed_read_dir <- file.path("intermediate_data", "trimmed_sequences")
+if (! dir.exists(trimmed_read_dir)) {
+  dir.create(trimmed_read_dir)
+}
+fastq_data$trimmed_path <- file.path(trimmed_read_dir, paste0(fastq_data$file_id, ".fastq.gz"))
+
+untrimmed_read_dir <- file.path("intermediate_data", "untrimmed_sequences")
+if (! dir.exists(untrimmed_read_dir)) {
+  dir.create(untrimmed_read_dir)
+}
+fastq_data$untrimmed_path <- file.path(untrimmed_read_dir, paste0(fastq_data$file_id, ".fastq.gz"))
+```
+
+Since there are three different sets of primers used, three different types of `cutadapt` commands must be applied.
+The code below makes a `cutadapt` command for each sample.
+
+```{r}
+cutadapt_data <- metadata %>%
+  select(sample_id, forward_id = forward, reverse_id = reverse) %>%
+  left_join(primer_data[, c("primer_id", "sequence", "rev_comp")], by = c("forward_id" = "primer_id")) %>%
+  rename(forward_seq = sequence, forward_seq_rc = rev_comp) %>%
+  left_join(primer_data[, c("primer_id", "sequence", "rev_comp")], by = c("reverse_id" = "primer_id")) %>%
+  rename(reverse_seq = sequence, reverse_seq_rc = rev_comp) %>%
+  select(-forward_id, -reverse_id)
+
+cutadapt_data <- fastq_data %>%
+  filter(direction == "Forward") %>%
+  select(sample_id, prefiltered_path, trimmed_path, untrimmed_path) %>%
+  right_join(cutadapt_data, by = "sample_id") %>%
+  rename(forward_input_path = prefiltered_path,
+         forward_output_path = trimmed_path, 
+         forward_untrimmed_path = untrimmed_path)
+
+cutadapt_data <- fastq_data %>%
+  filter(direction == "Reverse") %>%
+  select(sample_id, prefiltered_path, trimmed_path, untrimmed_path) %>%
+  right_join(cutadapt_data, by = "sample_id") %>%
+  rename(reverse_input_path = prefiltered_path,
+         reverse_output_path = trimmed_path,
+         reverse_untrimmed_path = untrimmed_path)
+
+cutadapt_info_dir <- file.path("intermediate_data", "cutadapt_info")
+if (! dir.exists(cutadapt_info_dir)) {
+  dir.create(cutadapt_info_dir)
+}
+cutadapt_data$info_path <- file.path(cutadapt_info_dir, paste0(cutadapt_data$sample_id, ".txt"))
+
+cutadapt_data <- cutadapt_data %>%
+  mutate(command_args = paste(
+    "-g", forward_seq,
+    "-a", reverse_seq_rc,
+    "-G", reverse_seq,
+    "-A", forward_seq_rc,
+    "-n", 2, # -n 2 required to remove FWD and REV from reads
+    "-o", forward_output_path,
+    "-p", reverse_output_path,
+    "--minimum-length", 50,
+    "--untrimmed-output", forward_untrimmed_path,
+    "--untrimmed-paired-output", reverse_untrimmed_path,
+    "--quiet",
+    # "--info-file", info_path,
+    forward_input_path,
+    reverse_input_path
+  ))
+print(cutadapt_data)
+```
+
+And now we can run the commands. **This will take a while**.
+
+```{r cutadapt}
+if (! all(file.exists(c(fastq_data$trimmed_path, fastq_data$untrimmed_path)))) {
+  cutadapt_output <- future_map(cutadapt_data$command_args, ~system2("cutadapt", args = .x))
+}
+```
+
+### Check that primers were removed
+
+This will take a while:
+
+```{r}
+cutadapt_verify_path <- file.path("intermediate_data", "cutadapt_verify_data.csv")
+if (file.exists(cutadapt_verify_path)) {
+  cutadapt_verify_data <- read_csv(cutadapt_verify_path)
+} else {
+  primer_hit_counts <- future_map(fastq_data$trimmed_path, 
+                                  function (a_path) map_dbl(primer_hit_data$sequence, primer_hits, path = a_path))
+  names(primer_hit_counts) <- fastq_data$file_id
+  cutadapt_verify_data <- primer_hit_data
+  cutadapt_verify_data[names(primer_hit_counts)] <- primer_hit_counts
+  write_csv(cutadapt_verify_data, cutadapt_verify_path)
+}
+print(cutadapt_verify_data)
+```
+
+We can now do a similar graph to what was done before:
+
+```{r}
+ cutadapt_plot <- cutadapt_verify_data %>%
+  gather(key = "file_id", value = "count", !!! fastq_data$file_id) %>%
+  mutate(sample_id = sub(file_id, pattern = "_R[12]$", replacement = "")) %>%
+  left_join(metadata, by = "sample_id") %>%
+  left_join(fastq_data, by = "file_id") %>%
+  select(primer_id, primer_direction = direction.x, orientation, count, sample_id = sample_id.x, primer_pair_id, forward, reverse, read_direction = direction.y) %>%
+  ggplot(aes(x = primer_id, y = count + 0.1, color = orientation)) +
+  geom_boxplot() +
+  facet_grid(read_direction ~ primer_pair_id)
+print(cutadapt_plot)
+```
+
+The rps10_f is expected to be found in rps10_final, so that OK.
+If we log scale the y axis we can see there are some other primers left over, but not many in most samples.
+
+```{r}
+cutadapt_plot +
+  scale_y_log10()
+```
+
+
+## Check read quality
+
+First I will make plots for each sample:
+
+```{r message=FALSE}
+sample_quality_plot_dir <- file.path("results", "sample_quality_plots")
+if (! dir.exists(sample_quality_plot_dir)) {
+  dir.create(sample_quality_plot_dir, recursive = TRUE)
+}
+sample_quality_plots <- future_map(metadata$sample_id,
+                                   .options = furrr_options(seed = seed),
+                                   function(id) {
+                                     title <- paste0(metadata[metadata$sample_id == id, 1:3], collapse = "--") %>%
+                                       gsub(pattern = "/", replacement = "_", fixed = TRUE)
+                                     plot <- plotQualityProfile(fastq_data$trimmed_path[fastq_data$sample_id == id]) +
+                                       ggtitle(title)
+                                     ggsave(plot, 
+                                            filename = paste0(title, ".pdf"), 
+                                            width = 7, height = 7 / 1.618, 
+                                            path = sample_quality_plot_dir)
+                                     return(plot)
+})
+```
+
+And plots for each primer pair:
+
+```{r message=FALSE}
+primer_quality_plots <- future_map(unique(metadata$primer_pair_id),
+                                   .options = furrr_options(seed = seed),
+                                   function(id) {
+                                     sample_ids <- metadata$sample_id[metadata$primer_pair_id == id]
+                                     forward_paths <- fastq_data %>%
+                                       filter(sample_id %in% sample_ids, direction == "Forward") %>%
+                                       pull(trimmed_path)
+                                     reverse_paths <- fastq_data %>%
+                                       filter(sample_id %in% sample_ids, direction == "Reverse") %>%
+                                       pull(trimmed_path)
+                                     forward_plot <- plotQualityProfile(forward_paths) +
+                                       ggtitle(paste(id, "Forward"))
+                                     reverse_plot <- plotQualityProfile(forward_paths) +
+                                       ggtitle(paste(id, "Reverse"))
+                                     combined_plot <- gridExtra::grid.arrange(forward_plot, reverse_plot)
+                                     ggsave(combined_plot, 
+                                            filename = paste0(gsub(id, pattern = "/", replacement = "_", fixed = TRUE), ".pdf"), 
+                                            width = 10, height = 16.18, 
+                                            path = sample_quality_plot_dir)
+                                     plot(combined_plot)
+                                     return(combined_plot)
+                                   })
+```
+
+And plots for each sample type:
+
+```{r message=FALSE}
+primer_quality_plots <- future_map(unique(metadata$dna_type), 
+                                   .options = furrr_options(seed = seed),
+                                   function(type) {
+                                     sample_ids <- metadata$sample_id[metadata$dna_type == type]
+                                     forward_paths <- fastq_data %>%
+                                       filter(sample_id %in% sample_ids, direction == "Forward") %>%
+                                       pull(trimmed_path)
+                                     reverse_paths <- fastq_data %>%
+                                       filter(sample_id %in% sample_ids, direction == "Reverse") %>%
+                                       pull(trimmed_path)
+                                     forward_plot <- plotQualityProfile(forward_paths) +
+                                       ggtitle(paste(type, "Forward"))
+                                     reverse_plot <- plotQualityProfile(forward_paths) +
+                                       ggtitle(paste(type, "Reverse"))
+                                     combined_plot <- gridExtra::grid.arrange(forward_plot, reverse_plot)
+                                     ggsave(combined_plot, 
+                                            filename = paste0(type, ".pdf"), 
+                                            width = 10, height = 16.18, 
+                                            path = sample_quality_plot_dir)
+                                     plot(combined_plot)
+                                     return(combined_plot)
+                                   })
+```
+
+
+## Quality filter reads
+
+Now we can do the main quality filtering for the reads.
+Here reads with Ns, below a length of 50, or that are expected to have more than `r expected_error_filter_limit` errors will be removed.
+First I will define a place to put the results:
+
+```{r}
+filtered_reads_dir <- file.path("intermediate_data", "filtered_sequences")
+fastq_data$filtered_path <- file.path(filtered_reads_dir, paste0(fastq_data$file_id, ".fastq.gz"))
+print(fastq_data)
+```
+
+**This might take a while.**
+
+```{r}
+if (! dir.exists(filtered_reads_dir)) {
+  filter_results <- filterAndTrim(fwd = fastq_data$trimmed_path[fastq_data$direction == "Forward"], 
+                                  filt = fastq_data$filtered_path[fastq_data$direction == "Forward"],
+                                  rev =  fastq_data$trimmed_path[fastq_data$direction == "Reverse"], 
+                                  filt.rev = fastq_data$filtered_path[fastq_data$direction == "Reverse"], 
+                                  maxN = 0, 
+                                  maxEE = c(expected_error_filter_limit, expected_error_filter_limit), 
+                                  truncQ = truncation_qual_limit, 
+                                  minLen = 50, 
+                                  rm.phix = TRUE, 
+                                  compress = TRUE,
+                                  multithread = TRUE)
+  filter_results <- as_tibble(filter_results)
+  print(colMeans(filter_results))
+}
+```
+
+## Save data sets
+
+Some of the tables used here are used in other Rmarkdown files and will be saved in CSV files.
+
+```{r}
+write_csv(fastq_data, file.path("intermediate_data", "fastq_data.csv"))
+write_csv(primer_data, file.path("intermediate_data", "primer_data.csv"))
+write_csv(metadata, file.path("intermediate_data", "metadata.csv"))
+```
+
+
+## Software information
+
+```{r}
+sessioninfo::session_info()
+```
+
+
