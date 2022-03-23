@@ -311,6 +311,42 @@ I manually BLASTed a few of the sequences on NCBI's website to verify the BLAST 
 These seem to be some kind of errors or mispriming against unknown organisms.
 
 
+## Look for overlap in oomycetes detected
+
+A reviewer requested that we look to see if any oomycetes are detected by ITS1 that are not detected by rps10.
+
+```{r}
+obj <- parse_tax_data(abundance_asv, class_cols = 'taxonomy', class_sep = ';',
+                      class_regex = '^(.+)--(.+)--(.+)$',
+                      class_key = c(taxon = 'taxon_name', boot = 'info', rank = 'taxon_rank'))
+obj$data$class_data <- NULL
+
+
+# Just look at oomycetes
+obj <- filter_taxa(obj, taxon_names == "Oomycetes", supertaxa = FALSE, subtaxa = TRUE)
+
+# Just look at species data
+obj <- filter_taxa(obj, taxon_ranks == "Species", supertaxa = FALSE)
+
+# Sum data by taxon
+obj$data$tax_abund <- calc_taxon_abund(obj, data = "tax_data", cols = metadata$sample_id, groups = metadata$locus)
+
+# Color by locus
+obj$data$tax_abund$locus <- "Both"
+obj$data$tax_abund$locus[obj$data$tax_abund$rps10 >= minimum_read_count & obj$data$tax_abund$ITS < minimum_read_count] <- 'Rps10'
+obj$data$tax_abund$locus[obj$data$tax_abund$rps10 < minimum_read_count & obj$data$tax_abund$ITS >= minimum_read_count] <- 'ITS1'
+table(obj$data$tax_abund$locus)
+
+# Plot
+obj %>%
+  heat_tree(node_label = taxon_names,
+            node_size = n_obs)
+
+```
+
+
+
+
 ## Software used
 
 ```{r}
