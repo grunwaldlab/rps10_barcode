@@ -319,8 +319,22 @@ A reviewer requested that we look to see if any oomycetes are detected by ITS1 t
 obj <- parse_tax_data(abundance_asv, class_cols = 'taxonomy', class_sep = ';',
                       class_regex = '^(.+)--(.+)--(.+)$',
                       class_key = c(taxon = 'taxon_name', boot = 'info', rank = 'taxon_rank'))
+
+# Remove ASVs without confident taxonomic assignments
+is_confident_species <- map_lgl(split(obj$data$class_data, obj$data$class_data$input_index), function(x) {
+  as.numeric(x$boot[x$rank == "Species"]) >= 50
+})
+ref_pid <- as.numeric(str_match(obj$data$tax_data$taxonomy, pattern = '--([0-9.]+)--ASV$')[, 2])
+obj <- filter_obs(obj, data = "tax_data", is_confident_species & ref_pid > 98, drop_taxa = TRUE)
 obj$data$class_data <- NULL
 
+# Remove taxa not in both databases
+its_ref <- read_fasta(file.path('intermediate_data', 'reference_databases', 'its1_reference_db.fa'))
+rps10_ref <- read_fasta(file.path('intermediate_data', 'reference_databases', 'rps10_reference_db.fa'))
+in_both_db <- map_lgl(taxon_names(obj), function(n) {
+  any(grepl(names(its_ref), pattern = n, ignore.case = TRUE)) & any(grepl(names(rps10_ref), pattern = n, ignore.case = TRUE))
+})
+obj <- filter_taxa(obj, in_both_db, supertaxa = TRUE)
 
 # Just look at oomycetes
 obj <- filter_taxa(obj, taxon_names == "Oomycetes", supertaxa = FALSE, subtaxa = TRUE)
@@ -330,18 +344,13 @@ obj <- filter_taxa(obj, taxon_ranks == "Species", supertaxa = FALSE)
 
 # Sum data by taxon
 obj$data$tax_abund <- calc_taxon_abund(obj, data = "tax_data", cols = metadata$sample_id, groups = metadata$locus)
+obj$data$tax_abund$name <- taxon_names(obj)[obj$data$tax_abund$taxon_id]
 
-# Color by locus
+# Summarize by locus
 obj$data$tax_abund$locus <- "Both"
 obj$data$tax_abund$locus[obj$data$tax_abund$rps10 >= minimum_read_count & obj$data$tax_abund$ITS < minimum_read_count] <- 'Rps10'
 obj$data$tax_abund$locus[obj$data$tax_abund$rps10 < minimum_read_count & obj$data$tax_abund$ITS >= minimum_read_count] <- 'ITS1'
 table(obj$data$tax_abund$locus)
-
-# Plot
-obj %>%
-  heat_tree(node_label = taxon_names,
-            node_size = n_obs)
-
 ```
 
 
