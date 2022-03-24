@@ -36,6 +36,7 @@ library(DT)
 library(gridExtra)
 library(stringr)
 library(Biostrings)
+library(ggpubr)
 ```
 
 
@@ -467,9 +468,9 @@ mc_read_prop_plot <- plot_data %>%
   ggplot(aes(x = locus, y = abund)) +
   geom_boxplot() +
   geom_hline(yintercept=1/24, linetype="dashed") +
-  labs(x = "Locus", y = "Read Proportion")
+  labs(x = "Locus", y = "Read Proportion") +
+  theme_minimal() 
 mc_read_prop_plot
-ggsave(mc_read_prop_plot, filename = 'read_proportion_of_mock_community.pdf', path = file.path('results'), width = 5, height = 5)
 ```
 
 Standard deviation:
@@ -482,10 +483,32 @@ sd(its_best_mc_hits$abund)
 We can also look at if the proportion of sequences in correlated
 
 ```{r}
-plot_data %>%
+plot_data$obligate <- plot_data$species %in% c("Peronospora effusa", "Peronospora schachtii", "Plasmopara halstedii", "Plasmopara obducens", "Pseudoperonospora cubensis")
+plot_data$low_dna <- plot_data$species %in% c("Phytophthora pluvialis", "Saprolegnia diclina")
+plot_data$dna_type <- "Normal"
+plot_data$dna_type[plot_data$obligate] <- "Obligate"
+plot_data$dna_type[plot_data$low_dna] <- "Less DNA"
+plot_data$species[plot_data$species == "Pythium citrinum"] <- "Phytopythium citrinum"
+read_prop_corr_plot <- plot_data %>%
+  select(species, abund, locus, obligate, low_dna, olbigate_or_low_dna, dna_type) %>%
   pivot_wider(names_from = locus, values_from = abund) %>%
-  ggplot(aes(x = Rps10, y = ITS1)) +
-  geom_point()
+  ggplot(aes(x = Rps10, y = ITS1, color = dna_type)) +
+  geom_point(alpha= 0.5) +
+  coord_fixed(xlim = c(0, 0.3), ylim = c(0, 0.3)) +
+  labs(x = "Rps10 read proportion", y = "ITS1 read proportion", color = "DNA type") +
+  theme_minimal() 
+read_prop_corr_plot
+```
+
+Lets combine these two plots since they both describe the same data
+
+```{r}
+mc_plot_combined <- ggarrange(mc_read_prop_plot, read_prop_corr_plot,
+                              labels = c("A", "B"),
+                              widths = c(.55, 1),
+                              ncol = 2, nrow = 1)
+mc_plot_combined
+ggsave(mc_plot_combined, filename = 'read_proportion_of_mock_community.pdf', path = file.path('results'), width = 10, height = 5)
 ```
 
 I will also save the alignments for all of the best matches:
