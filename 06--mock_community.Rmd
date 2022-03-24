@@ -151,7 +151,7 @@ asv_data <- reformat_abund_mat(asv_data)
 otu_data <- reformat_abund_mat(otu_data)
 ```
 
-and I can add which reference sequence each asv was assigned to and its PID as seperate columns for easy use afterwards.
+and I can add which reference sequence each asv was assigned to and its PID as separate columns for easy use afterwards.
 
 ```{r}
 add_assigned_ref_seq <- function(obj) {
@@ -447,14 +447,45 @@ For **rps10**:
 
 ```{r}
 rps10_align_data <- align_mock_comm_seqs(asv_data, 'rps10', rps10_ref_data)
-as.data.frame(filter_to_top_mc_ref_hits(rps10_align_data))
+(rps10_best_mc_hits <- as.data.frame(filter_to_top_mc_ref_hits(rps10_align_data)))
 ```
 
 For **ITS1**:
 
 ```{r}
 its_align_data <- align_mock_comm_seqs(asv_data, 'ITS', its_ref_data)
-as.data.frame(filter_to_top_mc_ref_hits(its_align_data))
+(its_best_mc_hits <- as.data.frame(filter_to_top_mc_ref_hits(its_align_data)))
+```
+
+We can plot this to check how even the read depth is for each locus:
+
+```{r}
+rps10_best_mc_hits$abund <- rps10_best_mc_hits$abund / sum(rps10_best_mc_hits$abund)
+its_best_mc_hits$abund <- its_best_mc_hits$abund / sum(its_best_mc_hits$abund)
+plot_data <- rbind(mutate(rps10_best_mc_hits, locus = "Rps10"), mutate(its_best_mc_hits, locus = "ITS1"))
+mc_read_prop_plot <- plot_data %>%
+  ggplot(aes(x = locus, y = abund)) +
+  geom_boxplot() +
+  geom_hline(yintercept=1/24, linetype="dashed") +
+  labs(x = "Locus", y = "Read Proportion")
+mc_read_prop_plot
+ggsave(mc_read_prop_plot, filename = 'read_proportion_of_mock_community.pdf', path = file.path('results'), width = 5, height = 5)
+```
+
+Standard deviation:
+
+```{r}
+sd(rps10_best_mc_hits$abund)
+sd(its_best_mc_hits$abund)
+```
+
+We can also look at if the proportion of sequences in correlated
+
+```{r}
+plot_data %>%
+  pivot_wider(names_from = locus, values_from = abund) %>%
+  ggplot(aes(x = Rps10, y = ITS1)) +
+  geom_point()
 ```
 
 I will also save the alignments for all of the best matches:
