@@ -403,11 +403,24 @@ table(binding_data$primer_pair)
 They don't seems to correspond the genus differences generally, but perhaps a few groups have an unique primer pair:
 
 ```{r}
-t(table(binding_data[, c("genus", "forward")]))
-t(table(binding_data[, c("genus", "reverse")]))
-t(table(binding_data[, c("genus", "primer_pair")]))
+(genus_bindings_forward <- t(table(binding_data[, c("genus", "forward")])))
+(genus_bindings_reverse <- t(table(binding_data[, c("genus", "reverse")])))
+(genus_bindings_pair <- t(table(binding_data[, c("genus", "primer_pair")])))
 ```
 
+Lets save all that information in a table for future reference:
+
+```{r}
+genus_bindings_data <- rbind(
+  cbind(type = 'forward', genus_bindings_forward),
+  cbind(type = 'reverse', genus_bindings_reverse),
+  cbind(type = 'pair', genus_bindings_pair)
+)
+genus_bindings_data <- cbind(primer = rownames(genus_bindings_data), genus_bindings_data)
+rownames(genus_bindings_data) <- NULL
+write_csv(as.data.frame(genus_bindings_data),
+          file = file.path('results', 'genus_primer_binding_site_counts.csv'))
+```
 
 
 
