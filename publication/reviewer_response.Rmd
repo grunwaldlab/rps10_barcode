@@ -1,82 +1,95 @@
+---
+output:
+  word_document: default
+---
 # Reviewer 1
 
-> This research will be very useful for people working on metabarcoding projects across many fields. The RPS10 loci appears to be well suited for barcoding oomycetes using Miseq sequencing technology and the creation of a website for the community to contribute reference sequences is a good contribution that will give ongoing value to the research community. I have made some suggestions for minor revisions below. As an aside, the website isn't under review here but could I also suggest that you might include some bioinformatic workflows there as well. This would useful for reproducibility for others in the future.
+*This research will be very useful for people working on metabarcoding projects across many fields. The RPS10 loci appears to be well suited for barcoding oomycetes using Miseq sequencing technology and the creation of a website for the community to contribute reference sequences is a good contribution that will give ongoing value to the research community. I have made some suggestions for minor revisions below. As an aside, the website isn't under review here but could I also suggest that you might include some bioinformatic workflows there as well. This would useful for reproducibility for others in the future.*
 
 Thank you for your review and constructive feedback!
-We are considering ways to improve the website and would like to have a few more tools there in the future.
+We are considering ways to improve the website and would like to have more tools available there in the future.
 
-> 55 : “Evaluated” might be a better word than “Identified” here
-
-Done.
-
-> 57 : Change “amplify” to “amplify this region from”
+*55 : “Evaluated” might be a better word than “Identified” here*
 
 Done.
 
-> 79: Change “often” to “can”
+*57 : Change “amplify” to “amplify this region from”*
 
 Done.
 
-> 96: “Eucalypt” should be changed to “Eucalyptus”
+*79: Change “often” to “can”*
 
 Done.
 
-> 109: Change “fungi and bacteria” to “fungi or bacteria”
+*96: “Eucalypt” should be changed to “Eucalyptus”*
 
 Done.
 
-> 110: Could you please expand a little about what you mean about activity of oomycetes.
+*109: Change “fungi and bacteria” to “fungi or bacteria”*
+
+Done.
+
+*110: Could you please expand a little about what you mean about activity of oomycetes.*
 
 The statement was referring to some types of oomycetes that must be baited during certain seasons when they are sporulating.
-However, since that does not apply to all oomycetes and is vague without more explanation, we have removed that portion of the sentence. 
+For example, Phytophthora species in streams are difficult to bait some times of the year (Reeser 2011, Figure 2).
+However, since that does not apply to all oomycetes and is too vague without more explanation, we have removed that portion of the sentence. 
 
-> 176: Change “amplification” to “PCR”
+Reeser, P.W., Sutton, W., Hansen, E.M., Remigi, P. and Adams, G.C., 2011. Phytophthora species in forest streams in Oregon and Alaska. Mycologia, 103(1), pp.22-35.
 
-Done.
+!!!!CHECK WITH NIK!!!!
 
-> 185 “Efficacy” might read better than “usefulness”
-
-Done.
-
-> 185 – 188 : the way this is phrased it sound like you are comparing rps10 primers ability to amplify the ITS1 region with the Sapkota primers which they don’t amplify. Could you re word it please to be a clearer.
+*176: Change “amplification” to “PCR”*
 
 Done.
 
-> 205: It would be useful and informative if you included the alignment as a supplementary file
+*185 “Efficacy” might read better than “usefulness”*
 
-!!!!TODO!!!! (Waiting on Frank to get back to us)
+Done.
 
-> 211: “All known oomycetes” implies you checked every oomycete ever described
+*185 – 188 : the way this is phrased it sound like you are comparing rps10 primers ability to amplify the ITS1 region with the Sapkota primers which they don’t amplify. Could you re word it please to be a clearer.*
+
+Done.
+
+*205: It would be useful and informative if you included the alignment as a supplementary file*
+
+!!!!TODO!!!! (Waiting for Frank to get back to us with the alignment)
+
+*211: “All known oomycetes” implies you checked every oomycete ever described*
 
 Good point. We meant that the goal was for the primers to amplify all oomycetes, but I see how that could be misinterpreted.
 We have modified the text.
 
-> 214: Which cutoffs did you use for the parameters such as GC content, hairpins etc when selecting primers?
+*214: Which cutoffs did you use for the parameters such as GC content, hairpins etc when selecting primers?*
 
-Rigid cutoffs were not used, but rather people experienced with primer design compared the OligoAnalyzer results to their previous experiences.
+Rigid cutoffs were not used, but rather people experienced with primer design compared the OligoAnalyzer results to their previous experiences to select primers to try in the lab.
 
-> 239: How was the DNA quantified?
+!!!!CHECK WITH NIK!!!!
+
+*239: How was the DNA quantified?*
 
 We used a Qubit. This information has been added.
 
-> 321 – 322: This first sentence is not required because the information is repeated in more detail below. Please just add the references for DADA2 and Cutadapt where approcpriate below instead.
+*321 – 322: This first sentence is not required because the information is repeated in more detail below. Please just add the references for DADA2 and Cutadapt where approcpriate below instead.*
 
 Done.
 
-> 478 – 494: Were there any oomycetes amplified/identified with the ITS1 primer set that were not identified with the rps10 primers?
+*478 – 494: Were there any oomycetes amplified/identified with the ITS1 primer set that were not identified with the rps10 primers?*
 
 Unfortunately the data from the environmental samples cannot be used to answer this question confidently for two reasons:
 
-* The content of the reference databases differs for the two loci, so even if both methods amplified the same organism, the closest match in the reference database of each locus could be to different taxa. Since many ASVs in the environmental samples have no close match in either database (only 16% of oomycete ASVs from environmental samples had a match >95% identical), this error is likely to occur often.
-* The limited taxonomic resolution of ITS1, and rps10 to a lesser extent, means that even if both databases have a reference sequence perfectly matching an ASV, there could be other taxa in that database with the same sequence, so which taxon name gets assigned to the ASV is random.
+1. The content of the reference databases differs for the two loci (about 1/3 of the species in each database are not in the other), so even if both methods amplified the same organism, the closest match in the reference database of each locus could be to different taxon. Since many ASVs in the environmental samples have no close match in either database (only 16% of oomycete ASVs from environmental samples had a match >95% identical), this error is likely to occur often.
+1. The limited taxonomic resolution of ITS1, and rps10 to a lesser extent, means that even if both databases have a reference sequence perfectly matching an ASV, there could be other taxa in that database with the same sequence, so which taxon name gets assigned to the ASV is random.
 
 This is why the mock community was useful; in that case we knew all the organisms sequenced had a perfect match in both databases.
 
-> 516 Please change “are generally more diverged from each other” to “are generally more divergent”
+!!!!CHECK WITH NIK!!!!
+
+*516 Please change “are generally more diverged from each other” to “are generally more divergent”*
 
 Done.
 
-> 540 - 541: Please change “showed” to “predicted” also please change “non-target taxa” to “all non-target taxa tested”
+*540 - 541: Please change “showed” to “predicted” also please change “non-target taxa” to “all non-target taxa tested”*
 
 Thanks for pointing that out. Done.
 
@@ -85,51 +98,59 @@ Thanks for pointing that out. Done.
 
 # Reviewer 2
 
-> This study describes the design of a valuable new barcoding locus/assay developed from a database of mtDNA sequence data. Its utility was then compared carefully against an ITS rDNA locus. The methods were used to metabarcode a mixed mock community and on eDNA samples from natural environments. The paper is a well-written account of a valuable breakthrough in oomycete barcoding and should be published.  A key benefit of the rps10 locus compared to the ITS loci primers seems to me the ability to amplify products beyond the Phytophthora and downy mildew genera to include other oomycetes.  I do, however have a few comments suggested changes that I feel would add to value of the publication, in particular in relation to the read ratio in the mock community.  I also feel it may be helpful to detail which of the reverse primers has specificity to which group of oomycetes. Could this be used to give future researchers an option to pick and choose the combination of rps10 primers to focus on the group of oomycetes of particular interest?
+*This study describes the design of a valuable new barcoding locus/assay developed from a database of mtDNA sequence data. Its utility was then compared carefully against an ITS rDNA locus. The methods were used to metabarcode a mixed mock community and on eDNA samples from natural environments. The paper is a well-written account of a valuable breakthrough in oomycete barcoding and should be published.  A key benefit of the rps10 locus compared to the ITS loci primers seems to me the ability to amplify products beyond the Phytophthora and downy mildew genera to include other oomycetes.  I do, however have a few comments suggested changes that I feel would add to value of the publication, in particular in relation to the read ratio in the mock community.  I also feel it may be helpful to detail which of the reverse primers has specificity to which group of oomycetes. Could this be used to give future researchers an option to pick and choose the combination of rps10 primers to focus on the group of oomycetes of particular interest?*
 
-> As an aside: note that the primers ITS6 and 7 were never designed to be, or described as, an oomycete-specific assay by Cooke et al (2000) but were simply modifications of the existing White et al (1990) fungal ITS primers to allow more robust amplification of oomycete samples in the laboratory. They were taken up and tested by other authors as ‘oomycete specific’. It was not entirely surprising they were not effective as the discriminating bases are often not at that the 3’ end that would have offered greater specificity.  I say this not to criticise the rps10 assay which looks very powerful, but the point could be made that an ITS-based assay that was as carefully designed as the rps10 one could also offer value for oomycete barcoding.  The assay of Sapkota and Nicolaisen (2015) was not ‘designed’ but tested ‘in hope’ and is maybe not a fair comparison. Having said that, there were no better oomycete ITS assays to be tested so this papers detailed investigation is valuable and will hopefully prevent others using these ITS primers as oomycete-specific in the future. While a comparison may have been with the Scibetta et al (2012) ITS primers which are highly specific to known downy mildew and Phytophthora I understand that these do not amplify other oomycetes and would not have been equivalent. The key advantages of rps10 – oomycete specificity and improved taxonomic resolution - are clear.
+!!!!TODO!!!!
+
+!!!!CHECK WITH NIK!!!!
+
+*As an aside: note that the primers ITS6 and 7 were never designed to be, or described as, an oomycete-specific assay by Cooke et al (2000) but were simply modifications of the existing White et al (1990) fungal ITS primers to allow more robust amplification of oomycete samples in the laboratory. They were taken up and tested by other authors as ‘oomycete specific’. It was not entirely surprising they were not effective as the discriminating bases are often not at that the 3’ end that would have offered greater specificity.  I say this not to criticise the rps10 assay which looks very powerful, but the point could be made that an ITS-based assay that was as carefully designed as the rps10 one could also offer value for oomycete barcoding.  The assay of Sapkota and Nicolaisen (2015) was not ‘designed’ but tested ‘in hope’ and is maybe not a fair comparison. Having said that, there were no better oomycete ITS assays to be tested so this papers detailed investigation is valuable and will hopefully prevent others using these ITS primers as oomycete-specific in the future. While a comparison may have been with the Scibetta et al (2012) ITS primers which are highly specific to known downy mildew and Phytophthora I understand that these do not amplify other oomycetes and would not have been equivalent. The key advantages of rps10 – oomycete specificity and improved taxonomic resolution - are clear.*
 
 These are excellent points.
-We have added a sentence to explain the history of ITS6 and ITS7.
+We have added a sentence to better explain the history of ITS6 and ITS7.
 
-> What happens with Nothophytophthora? I could not see them on Figure 2. There is no reason to suggest they would not amplify but perhaps they should be mentioned somewhere?
+*What happens with Nothophytophthora? I could not see them on Figure 2. There is no reason to suggest they would not amplify but perhaps they should be mentioned somewhere?*
 
 The data used to make Figure 2 was collected during the initial design of the primers.
 At the time Nothophytophthora had just been described and we were not aware of any publicly available rps10 sequences for Nothophytophthora that included the primer binding sites.
-As far as we can tell, the rps10 sequences for Nothophytophthora on NCBI currently available do not have the primer binding sites so we cannot predict whether or not Nothophytophthora would be amplified by this method.
-Nothophytophthora is one of many genera not represented by currently available rsp10 sequences.
-We have added a sentence to the methods (around line 228) using Nothophytophthora as an example for genera we dont have data for.
+I just looked again and, as far as we can tell, the rps10 sequences for Nothophytophthora on NCBI currently available do not have the primer binding sites either so we cannot predict whether or not Nothophytophthora would be amplified by this method.
+Nothophytophthora is one of many genera not represented by currently available rps10 reference sequences.
+We have added a sentence to the methods (around line 228) using Nothophytophthora as an example for genera we don't have data for.
 
-> The web-site https://nam04.safelinks.protection.outlook.com/?url=http%3A%2F%2Fwww.oomycetedb.org%2F&amp;data=04%7C01%7Cniklaus.grunwald%40oregonstate.edu%7C04b24f72622c4cf9996308da05c111ce%7Cce6d05e13c5e4d6287a84c4a2713c113%7C0%7C0%7C637828624036753211%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=%2FlQvEfQI7iNfh7VRxfzITmsi4h2dliKEmNs2dGUVj80%3D&amp;reserved=0 is a valuable resource.
+!!!!CHECK WITH NIK!!!!
+
+*The web-site https://nam04.safelinks.protection.outlook.com/?url=http%3A%2F%2Fwww.oomycetedb.org%2F&amp;data=04%7C01%7Cniklaus.grunwald%40oregonstate.edu%7C04b24f72622c4cf9996308da05c111ce%7Cce6d05e13c5e4d6287a84c4a2713c113%7C0%7C0%7C637828624036753211%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=%2FlQvEfQI7iNfh7VRxfzITmsi4h2dliKEmNs2dGUVj80%3D&amp;reserved=0 is a valuable resource.*
 
 Thank you!
 
-> L145 “due to it robust statistical” needs an extra word or ‘its’
+*L145 “due to it robust statistical” needs an extra word or ‘its’*
 
 Done.
 
-> L153 “currently available ITS1” I would say “some currently available ITS1” as there are ones that do not such as the unmentioned Scibetta et al primers. I feel reference should be made to the source paper (Scibetta et al 2012) which described the downy mildew and Phytophthora-specific primers employed in several key studies such as those of Landa and Riddell.
-> Scibetta, S.; Schena, L.; Chimento, A.; Cacciola, S.O.; Cooke, D.E. A molecular method to assess Phytophthora diversity in environmental samples. J. Microbiol. Methods 2012, 88, 356–368, doi:10.1016/j.mimet.2011.12.012.
+*L153 “currently available ITS1” I would say “some currently available ITS1” as there are ones that do not such as the unmentioned Scibetta et al primers. I feel reference should be made to the source paper (Scibetta et al 2012) which described the downy mildew and Phytophthora-specific primers employed in several key studies such as those of Landa and Riddell.*
+*Scibetta, S.; Schena, L.; Chimento, A.; Cacciola, S.O.; Cooke, D.E. A molecular method to assess Phytophthora diversity in environmental samples. J. Microbiol. Methods 2012, 88, 356–368, doi:10.1016/j.mimet.2011.12.012.*
 
 Good observation.
 A reference to the Scibetta paper has been added.  
 
-> L157 “as little as 5.3% of” simpler just to say “only 5.3% of ”
+*L157 “as little as 5.3% of” simpler just to say “only 5.3% of ”*
 
 Done.
 
-> L185 suggest “power” or “specificity“ rather than ”usefulness” or leave and just say they were compared.
+*L185 suggest “power” or “specificity“ rather than ”usefulness” or leave and just say they were compared.*
 
 Another reviewer suggested "efficacy" and we used that, but thanks for the suggestion!
  
-> L294 should specify the version of Illumina chemistry employed.  v2 or v3 and how many cycles?  This is important.
+*L294 should specify the version of Illumina chemistry employed.  v2 or v3 and how many cycles?  This is important.*
 
 Done.
 
-> L471 onwards – for the mock community it would also be interesting to know the read numbers for each species. Were all reads balanced in 1/24 ratio? This would give a measure of the uniformity of amplification efficiency of both assays.  For example did the unknown proportion of downy mildew vs plant DNA result in fewer DM species reads? How did ITS and mtDNA compare? The more uniform amplicon length of rps10 compared to ITS1 should theoretically offer an advantage as it may minimise competition in which shorter amplicons are more abundant than longer ones due to more efficient amplification. Was this the case? I understand the assays are not intended to be quantitative but it would be useful to know if differences in read number broadly align with initial DNA concentration.
+*L471 onwards – for the mock community it would also be interesting to know the read numbers for each species. Were all reads balanced in 1/24 ratio? This would give a measure of the uniformity of amplification efficiency of both assays.  For example did the unknown proportion of downy mildew vs plant DNA result in fewer DM species reads? How did ITS and mtDNA compare? The more uniform amplicon length of rps10 compared to ITS1 should theoretically offer an advantage as it may minimise competition in which shorter amplicons are more abundant than longer ones due to more efficient amplification. Was this the case? I understand the assays are not intended to be quantitative but it would be useful to know if differences in read number broadly align with initial DNA concentration.*
 
-Good idea. This information has been added.
+Good idea. This information has been added (around line 490).
 
-> SE Comment: Is there a spot you could include the importance to Phytobiome research, maybe early in the introduction. It is just nice to see the word phytobiome/s used.
+!!!!CHECK WITH NIK!!!!
+
+*SE Comment: Is there a spot you could include the importance to Phytobiome research, maybe early in the introduction. It is just nice to see the word phytobiome/s used.*
 
 Done.
