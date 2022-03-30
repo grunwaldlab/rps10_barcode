@@ -37,8 +37,6 @@ However, since that does not apply to all oomycetes and is too vague without mor
 
 Reeser, P.W., Sutton, W., Hansen, E.M., Remigi, P. and Adams, G.C., 2011. Phytophthora species in forest streams in Oregon and Alaska. Mycologia, 103(1), pp.22-35.
 
-!!!!CHECK WITH NIK!!!!
-
 *176: Change “amplification” to “PCR”*
 
 Done.
@@ -64,13 +62,11 @@ We have modified the text.
 
 Rigid cutoffs were not used, but rather people experienced with primer design compared the OligoAnalyzer results to their previous experiences to select primers to try in the lab.
 
-!!!!CHECK WITH NIK!!!!
-
 *239: How was the DNA quantified?*
 
 We used a Qubit. This information has been added.
 
-*321 – 322: This first sentence is not required because the information is repeated in more detail below. Please just add the references for DADA2 and Cutadapt where approcpriate below instead.*
+*321 – 322: This first sentence is not required because the information is repeated in more detail below. Please just add the references for DADA2 and Cutadapt where appropriate below instead.*
 
 Done.
 
@@ -83,7 +79,6 @@ Unfortunately the data from the environmental samples cannot be used to answer t
 
 This is why the mock community was useful; in that case we knew all the organisms sequenced had a perfect match in both databases.
 
-!!!!CHECK WITH NIK!!!!
 
 *516 Please change “are generally more diverged from each other” to “are generally more divergent”*
 
@@ -102,7 +97,6 @@ Thanks for pointing that out. Done.
 
 !!!!TODO!!!!
 
-!!!!CHECK WITH NIK!!!!
 
 *As an aside: note that the primers ITS6 and 7 were never designed to be, or described as, an oomycete-specific assay by Cooke et al (2000) but were simply modifications of the existing White et al (1990) fungal ITS primers to allow more robust amplification of oomycete samples in the laboratory. They were taken up and tested by other authors as ‘oomycete specific’. It was not entirely surprising they were not effective as the discriminating bases are often not at that the 3’ end that would have offered greater specificity.  I say this not to criticise the rps10 assay which looks very powerful, but the point could be made that an ITS-based assay that was as carefully designed as the rps10 one could also offer value for oomycete barcoding.  The assay of Sapkota and Nicolaisen (2015) was not ‘designed’ but tested ‘in hope’ and is maybe not a fair comparison. Having said that, there were no better oomycete ITS assays to be tested so this papers detailed investigation is valuable and will hopefully prevent others using these ITS primers as oomycete-specific in the future. While a comparison may have been with the Scibetta et al (2012) ITS primers which are highly specific to known downy mildew and Phytophthora I understand that these do not amplify other oomycetes and would not have been equivalent. The key advantages of rps10 – oomycete specificity and improved taxonomic resolution - are clear.*
 
@@ -117,7 +111,6 @@ I just looked again and, as far as we can tell, the rps10 sequences for Nothophy
 Nothophytophthora is one of many genera not represented by currently available rps10 reference sequences.
 We have added a sentence to the methods (around line 228) using Nothophytophthora as an example for genera we don't have data for.
 
-!!!!CHECK WITH NIK!!!!
 
 *The web-site https://nam04.safelinks.protection.outlook.com/?url=http%3A%2F%2Fwww.oomycetedb.org%2F&amp;data=04%7C01%7Cniklaus.grunwald%40oregonstate.edu%7C04b24f72622c4cf9996308da05c111ce%7Cce6d05e13c5e4d6287a84c4a2713c113%7C0%7C0%7C637828624036753211%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=%2FlQvEfQI7iNfh7VRxfzITmsi4h2dliKEmNs2dGUVj80%3D&amp;reserved=0 is a valuable resource.*
 
@@ -149,7 +142,6 @@ Done.
 
 Good idea. This information has been added (around line 490).
 
-!!!!CHECK WITH NIK!!!!
 
 *SE Comment: Is there a spot you could include the importance to Phytobiome research, maybe early in the introduction. It is just nice to see the word phytobiome/s used.*
 

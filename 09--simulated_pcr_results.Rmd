@@ -388,6 +388,14 @@ and save it for later reference:
 write_csv(binding_data, file = file.path('results', 'primer_binding_site_sequences.csv'))
 ```
 
+An alignment of the amplicons might also be useful:
+
+```{r}
+aligned <- binding_data$amplicon %>%
+  insect::char2dna() %>%
+  ips::mafft(method = 'localpair', exec = '/usr/bin/mafft')
+write.FASTA(aligned, file = file.path('results', 'amplicon_region_multiple_alignment.fa'))
+```
 
 ### Check if primers correspond to genus
 
