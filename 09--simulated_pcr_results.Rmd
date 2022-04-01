@@ -385,7 +385,9 @@ binding_data <- tibble(species = names(forward_bindings),
 and save it for later reference: 
 
 ```{r}
-write_csv(binding_data, file = file.path('results', 'primer_binding_site_sequences.csv'))
+binding_data %>%
+  select(species, forward, reverse, amplicon) %>%
+  write_csv(file = file.path('results', 'primer_binding_site_sequences.csv'))
 ```
 
 An alignment of the amplicons might also be useful:
@@ -426,8 +428,11 @@ genus_bindings_data <- rbind(
 )
 genus_bindings_data <- cbind(primer = rownames(genus_bindings_data), genus_bindings_data)
 rownames(genus_bindings_data) <- NULL
-write_csv(as.data.frame(genus_bindings_data),
-          file = file.path('results', 'genus_primer_binding_site_counts.csv'))
+genus_bindings_data %>%
+  as_tibble() %>%
+  filter(type == "pair") %>%
+  select(-type) %>%
+  write_csv(file = file.path('results', 'genus_primer_binding_site_counts.csv'))
 ```
 
 

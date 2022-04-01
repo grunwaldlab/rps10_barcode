@@ -51,7 +51,7 @@ Done.
 
 *205: It would be useful and informative if you included the alignment as a supplementary file*
 
-!!!!TODO!!!! (Waiting for Frank to get back to us with the alignment)
+We have added an alignment of the region amplified (including the primer binding sites) derived from the reference database, which includes most of the sequences used in the initial alignment as well as many more oomycete sequences we did not have when designing the primers.
 
 *211: “All known oomycetes” implies you checked every oomycete ever described*
 
@@ -86,7 +86,7 @@ Done.
 
 *540 - 541: Please change “showed” to “predicted” also please change “non-target taxa” to “all non-target taxa tested”*
 
-Thanks for pointing that out. Done.
+Done.
 
 
 
@@ -95,7 +95,8 @@ Thanks for pointing that out. Done.
 
 *This study describes the design of a valuable new barcoding locus/assay developed from a database of mtDNA sequence data. Its utility was then compared carefully against an ITS rDNA locus. The methods were used to metabarcode a mixed mock community and on eDNA samples from natural environments. The paper is a well-written account of a valuable breakthrough in oomycete barcoding and should be published.  A key benefit of the rps10 locus compared to the ITS loci primers seems to me the ability to amplify products beyond the Phytophthora and downy mildew genera to include other oomycetes.  I do, however have a few comments suggested changes that I feel would add to value of the publication, in particular in relation to the read ratio in the mock community.  I also feel it may be helpful to detail which of the reverse primers has specificity to which group of oomycetes. Could this be used to give future researchers an option to pick and choose the combination of rps10 primers to focus on the group of oomycetes of particular interest?*
 
-!!!!TODO!!!!
+Thank you for your review and constructive feedback!
+We have added two supplementary tables that inform which primer variations correspond to each genus and species. 
 
 
 *As an aside: note that the primers ITS6 and 7 were never designed to be, or described as, an oomycete-specific assay by Cooke et al (2000) but were simply modifications of the existing White et al (1990) fungal ITS primers to allow more robust amplification of oomycete samples in the laboratory. They were taken up and tested by other authors as ‘oomycete specific’. It was not entirely surprising they were not effective as the discriminating bases are often not at that the 3’ end that would have offered greater specificity.  I say this not to criticise the rps10 assay which looks very powerful, but the point could be made that an ITS-based assay that was as carefully designed as the rps10 one could also offer value for oomycete barcoding.  The assay of Sapkota and Nicolaisen (2015) was not ‘designed’ but tested ‘in hope’ and is maybe not a fair comparison. Having said that, there were no better oomycete ITS assays to be tested so this papers detailed investigation is valuable and will hopefully prevent others using these ITS primers as oomycete-specific in the future. While a comparison may have been with the Scibetta et al (2012) ITS primers which are highly specific to known downy mildew and Phytophthora I understand that these do not amplify other oomycetes and would not have been equivalent. The key advantages of rps10 – oomycete specificity and improved taxonomic resolution - are clear.*
@@ -140,7 +141,7 @@ Done.
 
 *L471 onwards – for the mock community it would also be interesting to know the read numbers for each species. Were all reads balanced in 1/24 ratio? This would give a measure of the uniformity of amplification efficiency of both assays.  For example did the unknown proportion of downy mildew vs plant DNA result in fewer DM species reads? How did ITS and mtDNA compare? The more uniform amplicon length of rps10 compared to ITS1 should theoretically offer an advantage as it may minimise competition in which shorter amplicons are more abundant than longer ones due to more efficient amplification. Was this the case? I understand the assays are not intended to be quantitative but it would be useful to know if differences in read number broadly align with initial DNA concentration.*
 
-Good idea. This information has been added (around line 490).
+Good idea. This information has been added (around line 490 and in a supplemental figure).
 
 
 *SE Comment: Is there a spot you could include the importance to Phytobiome research, maybe early in the introduction. It is just nice to see the word phytobiome/s used.*
